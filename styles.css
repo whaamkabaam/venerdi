@@ -491,6 +491,12 @@ svg { display: block; }
   font-size: 1rem;
   font-weight: 600;
 }
+.btn--primary:disabled {
+  background-color: color-mix(in oklch, var(--accent) 22%, transparent);
+  color: color-mix(in oklch, var(--ink) 55%, transparent);
+  box-shadow: none;
+}
+.day-note .btn { margin-left: 4px; vertical-align: middle; }
 @media (hover: hover) {
   .btn--primary:not(:disabled):hover { background-color: color-mix(in oklch, var(--accent) 88%, var(--ink)); }
 }

@@ -137,13 +137,22 @@
   let fromLink = false;
   let plan = null;
 
+  let hasBackup = false;
   function loadState() {
     const q = new URLSearchParams(location.search);
     if (q.has('p')) {
-      picks = new Set(q.get('p').split(',').map((s) => s.trim()).filter((id) => OPT[id]));
-      freeText = q.get('n') || '';
+      const linkPicks = q.get('p').split(',').map((s) => s.trim()).filter((id) => OPT[id]);
+      const linkNote = q.get('n') || '';
+      // Keep her own picks before adopting the link's, so "Back to my picks" can restore them.
+      const saved = store.get('picks', null), savedNote = store.get('note', '');
+      hasBackup = Array.isArray(saved) && ([...saved].sort().join() !== [...linkPicks].sort().join() || savedNote !== linkNote);
+      if (hasBackup) store.set('before-link', { picks: saved, note: savedNote });
+      picks = new Set(linkPicks);
+      freeText = linkNote;
       fromLink = true;
       saveState();
+      // Drop the query at once, so a reload or a restored tab keeps her later edits.
+      history.replaceState(null, '', location.pathname + location.hash);
       return;
     }
     const saved = store.get('picks', null);
@@ -152,11 +161,28 @@
   }
   function saveState() { store.set('picks', [...picks]); store.set('note', freeText); }
 
+  function backToMine() {
+    const b = store.get('before-link', null);
+    if (!b) return;
+    picks = new Set((b.picks || []).filter((id) => OPT[id]));
+    freeText = b.note || '';
+    slot('free-text').value = freeText;
+    fromLink = false;
+    hasBackup = false;
+    saveState();
+    syncCards();
+    update();
+  }
+
   const orderedPicks = () => [...picks].sort((a, b) => OPT[a].order - OPT[b].order);
+  // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids) last,
+  // and ! ' ( ) * . are encoded too. The full note is in the message; the link carries a capped copy.
+  const NOTE_LINK_MAX = 1000;
+  const encodeNote = (s) => encodeURIComponent(s).replace(/[!'()*.]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
   function linkURL() {
     const base = location.href.split(/[?#]/)[0];
-    const n = freeText.trim();
-    return `${base}?p=${orderedPicks().join(',')}${n ? `&n=${encodeURIComponent(n)}` : ''}`;
+    const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
+    return `${base}?${n ? `n=${encodeNote(n)}&` : ''}p=${orderedPicks().join(',')}`;
   }
   function shareText() {
     const lines = [C.picker.shareIntro, ...plan.options.map((o) => `- ${o.title}`)];
@@ -177,7 +203,7 @@
   }
   function toggle(id) {
     if (picks.has(id)) picks.delete(id); else picks.add(id);
-    if (fromLink) { fromLink = false; history.replaceState(null, '', location.pathname + location.hash); }
+    fromLink = false;
     saveState();
     syncCards();
     update();
@@ -192,7 +218,8 @@
   function renderDay() {
     const D = C.day;
     const body = slot('day-body');
-    const note = fromLink ? `<p class="day-note">${esc(D.fromLink)}</p>` : '';
+    const back = hasBackup ? ` <button class="btn btn--small" type="button" data-action="back-to-mine">${esc(D.backToMine)}</button>` : '';
+    const note = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
     if (!picks.size) { body.innerHTML = `${note}<p class="day-empty">${esc(D.empty)}</p>`; return; }
 
     let html = '', group = '', walked = 0;
@@ -219,7 +246,7 @@
     }
 
     const after = [];
-    after.push(`<p class="day-summary">${esc(fmt(D.summary, { n: plan.options.length, km: (plan.walkM / 1000).toFixed(1) }))}</p>`);
+    after.push(`<p class="day-summary">${esc(fmt(D.summary, { n: picks.size, km: (plan.walkM / 1000).toFixed(1) }))}</p>`);
     if (picks.size >= 7) after.push(`<p>${esc(D.manyLine)}</p>`);
     const books = plan.options.filter((o) => o.book).map((o) => o.book).concat(U.bookDinner);
     after.push(`<p>${esc(fmt(D.willBook, { list: books.join(U.listJoin) }))}</p>`);
@@ -702,8 +729,12 @@
 
   let booted = false;
   let refreshTimer = 0;
+  // Send needs something to send: a pick or a line of text.
+  function syncSend() { slot('send').disabled = !picks.size && !freeText.trim(); }
+
   function update() {
     plan = P.build(C, [...picks]);
+    syncSend();
     renderDay();
     renderMapPlan();
     if (booted) {
@@ -797,7 +828,8 @@
     const b = e.target.closest('.pick');
     if (b) toggle(b.dataset.id);
   });
-  slot('free-text').addEventListener('input', (e) => { freeText = e.target.value; saveState(); });
+  slot('free-text').addEventListener('input', (e) => { freeText = e.target.value; saveState(); syncSend(); });
+  slot('day-body').addEventListener('click', (e) => { if (e.target.closest('[data-action="back-to-mine"]')) backToMine(); });
   slot('send').addEventListener('click', send);
   nowBtns.forEach((b) => b.addEventListener('click', jumpToNow));
   wideMQ.addEventListener('change', () => { placeMap(); renderMapPlan(); ScrollTrigger.refresh(); });

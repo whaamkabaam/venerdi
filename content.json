@@ -101,6 +101,7 @@
     "willBook": "I'll book: {list}.",
     "noLunch": "Lunch wherever we are.",
     "fromLink": "These are the picks from the link. Tap any card to change them.",
+    "backToMine": "Back to my picks",
     "slots": {
       "morning": "Morning",
       "lunch": "Lunch",

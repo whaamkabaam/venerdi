@@ -16,7 +16,8 @@
   }
 
   const BUFFER = 15;            // relaxed buffer added to every stay
-  const LUNCH_FROM = toMin('12:30');
+  const NOON = toMin('12:00');         // nothing that starts after this is "morning"
+  const LUNCH_FROM = toMin('12:30');   // the plain lunch line, and the earliest afternoon-slot stop
   const LUNCH_MINUTES = 45;     // the plain "lunch wherever we are" stop
   const SUNSET_START = toMin('17:45');
   const AFTERNOON_END = toMin('17:30');
@@ -37,50 +38,68 @@
     return { text: fmt(U.taxi, { min }), m: 0, min };
   }
 
-  // One pass over the ordered picks. Returns the timeline plus items that could not be fitted.
-  function schedule(C, seq) {
+  // One pass over the ordered picks. Lunch is placed by the clock, not by `order`: before the first
+  // stop that would start at noon or later, and always before afternoon-slot stops and the sunset.
+  // `lunches` are the lunch picks in order of preference; the first one that is still open is
+  // used, otherwise the plain lunch line. Returns the timeline plus items that could not be fitted.
+  function schedule(C, seq, lunches) {
     const R = C.ui.reasons;
     const start = toMin(C.meta.startsAt.slice(11, 16));
     const dinner = C.anchors.dinner;
-    const hasLunch = seq.some((o) => o.slot === 'lunch');
     const out = [], drops = [];
-    let clock = start, prev = null, lunchDone = hasLunch;
+    let clock = start, prev = null, lunchDone = false;
 
-    const lunchFiller = () => {
-      const at = Math.max(clock, LUNCH_FROM);
-      out.push({ kind: 'lunch-filler', start: at, end: at + LUNCH_MINUTES, transfer: null });
-      clock = at + LUNCH_MINUTES;
-      lunchDone = true;
-    };
-
-    for (const o of seq) {
-      const isSunset = o.slot === 'sunset';
-      if (!lunchDone && (isSunset || clock >= LUNCH_FROM)) lunchFiller();
-      const t = prev ? makeTransfer(C, prev, o) : null;
+    // When we would arrive at `o` from where we are now (travel, opening time, midday closure).
+    function arrival(o, from) {
+      const t = from ? makeTransfer(C, from, o) : null;
       let arrive = clock + (t ? t.min : 0);
-      if (isSunset) arrive = Math.max(arrive, SUNSET_START);
+      if (o.slot === 'sunset') arrive = Math.max(arrive, SUNSET_START);
+      if (o.slot === 'afternoon') arrive = Math.max(arrive, LUNCH_FROM);
       if (o.open && arrive < toMin(o.open)) arrive = toMin(o.open);
       // `close` is the latest useful arrival (last entry, desk or gate), so the checks use arrival time.
+      let reason = null;
       if (o.closedFrom && o.closedTo) {
-        const from = toMin(o.closedFrom), to = toMin(o.closedTo);
-        if (arrive >= from && arrive < to) {
+        const from2 = toMin(o.closedFrom), to = toMin(o.closedTo);
+        if (arrive >= from2 && arrive < to) {
           if (!o.close || to <= toMin(o.close)) arrive = to;
-          else { drops.push({ option: o, reason: fmt(R.closedGap, { from: o.closedFrom, to: o.closedTo }) }); continue; }
+          else reason = fmt(R.closedGap, { from: o.closedFrom, to: o.closedTo });
         }
       }
       // A late sunset is fixed by trimming the afternoon (see the overflow loop), never by dropping it.
-      if (o.close && arrive > toMin(o.close) && !isSunset) {
-        drops.push({ option: o, reason: fmt(R.closes, { time: o.close }) });
-        continue;
-      }
-      out.push({ kind: 'option', option: o, start: arrive, end: arrive + o.minutes + BUFFER, transfer: t });
-      clock = arrive + o.minutes + BUFFER;
+      if (!reason && o.close && arrive > toMin(o.close) && o.slot !== 'sunset') reason = fmt(R.closes, { time: o.close });
+      return { t, arrive, reason };
+    }
+    function place(o, a) {
+      out.push({ kind: 'option', option: o, start: a.arrive, end: a.arrive + o.minutes + BUFFER, transfer: a.t });
+      clock = a.arrive + o.minutes + BUFFER;
       prev = o;
     }
-    if (!lunchDone) lunchFiller();
+    function placeLunch() {
+      lunchDone = true;
+      for (let i = 0; i < lunches.length; i++) {
+        const a = arrival(lunches[i], prev);
+        if (a.reason) { drops.push({ option: lunches[i], reason: a.reason }); continue; }
+        place(lunches[i], a);
+        lunches.slice(i + 1).forEach((o) => drops.push({ option: o, reason: R.lunchTaken }));
+        return;
+      }
+      const at = Math.max(clock, LUNCH_FROM);
+      out.push({ kind: 'lunch-filler', start: at, end: at + LUNCH_MINUTES, transfer: null });
+      clock = at + LUNCH_MINUTES;
+    }
+
+    for (const o of seq) {
+      // Compared on the rounded time, so a stop shown under Morning never reads "around 12:00".
+      if (!lunchDone && (o.slot === 'sunset' || o.slot === 'afternoon' || round30(arrival(o, prev).arrive) >= NOON)) placeLunch();
+      const a = arrival(o, prev);
+      if (a.reason) { drops.push({ option: o, reason: a.reason }); continue; }
+      place(o, a);
+    }
+    if (!lunchDone) placeLunch();
 
     const tDinner = prev ? makeTransfer(C, prev, dinner) : null;
-    const lastPlain = [...out].reverse().find((x) => x.kind === 'option' && x.option.slot !== 'sunset');
+    // Overflow trims the latest ordinary stop: never the sunset, never lunch.
+    const lastPlain = [...out].reverse().find((x) => x.kind === 'option' && x.option.slot !== 'sunset' && x.option.slot !== 'lunch');
     const sunsetPicked = out.some((x) => x.kind === 'option' && x.option.slot === 'sunset');
     let overflow = null;
     if (sunsetPicked && lastPlain && lastPlain.end > AFTERNOON_END) overflow = 'sunset';
@@ -97,38 +116,19 @@
     const sunsets = picked.filter((o) => o.slot === 'sunset');
     const sunset = sunsets[0] || null;
     sunsets.slice(1).forEach((o) => didntFit.push({ option: o, reason: R.sunsetTaken }));
-    // One lunch: the longer sit-down lunch wins (the market).
-    const lunches = picked.filter((o) => o.slot === 'lunch');
-    const lunchQueue = [...lunches].sort((a, b) => b.minutes - a.minutes || a.order - b.order);
-    const lunch = lunchQueue.shift() || null;
-    lunchQueue.forEach((o) => didntFit.push({ option: o, reason: R.lunchTaken }));
+    // Lunch picks in order of preference: the longer sit-down lunch first (the market).
+    const lunches = picked.filter((o) => o.slot === 'lunch').sort((a, b) => b.minutes - a.minutes || a.order - b.order);
 
-    let seq = picked.filter((o) => o.slot !== 'sunset' && (o.slot !== 'lunch' || o === lunch));
+    let seq = picked.filter((o) => o.slot !== 'sunset' && o.slot !== 'lunch');
     if (sunset) seq.push(sunset);
 
-    let res = schedule(C, seq);
-    for (let guard = 0; guard < 40; guard++) {
-      // A lunch stop that could not open in time is replaced by the plain lunch line.
-      // If it was the preferred one, the next lunch pick gets its chance.
-      const lostLunch = res.drops.find((d) => d.option.slot === 'lunch');
-      if (lostLunch && seq.includes(lostLunch.option)) {
-        didntFit.push(lostLunch);
-        seq = seq.filter((o) => o !== lostLunch.option);
-        const next = lunchQueue.shift();
-        if (next) {
-          didntFit.splice(didntFit.findIndex((d) => d.option === next), 1);
-          seq = [...seq, next].sort((a, b) => (a.slot === 'sunset') - (b.slot === 'sunset') || a.order - b.order);
-        }
-        res = schedule(C, seq);
-        continue;
-      }
-      if (!res.overflow) break;
-      // Too long: drop the latest afternoon item and try again.
-      const victim = res.lastPlain ? res.lastPlain.option : null;
-      if (!victim) break;
+    let res = schedule(C, seq, lunches);
+    for (let guard = 0; guard < 40 && res.overflow && res.lastPlain; guard++) {
+      // Too long: drop the latest ordinary stop and try again.
+      const victim = res.lastPlain.option;
       didntFit.push({ option: victim, reason: res.overflow === 'sunset' ? R.noTimeSunset : R.noTimeDinner });
       seq = seq.filter((o) => o !== victim);
-      res = schedule(C, seq);
+      res = schedule(C, seq, lunches);
     }
     res.drops.forEach((d) => { if (!didntFit.some((x) => x.option === d.option)) didntFit.push(d); });
     didntFit.sort((a, b) => a.option.order - b.option.order);
