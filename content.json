@@ -53,28 +53,28 @@
   },
   "arrival": {
     "title": "From the airport",
-    "lead": "If you're on the 06:00 Ryanair (FR134), you land at Fiumicino at 08:10. It's the only direct morning flight from Berlin, and lately it's been landing early. Drop your bag off first, then come find me at breakfast. From Termini, bus 40 or 64 to the Argentina stop takes about 20 minutes.",
+    "lead": "If you're on the 06:00 Ryanair (FR134), you land at Fiumicino at 08:10. It's the only direct morning flight from Berlin, and lately it's been landing early. From Termini, bus 40 or 64 to Argentina is about 20 min. Drop your bag off first, I'll be at breakfast from 09:45, no rush.",
     "options": [
       {
-        "from": "Fiumicino",
+        "from": "Easiest",
         "how": "Leonardo Express to Termini",
         "detail": "32 min non-stop, every 15 min, €14. Tap your card or phone at the platform gate, no ticket needed.",
         "time": "≈ 60–80 min from landing to Termini"
       },
       {
-        "from": "Fiumicino",
+        "from": "Cheapest",
         "how": "FL1 regional train",
         "detail": "€8, every 15 min. It skips Termini and stops at Trastevere and Ostiense instead.",
         "time": "≈ 30 min to Trastevere"
       },
       {
-        "from": "Fiumicino",
+        "from": "Door to door",
         "how": "White taxi, fixed fare",
         "detail": "€55 to anywhere inside the old walls. Say 'tariffa fissa' before you get in, and ignore anyone offering a ride inside the terminal.",
         "time": "45–60 min in Friday traffic"
       }
     ],
-    "warning": "No strikes listed for Ryanair or Rome transport on Friday (checked 8 Oct). I'll look again on Thursday."
+    "warning": "No strikes listed for Ryanair or Rome transport on Friday (checked 8 Oct)."
   },
   "stops": [
     {
@@ -88,7 +88,7 @@
       },
       "title": "Maritozzo, standing up",
       "place": "Roscioli Caffè",
-      "body": "Rome's breakfast: a soft bun split open and filled with way too much whipped cream. They fill it when you order. You eat it standing at the bar, like everyone else.",
+      "body": "Basically a soft bun with way too much whipped cream in it. They fill it when you order.",
       "move": "Order 'un maritozzo e un cappuccino al banco'. Al banco just means at the counter, and it's about half the price of sitting down.",
       "facts": [
         "≈ €6 each",
@@ -106,7 +106,7 @@
         {
           "title": "Coming through Termini?",
           "place": "Pasticceria Regoli",
-          "body": "Regoli is 8 minutes from the station and does the other famous maritozzo. Open from 06:30, closed Tuesdays.",
+          "body": "Regoli is 8 minutes from the station and does the other famous maritozzo. Open from 06:30.",
           "facts": [
             "€2.50 a maritozzo",
             "Esquilino"
@@ -137,7 +137,7 @@
       },
       "title": "Second breakfast",
       "place": "Pasticceria Boccione",
-      "body": "Rome's oldest Jewish bakery. No sign, not much smiling, and the cakes look burnt on purpose. The ricotta and sour cherry tart is the one, and it's more sour than sweet.",
+      "body": "Old-school Jewish bakery. No sign, not much smiling, and the cakes look burnt on purpose. The ricotta and sour cherry tart is the one, and it's not too sweet.",
       "move": "Cash, and know what you want before the counter. The tart tends to sell out before noon.",
       "facts": [
         "≈ €5 a slice",
@@ -167,8 +167,8 @@
       },
       "title": "Caesar was stabbed here. Now it's cats.",
       "place": "Largo di Torre Argentina",
-      "body": "The ruins where Julius Caesar was killed are a cat sanctuary now. You see all of it from the railing, for free.",
-      "move": "The cats only take visitors from noon, so this one is railing only.",
+      "body": "You see all of it from the railing, for free.",
+      "move": "The cat sanctuary only lets people in from noon.",
       "facts": [
         "Free from the railing",
         "10 min"
@@ -228,7 +228,7 @@
       },
       "title": "Coffee, round two",
       "place": "Sant'Eustachio Il Caffè",
-      "body": "Famous for the gran caffè, which comes pre-sweetened with a thick foam on top. Pay at the till first, then hand the receipt over.",
+      "body": "Get the gran caffè. It comes already sweetened, with a thick foam on top. Pay at the till first, then hand the receipt over.",
       "move": "Say 'amaro' and they leave the sugar out.",
       "facts": [
         "≈ €2–3 at the bar",
@@ -258,7 +258,7 @@
       },
       "title": "Look up",
       "place": "Pantheon",
-      "body": "A 2,000-year-old concrete dome with a hole in the roof, and still the biggest of its kind. Stand right under the hole. If it rains, it rains inside.",
+      "body": "A 2,000-year-old concrete dome with a hole in the roof. Stand right under the hole. If it rains, it rains inside.",
       "move": "I'm booking the 11:00–12:00 slot for both of us. The tickets have our names on them, so bring ID.",
       "facts": [
         "€7 (€2 if EU, 18–25)",
@@ -291,9 +291,9 @@
         "rione": "R. VI Parione",
         "street": "Piazza Navona"
       },
-      "title": "A stadium, still",
+      "title": "Just passing through",
       "place": "Piazza Navona",
-      "body": "It's that shape because it's built on top of a Roman stadium. We walk it end to end, don't eat here, then take bus 30 south.",
+      "body": "It sits on top of a Roman stadium, that's why it's so long. We walk it end to end, don't eat here, then take bus 30 south.",
       "move": "",
       "facts": [
         "Free",
@@ -324,7 +324,7 @@
       },
       "title": "Lunch at the market",
       "place": "Mercato di Testaccio",
-      "body": "Testaccio's covered market, where the neighbourhood actually shops. Mordi e Vai does one sandwich worth the bus ride: slow-cooked beef in a roll dipped in its own broth. Then we split a trapizzino from the shop around the corner that invented them.",
+      "body": "Testaccio's covered market. The stall we want is Mordi e Vai: slow-cooked beef in a roll dipped in its own broth. Then we split a trapizzino from the shop around the corner that invented them.",
       "move": "Bring cash and don't wear white. The good stalls sell out by about 13:30.",
       "facts": [
         "€10–15 each",
@@ -365,7 +365,7 @@
         {
           "title": "Pastry number three",
           "place": "Pasticceria Barberini",
-          "body": "On Via Marmorata, 7 minutes from the market and on the way up to the Aventine. Get a cornetto or a few mignon, the tiny ones, so it's a taste and not a sugar crash.",
+          "body": "On Via Marmorata, on the way from the market to the cemetery. Cornetti, or a few mignon (tiny pastries).",
           "facts": [
             "Open 06:00–21:00",
             "Counter is cheaper"
@@ -393,9 +393,9 @@
         "rione": "R. XX Testaccio",
         "street": "Via Caio Cestio"
       },
-      "title": "A pyramid, a poet, some cats",
+      "title": "A pyramid and a poet",
       "place": "Non-Catholic Cemetery",
-      "body": "Rome has a pyramid, a tomb from 12 BC, and behind it the quietest garden in the city. Keats is buried here under a stone that doesn't even have his name on it. There are cats.",
+      "body": "Rome has a pyramid, a tomb from 12 BC, and behind it a really quiet garden. Keats is buried here under a stone that doesn't even have his name on it.",
       "move": "They ask for €5 each at the gate. A couple of photos is fine, just not for Instagram.",
       "facts": [
         "€5 each",
@@ -412,7 +412,7 @@
       "rain": {
         "title": "Statues in a power plant",
         "place": "Centrale Montemartini",
-        "body": "Marble gods and emperors standing next to giant diesel engines in Rome's first power station. Weird in the best way, and nearly empty.",
+        "body": "Marble gods and emperors standing next to giant diesel engines in an old power station. Weird mix, and usually pretty empty.",
         "move": "Go straight to the engine hall.",
         "facts": [
           "€11 (€6.50 if 25 or under)",
@@ -454,7 +454,7 @@
       },
       "title": "Pick up the bibs",
       "place": "Rome Half Marathon expo",
-      "body": "Our first Startnummern (start numbers) :) The race village is right next to Eataly, so snacks are sorted too.",
+      "body": "Startnummern (start numbers) for Sunday :) The race village is right next to Eataly, so snacks are sorted too.",
       "move": "We each need our printed confirmation letter and ID, and the wave time is on the letter. From Piramide, take the underpass towards Eataly instead of crossing the big square.",
       "facts": [
         "Free",
@@ -502,8 +502,7 @@
       "move": "If the queue is huge, we do Santa Sabina first and come back.",
       "facts": [
         "Free",
-        "35 min with Santa Sabina",
-        "Queues vary"
+        "35 min with Santa Sabina"
       ],
       "links": [
         {
@@ -527,13 +526,13 @@
         "rione": "R. XII Ripa",
         "street": "Via di Santa Sabina"
       },
-      "title": "Orange trees, whole city",
+      "title": "The orange garden",
       "place": "Giardino degli Aranci",
-      "body": "The best free view in Rome, under orange trees. Around five the light goes gold. The gates close at 18:00, so around 17:10 we take the old cobbled lane down at the back.",
+      "body": "Free view over the whole city. The gates close at 18:00, so around 17:10 we take the old cobbled lane down at the back.",
       "move": "",
       "facts": [
         "Free",
-        "40 min",
+        "55 min",
         "Closes 18:00"
       ],
       "links": [
@@ -619,12 +618,12 @@
       },
       "title": "Sunset from the typewriter",
       "place": "Vittoriano rooftop",
-      "body": "Romans call this giant white monument 'the typewriter' and mostly complain about it. But a glass lift goes to the roof, and it's the best sunset spot in the city. The sun sets at 18:29, right behind the Gianicolo.",
+      "body": "Romans call this giant white monument 'the typewriter' and mostly complain about it. But a glass lift goes to the roof, and the view up there is huge. Sunset is 18:29.",
       "move": "We need to be inside by 18:45. Stairs up to the first terrace, then the lift does the rest.",
       "facts": [
         "€18 (€5 if EU, 18–24)",
         "75 min",
-        "Be inside by 18:45"
+        "Terrace until 19:30"
       ],
       "links": [
         {
@@ -639,9 +638,9 @@
       "image": "hero-rome",
       "swaps": [
         {
-          "title": "Cheaper, with a drink",
+          "title": "If we skip the ticket",
           "place": "Terrazza Caffarelli",
-          "body": "The Capitoline museums' café terrace, a few minutes away, looks west over the domes. Part of it has a roof, and no ticket needed.",
+          "body": "The Capitoline museums' café terrace, a few minutes away, looks west over the domes. Part of it has a roof.",
           "facts": [
             "No ticket",
             "Last entry 18:30"
@@ -656,10 +655,10 @@
         }
       ],
       "rain": {
-        "title": "Kandinsky, open late",
+        "title": "Kandinsky instead",
         "place": "Palazzo Bonaparte",
-        "body": "A big Kandinsky show right on Piazza Venezia, open until 21:00 on Fridays. Colour and shapes, no art degree needed.",
-        "move": "Last tickets at 20:00.",
+        "body": "A big Kandinsky show right on Piazza Venezia, open until 21:00 on Fridays. Mostly colour and shapes.",
+        "move": "",
         "facts": [
           "€18 + €1.50 online",
           "75 min",
@@ -690,7 +689,7 @@
       },
       "title": "Carbs, early",
       "place": "Li Rioni a Santiquattro",
-      "body": "A loud, packed Roman pizzeria behind the Colosseum: wafer-thin pizza from a wood oven and supplì on the side. Pull one apart and the cheese stretches like a phone cord, which is why they're called 'al telefono'. We walk there past the Colosseum all lit up.",
+      "body": "Loud, packed pizzeria right behind the Colosseum, so we walk past it on the way. Really thin pizza, and supplì: pull one apart and the cheese stretches like a phone cord.",
       "move": "I'll book 19:30. They only take bookings a week ahead, so the form goes in on Friday 9 October.",
       "facts": [
         "≈ €15–20 each",
@@ -782,7 +781,7 @@
       "id": "dinner",
       "owner": "Me",
       "label": "Li Rioni, 19:30",
-      "detail": "Booking form opens Friday 9 Oct; I'll call after 19:00 that day to make sure.",
+      "detail": "Booking form opens Friday 9 Oct. I'll call after 19:00 that day to make sure.",
       "cta": "Book",
       "url": "https://lirioni.it/prenotazione/"
     },
@@ -821,8 +820,8 @@
       "body": "We each need our own to get the bibs."
     },
     {
-      "title": "Something for your shoulders",
-      "body": "A couple of stops are churches, and some are strict about it."
+      "title": "A light layer",
+      "body": "Some churches want shoulders covered, and evenings get cool."
     },
     {
       "title": "A water bottle",
@@ -885,7 +884,7 @@
   ],
   "budgetNote": "EU and 18–24? The Pantheon drops to €2 and the Vittoriano to €5.",
   "footer": {
-    "line": "Made by Felix. Hours and prices checked on 8 October, and I'll check again on Thursday."
+    "line": "Hours and prices checked on 8 October."
   },
   "note": {
     "greeting": "Ciao Sasha,",
