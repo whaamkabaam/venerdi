@@ -346,9 +346,11 @@ svg { display: block; }
 .cells { display: flex; gap: 2px; }
 .board-grid { --fw: calc((100cqi - (var(--n1) + var(--n2) - 2) * 2px - 10px) / (var(--n1) + var(--n2))); }
 .board-row.is-you .flap { color: var(--solari); }
-.note-en { color: #A9A59C; font-size: 0.75rem; font-stretch: 87.5%; opacity: 0; transition: opacity 300ms var(--ease-out); }
-.note-en.is-on { opacity: 1; }
-.note-en:empty, .board-colheads .ch i:empty { display: none; }
+/* The egg captions take a line only once tapped; the row opens with a short fade. */
+.note-en { display: none; color: #A9A59C; font-size: 0.75rem; font-stretch: 87.5%; }
+.note-en.is-on { display: block; animation: en-in 300ms var(--ease-out); }
+@keyframes en-in { from { opacity: 0; } }
+.board-colheads .ch i:empty { display: none; }
 .board-row { position: relative; }
 /* A transparent button over each row that does something (Details, the eggs). */
 .board-hit {
@@ -743,7 +745,8 @@ svg { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-halo, .pick, .pick-mark svg, .chip, .note-en, .plan-item { transition: none; }
+  .map-halo, .pick, .pick-mark svg, .chip, .plan-item { transition: none; }
+  .note-en.is-on { animation: none; }
   body { transition: none; }
   .hud, .hud[data-on] { transition: none; }
   .hud-fill { transition: none; }

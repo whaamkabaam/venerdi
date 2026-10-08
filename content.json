@@ -66,7 +66,7 @@
         ],
         "tap": {
           "remark": "SUNRISE 07:22",
-          "en": "window seat, left"
+          "en": "sun's on the left"
         }
       },
       {
@@ -148,7 +148,7 @@
     "manyLine": "",
     "didntFitTitle": "Didn't fit",
     "summary": "",
-    "willBook": "I'll book: {list}.",
+    "willBook": "I'll book {list}.",
     "noLunch": "Lunch wherever we are.",
     "fromLink": "These are the picks from the link. Tap any card to change them.",
     "backToMine": "Back to my picks",
@@ -173,7 +173,7 @@
       "time": "19:30",
       "title": "Dinner",
       "place": "Li Rioni",
-      "body": "Pizza at Li Rioni, behind the Colosseum. I'll book it.",
+      "body": "Pizza at Li Rioni, behind the Colosseum.",
       "area": "celio",
       "lat": 41.88869,
       "lon": 12.49783,
@@ -376,7 +376,7 @@
           "url": "https://maps.google.com/?q=Via+Giuseppe+Zanardelli+14+Roma"
         }
       ],
-      "book": "Pasta class"
+      "book": "the pasta class"
     },
     {
       "id": "pantheon",
@@ -403,13 +403,13 @@
           "url": "https://maps.google.com/?q=Pantheon+Roma"
         }
       ],
-      "book": "Pantheon tickets"
+      "book": "the Pantheon"
     },
     {
       "id": "caravaggio",
       "group": "big",
       "title": "Three Caravaggios",
-      "line": "You walk in off the street and there are three Caravaggios.",
+      "line": "You walk in off the street and they're hanging in a side chapel.",
       "board": {
         "to": "SAN LUIGI",
         "remark": "3 CARAVAGGIOS"
@@ -458,7 +458,7 @@
           "url": "https://maps.google.com/?q=Colosseo+Roma"
         }
       ],
-      "book": "Colosseum arena tickets"
+      "book": "the Colosseum floor"
     },
     {
       "id": "domus",
@@ -485,7 +485,7 @@
           "url": "https://maps.google.com/?q=Domus+Aurea+Roma"
         }
       ],
-      "book": "Domus Aurea tickets"
+      "book": "the Domus Aurea"
     },
     {
       "id": "borghese",
@@ -512,7 +512,7 @@
           "url": "https://maps.google.com/?q=Galleria+Borghese+Roma"
         }
       ],
-      "book": "Borghese tickets"
+      "book": "the Borghese"
     },
     {
       "id": "keyhole",
@@ -544,10 +544,10 @@
       "id": "sidecar",
       "group": "big",
       "title": "Vespa sidecar",
-      "line": "You ride through Rome in a sidecar and swap seats at every stop.",
+      "line": "A driver takes you round the old streets in a sidecar, no walking.",
       "board": {
         "to": "SIDECAR",
-        "remark": "SWAP AT EACH STOP"
+        "remark": "NO WALKING"
       },
       "image": "sidecar",
       "area": "centro",
@@ -565,7 +565,7 @@
           "url": "https://maps.google.com/?q=Piazza+Navona+Roma"
         }
       ],
-      "book": "Vespa sidecar",
+      "book": "the sidecar",
       "tag": "€€€"
     },
     {
@@ -727,13 +727,13 @@
       ],
       "closedFrom": "12:00",
       "closedTo": "14:00",
-      "book": "San Clemente tickets"
+      "book": "San Clemente"
     },
     {
       "id": "coppede",
       "group": "weird",
       "title": "Coppedè",
-      "line": "An iron chandelier hangs from an arch over a fairy-tale square.",
+      "line": "An iron chandelier hangs from an arch, and the fountain is all frogs.",
       "board": {
         "to": "COPPEDE",
         "remark": "FROG FOUNTAIN"
@@ -889,7 +889,7 @@
       "id": "cannon",
       "group": "clock",
       "title": "Noon cannon",
-      "line": "At 12:00 exactly a cannon fires over the city, and it's loud.",
+      "line": "A cannon fires over the city at noon, and it's loud.",
       "board": {
         "to": "NOON CANNON",
         "remark": "EXACTLY. LOUD."
@@ -938,7 +938,7 @@
           "url": "https://maps.google.com/?q=Vittoriano+Roma"
         }
       ],
-      "book": "Vittoriano tickets"
+      "book": "the Vittoriano roof"
     },
     {
       "id": "pincio",
@@ -1332,7 +1332,8 @@
     },
     "boardHit": "{time}, {to}. Show details",
     "pickedAt": "Picked, {time}",
-    "pickedDrop": "Picked, doesn't fit"
+    "pickedDrop": "Picked, doesn't fit",
+    "listJoinLast": " and "
   },
   "departures": {
     "title": "Departures",
@@ -1383,7 +1384,9 @@
             "run",
             "jog",
             "shakeout",
-            "running"
+            "running",
+            "laufen",
+            "joggen"
           ],
           "remark": "EASY PACE ONLY"
         },
@@ -1391,7 +1394,9 @@
           "words": [
             "nap",
             "sleep",
-            "napping"
+            "napping",
+            "nickerchen",
+            "schlafen"
           ],
           "remark": "APPROVED"
         },
@@ -1399,7 +1404,8 @@
           "words": [
             "coffee",
             "espresso",
-            "cappuccino"
+            "cappuccino",
+            "kaffee"
           ],
           "remark": "ALWAYS"
         },
@@ -1421,11 +1427,13 @@
         {
           "words": [
             "gelato",
-            "ice cream"
+            "ice cream",
+            "eis"
           ],
           "remark": "NOT TOO SWEET"
         }
-      ]
+      ],
+      "blank": "SOMETHING"
     },
     "drop": {
       "time": "--:--",

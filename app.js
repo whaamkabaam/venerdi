@@ -356,6 +356,9 @@
       freeText = linkNote;
       fromLink = true;
       saveState();
+      // A link always replays its build in tap order, whatever this phone has seen before.
+      store.set('depSeen', null);
+      DEP.seen = null;
       // Drop the query at once, so a reload or a restored tab keeps her later edits.
       history.replaceState(null, '', location.pathname + location.hash);
       return;
@@ -390,8 +393,12 @@
   }
   // A mini timetable: "10:00 Maritozzo" per stop, then her line, then the link.
   function shareText() {
-    const lines = [C.picker.shareIntro, ...plan.items.filter((it) => it.kind === 'option').map((it) => `${it.rough} ${it.option.title}`)];
-    if (freeText.trim()) lines.push(`${C.picker.shareExtra} ${freeText.trim()}`);
+    const stops = plan.items.filter((it) => it.kind === 'option').map((it) => `${it.rough} ${it.option.title}`);
+    const note = freeText.trim();
+    // Only a note: send the note and the link, without the timetable frame.
+    if (!stops.length) return [note, linkURL()].filter(Boolean).join('\n');
+    const lines = [C.picker.shareIntro, ...stops];
+    if (note) lines.push(`${C.picker.shareExtra} ${note}`);
     lines.push(linkURL());
     return lines.join('\n');
   }
@@ -439,11 +446,17 @@
   function tbcRow() {
     const text = freeText.trim();
     if (!text) return null;
-    // Emoji and other glyphs a flap lacks drop out; the spaces around them collapse.
-    const to = boardText(text, text.length).replace(/ +/g, ' ').trim().slice(0, DW[1]);
     const lower = text.toLowerCase();
-    const hit = DEPC.tbc.keywords.find((k) => k.words.some((w) => wordRe(w).test(lower)));
-    return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.time, remark: hit ? hit.remark : DEPC.tbc.remark, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
+    let word = null;
+    const hit = DEPC.tbc.keywords.find((k) => (word = k.words.find((w) => wordRe(w).test(lower))));
+    // Emoji and other glyphs a flap lacks drop out and the spaces around them collapse. A long line
+    // breaks at the last space that fits (a single long word is cut hard).
+    const all = boardText(text, text.length).replace(/ +/g, ' ').trim();
+    let to = all;
+    if (all.length > DW[1]) { const cut = all.lastIndexOf(' ', DW[1]); to = cut > 0 ? all.slice(0, cut) : all.slice(0, DW[1]); }
+    // The reply answers a word: if that word is past what the board shows, the word itself goes up.
+    if (hit && !wordRe(word).test(to.toLowerCase())) to = boardText(word, DW[1]);
+    return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.blank, remark: hit ? hit.remark : DEPC.tbc.remark, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
   }
 
   // The board for a plan: coffee, the stops, her TBC line, dinner, the end, then what didn't fit.
@@ -504,11 +517,30 @@
     setRowNow(DEP.board.sun, on ? sundayRow(DEP.sunEgg) : null);
     gsap.set(gapEl(), { scaleX: on ? 1 : 0 });
   }
-  // Rows needed: the most any state uses, plus one spare so typing a TBC line never moves the page.
-  const slotsFor = (states) => Math.max(...states.map((s) => s.length)) + 1;
-  function markSeen() {
-    DEP.seen = { sig: depSig(), rows: plainRows(DEP.shown) };
+  // A spare row while her note is empty, so her TBC line takes it and the page never moves.
+  const spare = () => (freeText.trim() ? 0 : 1);
+  const slotsFor = (states) => Math.max(...states.map((s) => s.length)) + spare();
+  // What the board last showed, and the pick order last replayed in full (only a replay with at
+  // least two picks counts, so a look at the default card does not spend it).
+  function markSeen(fullPicks = null) {
+    DEP.seen = { sig: depSig(), rows: plainRows(DEP.shown), picks: [...picks], fullPicks: fullPicks || DEP.seen?.fullPicks || null };
     store.set('depSeen', DEP.seen);
+  }
+  // Her build replays in full unless she has watched one: then only if two or more picks are new
+  // since. Without a full replay on record, any change of picks earns one; typing alone does not.
+  function needsFull() {
+    const s = DEP.seen;
+    if (!s) return true;
+    if (!s.fullPicks) return (s.picks || []).join() !== [...picks].join();
+    return [...picks].filter((id) => !s.fullPicks.includes(id)).length >= 2;
+  }
+  function primeFull() {
+    const states = replayStates();
+    DEP.board.ensure(Math.max(DEP.board.rows.length, slotsFor(states)));
+    setBoardNow(states[0]);
+    setSunNow(false);
+    DEP.sunPending = false;
+    return states;
   }
   // The replay: one state per tap, each wave re-sorting the board as the day re-plans itself.
   function replayStates() {
@@ -532,12 +564,12 @@
     const r = DEP.replay;
     stopReplay();
     const finalRows = depRows(plan);
-    DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + 1));
+    DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + spare()));
     setBoardNow(finalRows);
     setSunNow(true);
     DEP.sunPending = false;
     if (r) r.done();
-    markSeen();
+    markSeen(r && r.fullPicks);
     DEP.pending = false;
   }
   // One replay run: its timelines plus an rAF frame meter for the stats and the slow-phone fallback.
@@ -547,7 +579,7 @@
     const r = { tls: [], frames: [], meterOn: true, scramble: 1, stopping: false };
     let last = performance.now();
     const t0 = last;
-    const meter = (t) => { if (!r.meterOn) return; r.frames.push(t - last); last = t; requestAnimationFrame(meter); };
+    const meter = (t) => { if (!r.meterOn) return; if (!r.paused) r.frames.push(t - last); last = t; requestAnimationFrame(meter); };
     requestAnimationFrame(meter);
     r.done = () => {
       if (!r.meterOn) return;
@@ -558,7 +590,8 @@
     DEP.replay = r;
     return r;
   }
-  const sunInView = () => DEP.board.sun.el.getBoundingClientRect().top < innerHeight * 0.85;
+  // The Sunday row counts as on screen once it is fully visible (or she has scrolled past it).
+  const sunInView = () => DEP.board.sun.el.getBoundingClientRect().bottom <= innerHeight;
   // The Sunday row, after a short pause. It plays straight after the replay when it is on screen,
   // otherwise its own trigger plays it when she scrolls down to it (long boards).
   function playSun(r, pause) {
@@ -569,7 +602,7 @@
     r.tls.push(tl);
     tl.fromTo(gapEl(), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: 'power2.out', immediateRender: false }, pause);
     flipRow(tl, DEP.board.sun, sundayRow(DEP.sunEgg), pause + 0.3, { scramble: 4, D: 0.06, stagger: 0.012 });
-    tl.call(() => { r.done(); DEP.replay = null; markSeen(); });
+    tl.call(() => { r.done(); DEP.replay = null; markSeen(r.fullPicks); });
   }
   // Waves `from`.. of the replay on one timeline, built before it plays. Row models track the
   // state as each wave is added, so later waves only flip what actually changes.
@@ -583,7 +616,7 @@
       DEP.board.rows.forEach((row, j) => flipRow(tl, row, states[s][j] || null, at + j * 0.05, { scramble }));
     }
     tl.call(() => {
-      markSeen();
+      markSeen(r.stopping ? null : r.fullPicks);
       if (full) {
         DEP.sunPending = true;
         if (!r.stopping && sunInView()) { playSun(r, 0.4); return; }
@@ -597,6 +630,7 @@
     stopReplay();
     warmBoard();
     const r = newReplay();
+    if (full && states.length > 2) r.fullPicks = [...picks];
     DEP.pending = false;
     const { tl, wave } = buildWaves(r, states, 1, 1, 0.3, full);
     DEP.shown = states[states.length - 1];
@@ -620,20 +654,19 @@
     }
     tl.play(0);
   }
+  // Off screen the replay waits, so a flick past the board does not spend it.
+  function pauseReplay() { const r = DEP.replay; if (r && !r.paused) { r.paused = true; r.tls.forEach((t) => t.pause()); } }
+  function resumeReplay() { const r = DEP.replay; if (r && r.paused) { r.paused = false; r.tls.forEach((t) => t.resume()); } }
   function maybeSun() { if (DEP.sunPending && !DEP.replay && !reduced) playSun(null, 0); }
   // When the board comes into view: replay her build the first time, one diff wave after a change.
   function maybePlay() {
     if (DEP.replay || !DEP.pending) return;
     if (reduced) { finishBoard(); return; }
-    if (!DEP.seen) {
-      const states = replayStates();
-      DEP.board.ensure(Math.max(DEP.board.rows.length, slotsFor(states)));
-      setBoardNow(states[0]);
-      setSunNow(false);
-      playStates(states, { full: true });
+    if (needsFull()) {
+      playStates(primeFull(), { full: true });
     } else {
       const finalRows = depRows(plan);
-      DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + 1));
+      DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + spare()));
       playStates([DEP.shown, finalRows], { full: false });
     }
   }
@@ -644,30 +677,30 @@
     const finalRows = depRows(plan);
     const sig = depSig();
     if (initial) {
-      if (reduced || (DEP.seen && DEP.seen.sig === sig)) {
-        DEP.board.ensure(finalRows.length + 1);
+      const full = !reduced && needsFull();
+      if (reduced || (!full && DEP.seen.sig === sig)) {
+        DEP.board.ensure(finalRows.length + spare());
         setBoardNow(finalRows);
         setSunNow(true);
         if (reduced) markSeen();
         DEP.pending = false;
-      } else if (DEP.seen) {
+      } else if (!full) {
         const old = DEP.seen.rows;
-        DEP.board.ensure(Math.max(old.length, finalRows.length) + 1);
+        DEP.board.ensure(Math.max(old.length, finalRows.length) + spare());
         setBoardNow(old);
         setSunNow(true);
         DEP.pending = true;
       } else {
-        const states = replayStates();
-        DEP.board.ensure(slotsFor(states));
-        setBoardNow(states[0]);
-        setSunNow(false);
+        primeFull();
         DEP.pending = true;
       }
       return;
     }
     if (DEP.replay) stopReplay();
     if (reduced) { finishBoard(); return; }
-    if (sameRows(DEP.shown, finalRows)) { DEP.shown = finalRows; DEP.board.rows.forEach((row, i) => applyRowMeta(row, finalRows[i] || null)); markSeen(); return; }
+    // A full replay waiting: the board goes back to its skeleton now, while she is in the picker.
+    if (needsFull()) primeFull();
+    else if (sameRows(DEP.shown, finalRows)) { DEP.shown = finalRows; DEP.board.rows.forEach((row, i) => applyRowMeta(row, finalRows[i] || null)); markSeen(); return; }
     DEP.pending = true;
     clearTimeout(depTimer);
     depTimer = setTimeout(() => { if (boardInView()) maybePlay(); }, 250);
@@ -692,7 +725,8 @@
     const row = DEP.board.rows.find((r) => r.hit === hit) || (DEP.board.sun.hit === hit ? DEP.board.sun : null);
     if (!row || !row.data) return;
     const t = row.data.target;
-    if (t === 'sunday') { DEP.sunEgg = !DEP.sunEgg; flipRowNow(DEP.board.sun, sundayRow(DEP.sunEgg)); return; }
+    // The egg caption adds a line to the row, so the triggers below re-measure.
+    if (t === 'sunday') { DEP.sunEgg = !DEP.sunEgg; flipRowNow(DEP.board.sun, sundayRow(DEP.sunEgg)); refreshSoon(); return; }
     if (t === 'tbc') { slot('free-text').focus(); return; }
     const el = $(`.plan-item[data-key="${CSS.escape(t)}"]`);
     if (!el) return;
@@ -707,8 +741,10 @@
     if (!hit) return;
     const i = HERO.rows.findIndex((r) => r.hit === hit);
     if (i < 0 || !H.rows[i].tap) return;
+    if (HERO.intro && HERO.intro.isActive()) HERO.intro.progress(1);
     heroEgg[i] = !heroEgg[i];
     flipRowNow(HERO.rows[i], heroRowData(H.rows[i], i));
+    refreshSoon();
   }
 
   /* ------------------------------------------------------------------ */
@@ -746,7 +782,8 @@
     const back = hasBackup ? ` <button class="btn btn--small" type="button" data-action="back-to-mine">${esc(D.backToMine)}</button>` : '';
     slot('dep-note').innerHTML = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
     const books = plan.options.filter((o) => o.book).map((o) => o.book).concat(U.bookDinner);
-    const after = [`<p>${esc(fmt(D.willBook, { list: books.join(U.listJoin) }))}</p>`];
+    const list = books.length > 1 ? books.slice(0, -1).join(U.listJoin) + U.listJoinLast + books[books.length - 1] : books.join('');
+    const after = [`<p>${esc(fmt(D.willBook, { list }))}</p>`];
     if (C.options.some((o) => o.default && !plan.options.includes(o))) after.push(`<p>${esc(D.bibsSaturday)}</p>`);
     slot('send-after').innerHTML = after.join('');
   }
@@ -1198,10 +1235,10 @@
     if (booted) {
       syncDepBoard();
       tick();
-      clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 60);
+      refreshSoon();
     }
   }
+  function refreshSoon() { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 60); }
 
   /* ------------------------------------------------------------------ */
   /* Motion                                                              */
@@ -1235,6 +1272,7 @@
 
       // Hero: the ARRIVALS board flips in (or only its changed cells on a return visit), then the word and the lead.
       const intro = gsap.timeline();
+      HERO.intro = intro;
       heroIntro(intro, 0.2);
       intro.from(['.hero-title', '.hero-date', '.hero-lead', '.hero-meta'], {
         autoAlpha: 0, y: 18, duration: 0.8, ease: 'power3.out', stagger: 0.1, clearProps: 'transform,visibility,opacity',
@@ -1242,8 +1280,10 @@
 
       // DEPARTURES: her build replays when the board comes into view.
       ScrollTrigger.create({ trigger: '#dep .board', start: 'top 45%', onEnter: maybePlay, onEnterBack: maybePlay });
+      // A replay under way waits while the board is off screen and carries on when it is back.
+      ScrollTrigger.create({ trigger: '#dep .board', start: 'top bottom', end: 'bottom top+=64', onLeave: pauseReplay, onLeaveBack: pauseReplay, onEnter: resumeReplay, onEnterBack: resumeReplay });
       // A long board pushes the Sunday row below the fold; it then waits for its own trigger.
-      ScrollTrigger.create({ trigger: '#dep .board-sun', start: 'top 85%', onEnter: maybeSun });
+      ScrollTrigger.create({ trigger: '#dep .board-sun', start: 'bottom bottom', onEnter: maybeSun });
 
       // Map: the first time it scrolls in, the lines draw and the dots pop in plan order.
       revealMap = () => {
@@ -1318,7 +1358,7 @@
   setTimeout(() => { tick(); setInterval(tick, 60000); }, 60000 - (nowMs() % 60000) + 50);
   loadWeather();
   (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => warmBoard(), { timeout: 3000 });
-  window.__venerdi = { finishBoard, depRows: () => depRows(plan), boardRows: () => DEP.board.rows.map((r) => r.shown), replayStats: () => DEP.stats, plan: () => plan, state: () => ({ replaying: !!DEP.replay, pending: DEP.pending, seen: !!DEP.seen, sun: DEP.board.sun.shown }) };
+  window.__venerdi = { finishBoard, depRows: () => depRows(plan), boardRows: () => DEP.board.rows.map((r) => r.shown), replayStats: () => DEP.stats, plan: () => plan, state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board.sun.shown }) };
 
   $$('details').forEach((d) => d.addEventListener('toggle', () => ScrollTrigger.refresh()));
   if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());
