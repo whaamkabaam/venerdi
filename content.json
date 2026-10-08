@@ -152,7 +152,7 @@
     {
       "id": "largo-argentina",
       "kind": "pit",
-      "time": "10:30",
+      "time": "10:25",
       "phase": "morning",
       "plaque": {
         "rione": "R. IX Pigna",
@@ -321,7 +321,7 @@
       "move": "Don't eat on the square itself. Five minutes away, everything is better and cheaper.",
       "facts": [
         "Free",
-        "10 min"
+        "5 min"
       ],
       "links": [
         {
@@ -405,7 +405,7 @@
         "m": 702,
         "min": 9
       },
-      "hud": "Testaccio market"
+      "hud": "Testaccio"
     },
     {
       "id": "cemetery",
@@ -439,7 +439,7 @@
         "move": "Head straight for the engine hall.",
         "facts": [
           "€11 (€6.50 if 25 or under)",
-          "60 min",
+          "40 min",
           "Last entry 18:00"
         ],
         "image": "montemartini",
@@ -522,7 +522,7 @@
       "title": "Look through the keyhole",
       "place": "Knights of Malta keyhole",
       "body": "There's a green door with a queue in front of it. Put your eye to the keyhole and you get a perfect hedge tunnel ending in St Peter's dome. You're standing in Italy, looking through the Knights of Malta's garden, at a dome in the Vatican.",
-      "move": "Phone at 1x, lens right on the hole, tap the dome to fix the exposure. More than about 20 people in line? Do Santa Sabina first and come back, and skip it if it's still long at 16:25: the garden gate at 18:00 is the one that matters. Santa Sabina is 3 minutes away: a small window in its porch shows an orange tree said to come from a seed St Dominic brought from Spain around 1220. Most people walk right past it.",
+      "move": "Phone at 1x, lens right on the hole, tap the dome to fix the exposure. More than about 20 people in line? Do Santa Sabina first and come back, and skip it if it's still long at 16:25. Santa Sabina is 3 minutes away: a small window in its porch shows an orange tree said to come from a seed St Dominic brought from Spain around 1220. Most people walk right past it.",
       "facts": [
         "Free",
         "35 min with Santa Sabina",
@@ -577,7 +577,7 @@
         "move": "You see the colonnade from the courtyard; last access to it is 18:30. Skip the picture rooms upstairs.",
         "facts": [
           "€6 (€2 if EU, 18–25)",
-          "45 min",
+          "30 min",
           "Open until 19:30"
         ],
         "image": "galleria-spada",
@@ -664,7 +664,7 @@
         {
           "title": "Cheaper, with a drink",
           "place": "Terrazza Caffarelli",
-          "body": "The Capitoline museums' café terrace, a few minutes away, faces the same sunset. No ticket needed: go in from Piazzale Caffarelli. Drinks at the counter are cheaper than at the tables.",
+          "body": "The Capitoline museums' café terrace, a few minutes away, looks west over the domes, and part of it has a roof. No ticket needed: go in from Piazzale Caffarelli. Drinks at the counter are cheaper than at the tables.",
           "facts": [
             "No ticket",
             "Last entry 18:30"

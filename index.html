@@ -42,7 +42,7 @@
       <p class="hud-km" data-slot="hud-km"></p>
       <span class="hud-bar" aria-hidden="true"><span class="hud-fill"></span></span>
     </div>
-    <button class="btn btn--small hud-now" type="button" hidden>Jump to now</button>
+    <button class="btn btn--small hud-now" type="button" aria-label="Jump to now" hidden><span class="now-long">Jump to now</span><span class="now-short">Now</span></button>
   </div>
 </aside>
 
@@ -51,6 +51,7 @@
   <div class="hero-text">
     <h1 class="hero-title" data-slot="hero-title"></h1>
     <p class="hero-date" data-slot="hero-date"></p>
+    <ul class="hero-meta hero-today" data-slot="hero-today" hidden></ul>
     <p class="hero-lead" data-slot="hero-lead"></p>
     <ul class="hero-meta">
       <li class="countdown"><span data-slot="countdown"></span><button class="btn hero-now" type="button" hidden>Jump to now</button></li>

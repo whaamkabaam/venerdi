@@ -167,7 +167,7 @@
 
   function swapsHTML(s) {
     if (!s.swaps?.length) return '';
-    return `<details class="swaps"><summary>Plan B${ICON.chev}</summary><div class="swap-cards">${s.swaps
+    return `<details class="swaps"><summary>Plan B<span class="sr-only">: ${esc(s.title)}</span>${ICON.chev}</summary><div class="swap-cards">${s.swaps
       .map((w) => `<article class="swap">${w.image ? photoHTML(w.image, 'swap') : ''}<div class="swap-text">
         <h4>${esc(w.title)}</h4><p class="label">${esc(w.place)}</p><p class="swap-body">${esc(w.body)}</p>${factsHTML(w.facts)}${linksHTML(w.links, w.title)}
       </div></article>`)
@@ -505,6 +505,7 @@
   let reduced = reduceMotion();
   let lastY = 0;
   let booted = false;
+  let skyTrigger = null;
 
   function measure() {
     layoutMap();
@@ -553,7 +554,7 @@
     if (place !== hudPlaceText) { hudPlaceText = place; hudPlace.textContent = place; }
 
     // Sticky desktop map: mark the current stop's dot.
-    const cur = s ? $(`.map-stop[data-id="${s.id}"]`, mapFig) : null;
+    const cur = s && v === s ? $(`.map-stop[data-id="${s.id}"]`, mapFig) : null; // rain variants have no dot
     if (cur !== mapCurrent) { mapCurrent?.classList.remove('is-current'); cur?.classList.add('is-current'); mapCurrent = cur; }
 
     const m = legMarks.reduce((sum, l) => sum + (y >= l.y ? l.m : 0), 0);
@@ -577,7 +578,12 @@
   /* Plan switch                                                         */
   /* ------------------------------------------------------------------ */
 
-  function setPlan(plan, save = true) {
+  // `anchor` (a stop) keeps its place on screen: rain variants above it change height, so the
+  // page is shifted by the difference before measuring. If the stop's top is out of view, the
+  // same instant shift puts it under the HUD; an animated scroll would pass over the following
+  // stops and flash the HUD and sky through the evening. The sky scrub is then snapped.
+  function setPlan(plan, save = true, anchor = null) {
+    const before = anchor ? anchor.getBoundingClientRect().top : 0;
     root.dataset.plan = plan;
     $$('.stop').forEach((st) => {
       const rain = $('.variant--rain', st);
@@ -593,7 +599,16 @@
     if (save) store.set('plan', plan);
     hudPlaceText = '';
     hudKmKey = '';
-    if (booted) ScrollTrigger.refresh(); // heights and walking metres changed
+    if (!booted) return;
+    if (anchor) {
+      const gap = parseFloat(getComputedStyle(anchor).scrollMarginTop) || 0;
+      const target = before < gap ? gap : before;
+      const delta = anchor.getBoundingClientRect().top - target;
+      if (Math.abs(delta) > 0.5) window.scrollBy({ top: delta, behavior: 'instant' });
+    }
+    lastY = scrollY;
+    ScrollTrigger.refresh(); // heights and walking metres changed
+    skyTrigger?.getTween()?.progress(1);
   }
 
   /* ------------------------------------------------------------------ */
@@ -620,6 +635,10 @@
   function tick() {
     const r = romeNow();
     slot('countdown').textContent = countdownText(r);
+    const row = $('.countdown'), today = slot('hero-today'), isToday = r.date === C.meta.date;
+    if (isToday && row.parentElement !== today) today.append(row);
+    if (!isToday && row.parentElement === today) $('.hero-meta:not(.hero-today)').prepend(row);
+    today.hidden = !isToday;
     let nowIdx = -1;
     jumpIdx = -1;
     if (r.date === C.meta.date) {
@@ -687,7 +706,14 @@
       if (w.prob >= 50) html += `<span class="weather-wet"><span>Looks wet.</span><button class="btn" type="button" data-action="rain"><span>Switch to the rain plan</span></button></span>`;
       el.innerHTML = html;
       const btn = $('[data-action="rain"]', el);
-      if (btn) { btn.addEventListener('click', () => setPlan('rain')); setPlan(root.dataset.plan, false); }
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const hadFocus = document.activeElement === btn;
+          setPlan('rain');
+          if (hadFocus) $('.plan input[value="rain"]').focus({ preventScroll: true });
+        });
+        setPlan(root.dataset.plan, false);
+      }
       return true;
     };
     const cached = store.get('wx', null);
@@ -716,6 +742,7 @@
     mm.add({ motion: '(prefers-reduced-motion: no-preference)', still: '(prefers-reduced-motion: reduce)' }, (ctx) => {
       reduced = !ctx.conditions.motion;
       skyHex = '';
+      skyTrigger = null;
 
       if (reduced) {
         boardFinal();
@@ -726,12 +753,12 @@
 
       // Sky scrub: smoothed scroll position drives the time of day.
       const st = { y: scrollY };
-      gsap.fromTo(st, { y: 0 }, {
+      skyTrigger = gsap.fromTo(st, { y: 0 }, {
         y: () => ScrollTrigger.maxScroll(window),
         ease: 'none',
         onUpdate: () => render(st.y),
         scrollTrigger: { start: 0, end: 'max', scrub: 0.4, invalidateOnRefresh: true },
-      });
+      }).scrollTrigger;
       render(scrollY);
 
       // Hero: the board flips in row by row, then the word and the lead.
@@ -823,8 +850,7 @@
     const btn = e.target.closest('[data-set-plan]');
     if (!btn) return;
     const stop = btn.closest('.stop');
-    setPlan(btn.dataset.setPlan);
-    if (stop.getBoundingClientRect().top < 0) stop.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+    setPlan(btn.dataset.setPlan, true, stop);
     const h = $('.variant:not([inert]) h3', stop);
     if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
   });
