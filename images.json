@@ -1,0 +1,290 @@
+{
+ "hero-rome": {
+  "src800": "img/hero-rome-800.webp",
+  "src1600": "img/hero-rome-1600.webp",
+  "w": 1600,
+  "h": 1063,
+  "alt": "Rome's domes and rooftops, with the white Vittoriano and its bronze chariots on the skyline",
+  "focal": "92% 60%",
+  "color": "#75756b",
+  "credit": {
+   "title": "Rome. View from Castel Sant'Angelo",
+   "author": "Ввласенко (Volodymyr Vlasenko)",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rome._View_from_Castel_Sant%27Angelo.jpg"
+  }
+ },
+ "maritozzo": {
+  "src800": "img/maritozzo-800.webp",
+  "src1600": "img/maritozzo-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A maritozzo: a sweet bun split open, packed with whipped cream and dusted with sugar, on a white plate",
+  "focal": "45% 50%",
+  "color": "#7e7065",
+  "credit": {
+   "title": "Maritozzo presso Caffè delle colline, Reggio Emilia",
+   "author": "Ensahequ",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Maritozzo_presso_Caff%C3%A8_delle_colline,_Reggio_Emilia.jpg"
+  }
+ },
+ "largo-argentina": {
+  "src800": "img/largo-argentina-800.webp",
+  "src1600": "img/largo-argentina-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "A black-and-white cat sits in the sun on an ancient wall at Largo di Torre Argentina, an arcade behind",
+  "focal": "47% 75%",
+  "color": "#726c5d",
+  "credit": {
+   "title": "Largo di Torre Argentina (44708387640)",
+   "author": "Sonse",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Largo_di_Torre_Argentina_(44708387640).jpg"
+  }
+ },
+ "pantheon-oculus": {
+  "src800": "img/pantheon-oculus-800.webp",
+  "src1600": "img/pantheon-oculus-1600.webp",
+  "w": 1600,
+  "h": 1064,
+  "alt": "Looking up into the Pantheon's coffered dome as a shaft of sunlight falls through the round oculus",
+  "focal": "47% 40%",
+  "color": "#675c54",
+  "credit": {
+   "title": "Dennis Mayk 2015 (Unsplash)",
+   "author": "Dennis Mayk",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dennis_Mayk_2015_(Unsplash).jpg"
+  }
+ },
+ "sant-ignazio-ceiling": {
+  "src800": "img/sant-ignazio-ceiling-800.webp",
+  "src1600": "img/sant-ignazio-ceiling-1600.webp",
+  "w": 1600,
+  "h": 1028,
+  "alt": "Andrea Pozzo's ceiling in Sant'Ignazio: saints and angels rise into the sky above painted columns",
+  "focal": "50% 50%",
+  "color": "#725638",
+  "credit": {
+   "title": "Triumph of St. Ignatius of Loyola, ceiling fresco by Andrea Pozzo",
+   "author": "Wilfredor",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Triumph_of_St._Ignatius_of_Loyola,_ceiling_fresco_by_Andrea_Pozzo.jpg"
+  }
+ },
+ "sant-eustachio": {
+  "src800": "img/sant-eustachio-800.webp",
+  "src1600": "img/sant-eustachio-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "The doorway of Sant'Eustachio Il Caffè, its blue script sign set in a rough stone wall, tables outside",
+  "focal": "51% 40%",
+  "color": "#7c7671",
+  "credit": {
+   "title": "Roma - Caffè Sant'Eustachio",
+   "author": "Blackcat (Sergio D'Afflitto)",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roma_-_Caff%C3%A8_Sant%27Eustachio.jpg"
+  }
+ },
+ "calling-st-matthew": {
+  "src800": "img/calling-st-matthew-800.webp",
+  "src1600": "img/calling-st-matthew-1600.webp",
+  "w": 1600,
+  "h": 1645,
+  "alt": "Caravaggio's Calling of Saint Matthew: Christ points at men counting money as light cuts across the wall",
+  "focal": "75% 55%",
+  "color": "#2f2013",
+  "credit": {
+   "title": "The Calling of Saint Matthew (Caravaggio, 1599-1600)",
+   "author": "Caravaggio",
+   "license": "Public domain",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Calling_of_Saint_Matthew-Caravaggo_(1599-1600).jpg"
+  }
+ },
+ "navona": {
+  "src800": "img/navona-800.webp",
+  "src1600": "img/navona-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The Fountain of the Four Rivers in Piazza Navona: river-god statues around an obelisk under blue sky",
+  "focal": "50% 60%",
+  "color": "#8b8e9a",
+  "credit": {
+   "title": "Fontana dei Quattro Fiumi 2019 02",
+   "author": "Nicholas Gemini",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fontana_dei_Quattro_Fiumi_2019_02.jpg"
+  }
+ },
+ "galleria-spada": {
+  "src800": "img/galleria-spada-800.webp",
+  "src1600": "img/galleria-spada-1600.webp",
+  "w": 1600,
+  "h": 1076,
+  "alt": "Borromini's colonnade at Palazzo Spada, its columns shrinking towards a small statue to fake great depth",
+  "focal": "50% 55%",
+  "color": "#7c776e",
+  "credit": {
+   "title": "Forced perspective gallery by Francesco Borromini",
+   "author": "Livioandronico2013",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Forced_perspective_gallery_by_Francesco_Borromini.jpg"
+  }
+ },
+ "trapizzino": {
+  "src800": "img/trapizzino-800.webp",
+  "src1600": "img/trapizzino-1600.webp",
+  "w": 1600,
+  "h": 1600,
+  "alt": "A trapizzino, a triangle of crusty pizza bread stuffed with pulled chicken cacciatora, on a dark backdrop",
+  "focal": "50% 52%",
+  "color": "#564b4b",
+  "credit": {
+   "title": "Trapizzino - Pollo alla Cacciatora",
+   "author": "Diego Zitelli",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Trapizzino_-_Pollo_alla_Cacciatora.jpg"
+  }
+ },
+ "cemetery-pyramid": {
+  "src800": "img/cemetery-pyramid-800.webp",
+  "src1600": "img/cemetery-pyramid-1600.webp",
+  "w": 1600,
+  "h": 1106,
+  "alt": "The white Pyramid of Cestius behind cypresses and a lawn in Rome's Non-Catholic Cemetery, Porta San Paolo at left",
+  "focal": "74% 52%",
+  "color": "#627282",
+  "credit": {
+   "title": "Cimetière anglais de Rome",
+   "author": "Pierrette13",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cimeti%C3%A8re_anglais_de_Rome.jpg"
+  }
+ },
+ "montemartini": {
+  "src800": "img/montemartini-800.webp",
+  "src1600": "img/montemartini-1600.webp",
+  "w": 1600,
+  "h": 1198,
+  "alt": "Ancient statues standing beside a huge grey diesel engine in the old engine hall of the Centrale Montemartini",
+  "focal": "45% 55%",
+  "color": "#5b5b5e",
+  "credit": {
+   "title": "The Engine Room, Centrale Montemartini, Rome (21961766906)",
+   "author": "Carole Raddato from FRANKFURT, Germany",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Engine_Room,_Centrale_Montemartini,_Rome_(21961766906).jpg"
+  }
+ },
+ "keyhole": {
+  "src800": "img/keyhole-800.webp",
+  "src1600": "img/keyhole-1600.webp",
+  "w": 1600,
+  "h": 2134,
+  "alt": "St Peter's dome in warm light, framed by a dark keyhole-shaped arch of clipped hedges",
+  "focal": "50% 50%",
+  "color": "#343a43",
+  "credit": {
+   "title": "View of St Peter trough the holy keyhole",
+   "author": "Michael Gröning",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:View_of_St_Peter_trough_the_holy_keyhole.jpg"
+  }
+ },
+ "orange-garden": {
+  "src800": "img/orange-garden-800.webp",
+  "src1600": "img/orange-garden-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Umbrella pines silhouetted against a pink sunset in the Orange Garden, St Peter's dome small on the horizon",
+  "focal": "60% 60%",
+  "color": "#454345",
+  "credit": {
+   "title": "Giardino degli aranci (Roma)",
+   "author": "Bex-Lemon",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Giardino_degli_aranci_(Roma).jpg"
+  }
+ },
+ "bocca": {
+  "src800": "img/bocca-800.webp",
+  "src1600": "img/bocca-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "The Bocca della Verità, a round marble face with an open mouth, set against a pink wall next to a green door",
+  "focal": "50% 40%",
+  "color": "#9b888a",
+  "credit": {
+   "title": "Rome Santa Maria in Cosmedin 2020 P03 Bocca della Verità",
+   "author": "Fallaner",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rome_Santa_Maria_in_Cosmedin_2020_P03_Bocca_della_Verit%C3%A0.jpg"
+  }
+ },
+ "caffarelli": {
+  "src800": "img/caffarelli-800.webp",
+  "src1600": "img/caffarelli-1600.webp",
+  "w": 1600,
+  "h": 1148,
+  "alt": "Rooftops and domes of Rome seen from Terrazza Caffarelli, St Peter's dome on the horizon",
+  "focal": "50% 45%",
+  "color": "#8b8277",
+  "credit": {
+   "title": "Aussichten von der Terrazza Caffarelli (3)",
+   "author": "Rudolfo Kithera",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Aussichten_von_der_Terrazza_Caffarelli_(3).jpg"
+  }
+ },
+ "suppli": {
+  "src800": "img/suppli-800.webp",
+  "src1600": "img/suppli-1600.webp",
+  "w": 1000,
+  "h": 667,
+  "alt": "Two fried supplì on a plate with salad",
+  "focal": "50% 55%",
+  "color": "#988069",
+  "credit": {
+   "title": "Supplì al telefono",
+   "author": "Krista",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Suppl%C3%AC_al_telefono.jpg"
+  }
+ },
+ "trevi-night": {
+  "src800": "img/trevi-night-800.webp",
+  "src1600": "img/trevi-night-1600.webp",
+  "w": 1600,
+  "h": 1063,
+  "alt": "The Trevi Fountain lit up at night",
+  "focal": "50% 50%",
+  "color": "#866440",
+  "credit": {
+   "title": "Trevi Fountain at night 31.07.2012",
+   "author": "Bo&Ko",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Trevi_Fountain_at_night_31.07.2012.jpg"
+  }
+ }
+}

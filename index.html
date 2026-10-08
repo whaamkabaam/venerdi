@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-plan="sun">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Venerdì · 16 ottobre</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="You land in the morning. The other two land at night. This is the plan for everything in between.">
+<meta name="theme-color" content="#CFE4F1">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Venerdì · Friday in Rome">
+<meta property="og:description" content="You land in the morning. The other two land at night. This is the plan for everything in between.">
+<meta property="og:image" content="https://whaamkabaam.github.io/venerdi/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="An ARRIVI split-flap board above the word Venerdì">
+<meta property="og:url" content="https://whaamkabaam.github.io/venerdi/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Venerdì · Friday in Rome">
+<meta name="twitter:description" content="You land in the morning. The other two land at night. This is the plan for everything in between.">
+<meta name="twitter:image" content="https://whaamkabaam.github.io/venerdi/og.jpg">
+<meta name="twitter:image:alt" content="An ARRIVI split-flap board above the word Venerdì">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>
+  /* Preload the two critical fonts. Skipped on file://, where a crossorigin preload only logs CORS errors. */
+  if (location.protocol !== 'file:') ['bodoni-moda-latin-opsz-normal', 'archivo-latin-wdth-normal'].forEach(function (f) {
+    var l = document.createElement('link');
+    l.rel = 'preload'; l.as = 'font'; l.type = 'font/woff2'; l.crossOrigin = 'anonymous'; l.href = 'fonts/' + f + '.woff2';
+    document.head.appendChild(l);
+  });
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<aside class="hud" aria-label="Day progress">
+  <div class="hud-inner">
+    <div class="hud-clock" aria-hidden="true"></div>
+    <p class="hud-place"><span class="sr-only" data-slot="hud-time"></span><span data-slot="hud-place"></span></p>
+    <div class="hud-legs">
+      <p class="hud-km" data-slot="hud-km"></p>
+      <span class="hud-bar" aria-hidden="true"><span class="hud-fill"></span></span>
+    </div>
+    <button class="btn btn--small hud-now" type="button" hidden>Jump to now</button>
+  </div>
+</aside>
+
+<header class="hero" id="top">
+  <div class="board-wrap" data-slot="board"></div>
+  <div class="hero-text">
+    <h1 class="hero-title" data-slot="hero-title"></h1>
+    <p class="hero-date" data-slot="hero-date"></p>
+    <p class="hero-lead" data-slot="hero-lead"></p>
+    <ul class="hero-meta">
+      <li class="countdown"><span data-slot="countdown"></span><button class="btn hero-now" type="button" hidden>Jump to now</button></li>
+      <li class="weather" data-slot="weather"></li>
+      <li class="sunset" data-slot="sunset"></li>
+    </ul>
+    <nav class="hero-links" aria-label="Jump to a section">
+      <a href="#day">The day</a>
+      <a href="#book">Book</a>
+      <a href="#budget">Costs</a>
+    </nav>
+  </div>
+  <noscript><p class="noscript">This page needs JavaScript to show the plan.</p></noscript>
+</header>
+
+<main>
+  <section class="section" id="rules" aria-labelledby="rules-h" data-hud="House rules">
+    <h2 id="rules-h">House rules</h2>
+    <div class="rules" data-slot="rules"></div>
+  </section>
+
+  <section class="section" id="arrival" aria-labelledby="arrival-h" data-hud="Getting in">
+    <h2 id="arrival-h" data-slot="arrival-title"></h2>
+    <p class="section-lead" data-slot="arrival-lead"></p>
+    <div class="options" data-slot="arrival-options"></div>
+    <p class="notice" role="note" data-slot="arrival-warning"></p>
+  </section>
+
+  <section class="section" id="map" aria-labelledby="map-h" data-hud="Map">
+    <h2 id="map-h">The day on one map</h2>
+    <div data-slot="map-home"></div>
+  </section>
+
+  <section class="section section--day" id="day" aria-labelledby="day-h" data-hud="The day">
+    <h2 id="day-h">The day</h2>
+    <div class="day-map" data-slot="day-map"></div>
+    <fieldset class="plan">
+      <legend class="sr-only">Plan</legend>
+      <label><input type="radio" name="plan" value="sun" checked><span>Sun plan</span></label>
+      <label><input type="radio" name="plan" value="rain"><span>Rain plan</span></label>
+    </fieldset>
+    <ol class="stops" data-slot="stops"></ol>
+  </section>
+
+  <section class="section" id="book" aria-labelledby="book-h" data-hud="Book">
+    <h2 id="book-h">Book before Friday</h2>
+    <ul class="checklist" data-slot="book"></ul>
+  </section>
+
+  <section class="section" id="budget" aria-labelledby="budget-h" data-hud="Costs">
+    <h2 id="budget-h">What it costs</h2>
+    <div class="receipt-wrap" data-slot="receipt"></div>
+    <p class="budget-note" data-slot="budget-note"></p>
+  </section>
+
+  <section class="section" id="practical" aria-labelledby="practical-h" data-hud="Good to know">
+    <h2 id="practical-h">Good to know</h2>
+    <div class="practical" data-slot="practical"></div>
+  </section>
+
+  <section class="section" id="also" aria-labelledby="also-h" data-hud="Also on">
+    <h2 id="also-h">Also on that Friday</h2>
+    <div class="also" data-slot="also"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div data-slot="credits"></div>
+  <p class="footer-line" data-slot="footer"></p>
+</footer>
+
+<script src="data.js"></script>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/DrawSVGPlugin.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
