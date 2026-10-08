@@ -32,7 +32,7 @@
   const ctxSr = (ctx) => (ctx ? `<span class="sr-only">: ${esc(ctx)}</span>` : '');
   const linksHTML = (ls, ctx) => (ls?.length ? `<div class="links">${ls.map((l) => linkBtn(l.url, l.label, ctxSr(ctx))).join('')}</div>` : '');
   const factsHTML = (fs) => (fs?.length ? `<ul class="facts">${fs.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : '');
-  const moveHTML = (m) => (m ? `<div class="move"><p class="label">The move</p><p>${esc(m)}</p></div>` : '');
+  const moveHTML = (m) => (m ? `<p class="stop-body stop-tip">${esc(m)}</p>` : '');
   const plaqueHTML = (p, small = false) =>
     p ? `<p class="plaque${small ? ' plaque--small' : ''}"><span class="plaque-rione">${esc(p.rione)}</span><span class="sr-only">, </span><span class="plaque-street">${esc(p.street)}</span></p>` : '';
   const timeRow = (s, rain = false) =>
@@ -89,7 +89,8 @@
   /* ------------------------------------------------------------------ */
 
   function renderSections() {
-    slot('rules').innerHTML = C.rules.map((r) => `<div class="rule"><h3>${esc(r.title)}</h3><p>${esc(r.body)}</p></div>`).join('');
+    const N = C.note;
+    slot('note').innerHTML = `<p class="note-greeting">${esc(N.greeting)}</p>${N.paras.map((p) => `<p>${esc(p)}</p>`).join('')}<p class="note-sign">${esc(N.sign)}</p>`;
 
     const A = C.arrival;
     slot('arrival-title').textContent = A.title;
@@ -123,7 +124,7 @@
     slot('budget-note').textContent = C.budgetNote;
 
     slot('practical').innerHTML = C.practical.map((p) => `<div class="tip"><h3>${esc(p.title)}</h3><p>${esc(p.body)}</p></div>`).join('');
-    slot('also').innerHTML = C.alsoOn
+    if (slot('also')) slot('also').innerHTML = (C.alsoOn || [])
       .map((a) => `<article class="also-item"><h3>${esc(a.title)}</h3><p>${esc(a.body)}</p><div class="links">${linkBtn(a.url, 'Info', ctxSr(a.title))}</div></article>`)
       .join('');
 
@@ -167,7 +168,7 @@
 
   function swapsHTML(s) {
     if (!s.swaps?.length) return '';
-    return `<details class="swaps"><summary>Plan B<span class="sr-only">: ${esc(s.title)}</span>${ICON.chev}</summary><div class="swap-cards">${s.swaps
+    return `<details class="swaps"><summary>Other options<span class="sr-only">: ${esc(s.title)}</span>${ICON.chev}</summary><div class="swap-cards">${s.swaps
       .map((w) => `<article class="swap">${w.image ? photoHTML(w.image, 'swap') : ''}<div class="swap-text">
         <h4>${esc(w.title)}</h4><p class="label">${esc(w.place)}</p><p class="swap-body">${esc(w.body)}</p>${factsHTML(w.facts)}${linksHTML(w.links, w.title)}
       </div></article>`)
@@ -566,7 +567,7 @@
       const cap = C.meta.walkCapKm;
       // Phones show "4.0 km"; from 480 px "4.0 / 10 km", and at the night walk "7.7 km · Sunday's sorted".
       hudKm.classList.toggle('is-sorted', sorted);
-      hudKm.innerHTML = `<span aria-hidden="true">${km}<span class="km-cap"> / ${cap}</span> km${sorted ? '<span class="km-sorted"> · Sunday\'s sorted</span>' : ''}</span><span class="sr-only">${km} of ${cap} km walked${sorted ? ", Sunday's sorted" : ''}</span>`;
+      hudKm.innerHTML = `<span aria-hidden="true">${km}<span class="km-cap"> / ${cap}</span> km${sorted ? '<span class="km-sorted"> · done</span>' : ''}</span><span class="sr-only">${km} of ${cap} km walked${sorted ? ", done" : ''}</span>`;
     }
     if (m !== hudLegs) {
       hudLegs = m;

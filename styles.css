@@ -418,9 +418,12 @@ svg { display: block; }
 }
 .section-lead { margin-bottom: 22px; }
 
-/* Rules */
-.rules { display: grid; gap: 22px; }
-.rule h3 { font-size: 1.125rem; line-height: 1.3; margin-bottom: 4px; }
+/* Note from Felix */
+.note { display: grid; gap: 14px; font-size: 1.125rem; line-height: 1.55; }
+.note p { max-width: 36rem; }
+.note p { text-wrap: pretty; }
+.note-greeting, .note-sign { font-family: var(--font-display); font-size: 1.75rem; line-height: 1.1; font-weight: 600; }
+.note-sign { margin-top: 6px; }
 
 /* Arrival */
 .options { display: grid; gap: 10px; }
@@ -601,6 +604,7 @@ svg { display: block; }
 }
 .stop-place { margin-top: 10px; }
 .stop-body { margin-top: 16px; }
+.stop-tip { margin-top: 10px; }
 .move {
   margin-top: 18px;
   padding: 2px 0 2px 16px;
@@ -870,7 +874,7 @@ svg { display: block; }
 /* ---------- Wider screens ---------- */
 
 @media (min-width: 640px) {
-  .rules, .practical { grid-template-columns: 1fr 1fr; column-gap: 32px; }
+  .practical { grid-template-columns: 1fr 1fr; column-gap: 32px; }
   .options { grid-template-columns: 1fr 1fr; }
   .swap-cards { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
   .also { grid-template-columns: 1fr 1fr; }

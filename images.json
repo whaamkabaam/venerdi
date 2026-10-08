@@ -286,5 +286,21 @@
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Trevi_Fountain_at_night_31.07.2012.jpg"
   }
+ },
+ "ghetto": {
+  "src800": "img/ghetto-800.webp",
+  "src1600": "img/ghetto-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "The Portico d'Ottavia ruins and old brick houses in Rome's Jewish Ghetto, a few steps from the bakery",
+  "focal": "35% 60%",
+  "color": "#5d6665",
+  "credit": {
+   "title": "Roma- Portico d'Ottavia - 52350512476",
+   "author": "Jorge Franganillo",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roma-_Portico_d%27Ottavia_-_52350512476.jpg"
+  }
  }
 }
