@@ -346,8 +346,22 @@ svg { display: block; }
 .cells { display: flex; gap: 2px; }
 .board-grid { --fw: calc((100cqi - (var(--n1) + var(--n2) - 2) * 2px - 10px) / (var(--n1) + var(--n2))); }
 .board-row.is-you .flap { color: var(--solari); }
-.note-en { color: #A9A59C; font-size: 0.75rem; font-stretch: 87.5%; }
+.note-en { color: #A9A59C; font-size: 0.75rem; font-stretch: 87.5%; opacity: 0; transition: opacity 300ms var(--ease-out); }
+.note-en.is-on { opacity: 1; }
 .note-en:empty, .board-colheads .ch i:empty { display: none; }
+.board-row { position: relative; }
+/* A transparent button over each row that does something (Details, the eggs). */
+.board-hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.board-hit:focus-visible { outline: 2px solid var(--flap-ink); outline-offset: 2px; }
 
 @container (min-width: 560px) {
   .board-row, .board-colheads {
@@ -371,7 +385,6 @@ svg { display: block; }
   margin-left: -0.04em;
 }
 .hero-date { font-size: 0.875rem; }
-.hero-meta.hero-today { margin-top: 18px; }
 .hero-lead { font-size: 1.25rem; line-height: 1.45; margin-top: 22px; max-width: 34ch; }
 .hero-meta {
   margin-top: 28px;
@@ -383,18 +396,6 @@ svg { display: block; }
   border-bottom: 1px solid var(--hairline);
   font-size: 0.9375rem;
   min-height: calc(1.55em + 24px);
-}
-.countdown { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
-.hero-links { display: flex; flex-wrap: wrap; gap: 0 22px; margin-top: 6px; }
-.hero-links a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
 }
 .weather-wet { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
 .noscript { margin-top: 24px; }
@@ -503,18 +504,31 @@ svg { display: block; }
 
 /* ---------- Picker ---------- */
 
-.pick-groups { display: grid; gap: 30px; }
-.pick-group h3 { font-size: 1.125rem; line-height: 1.3; margin-bottom: 12px; }
-.pick-grid { display: grid; gap: 10px; }
+.pick-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+.pick-group h3 { font-size: 1.125rem; line-height: 1.3; margin-bottom: 10px; }
+/* Phones: each group is a swipeable row; the next card peeks in so the swipe is obvious. */
+.pick-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 240px;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--pad);
+  padding: 4px var(--pad) 10px;
+  margin-inline: calc(-1 * var(--pad));
+  scrollbar-width: none;
+}
+.pick-row::-webkit-scrollbar { display: none; }
 .pick {
   position: relative;
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
+  grid-template-rows: auto 1fr;
+  align-content: start;
   width: 100%;
-  min-height: 104px;
-  padding: 8px 44px 8px 8px;
+  min-height: 44px;
+  padding: 6px 6px 12px;
   border: 0;
   border-radius: 14px;
   background-color: var(--surface);
@@ -522,6 +536,7 @@ svg { display: block; }
   color: inherit;
   text-align: left;
   cursor: pointer;
+  scroll-snap-align: start;
   -webkit-tap-highlight-color: transparent;
   transition-property: background-color, box-shadow, scale;
   transition-duration: 150ms;
@@ -533,21 +548,27 @@ svg { display: block; }
   box-shadow: inset 0 0 0 2px var(--accent), var(--shadow-border);
 }
 .pick-photo {
-  width: 88px;
-  height: 88px;
-  border-radius: 6px;
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 2;
+  border-radius: 8px;
   overflow: hidden;
   background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent));
 }
 .pick-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
-.pick-text { display: grid; gap: 4px; padding-top: 2px; }
-.pick-title { font-weight: 600; line-height: 1.3; }
-.pick-line { font-size: 0.9375rem; line-height: 1.45; text-wrap: pretty; }
+.pick-text { display: grid; align-content: start; gap: 4px; padding: 10px 6px 0; }
+.pick-title { font-weight: 600; line-height: 1.25; text-wrap: balance; }
+.pick-line { font-size: 0.9375rem; line-height: 1.4; text-wrap: pretty; }
 .pick-text .tag { justify-self: start; margin-top: 4px; box-shadow: inset 0 0 0 1px var(--hairline); }
-/* The corner mark: an outline plus that cross-fades to a filled check. */
-.pick-mark { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; }
+/* The corner mark sits on the photo: an outline plus that cross-fades to a filled check. */
+.pick-mark {
+  position: absolute; top: 12px; right: 12px; width: 26px; height: 26px;
+  border-radius: 50%;
+  background: color-mix(in oklch, var(--surface) 88%, transparent);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.2);
+}
 .pick-mark svg {
-  position: absolute; inset: 0; width: 24px; height: 24px;
+  position: absolute; inset: 1px; width: 24px; height: 24px;
   transition-property: opacity, scale, filter;
   transition-duration: 300ms;
   transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
@@ -556,8 +577,28 @@ svg { display: block; }
 .pick[aria-pressed="true"] .mark-on { opacity: 1; scale: 1; filter: blur(0); }
 .pick[aria-pressed="true"] .mark-off { opacity: 0; scale: 0.25; filter: blur(4px); }
 .mark-on .tick { stroke: var(--on-accent); }
+/* The departure-time chip: five small flaps on the photo, only on picked cards. */
+.chip {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 6px;
+  background: #0B0B0C;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  --fw: 11px;
+  opacity: 0;
+  translate: 0 3px;
+  transition: opacity 150ms var(--ease-out), translate 150ms var(--ease-out);
+}
+.chip .flap { color: var(--solari); }
+.chip.is-drop .flap { color: #8C877E; }
+.pick[aria-pressed="true"] .chip { opacity: 1; translate: 0 0; }
 
-.send { display: grid; gap: 10px; margin-top: 36px; }
+.send { display: grid; gap: 10px; margin-top: 22px; }
+.send-after { display: grid; gap: 6px; margin-top: 8px; }
 .send-label { font-weight: 600; }
 .send-text {
   width: 100%;
@@ -574,7 +615,21 @@ svg { display: block; }
 }
 .send-text::placeholder { color: color-mix(in oklch, currentColor 60%, transparent); }
 .send-btn { justify-self: start; margin-top: 6px; }
-.send-hint { font-size: 0.875rem; }
+
+/* ---------- Departures ---------- */
+
+.section--dep > .board-wrap { max-width: 860px; }
+.section--dep .c--note .flap { color: #A9A59C; }
+.section--dep .is-pick .c--who .flap { color: var(--solari); }
+.section--dep .is-drop .flap { color: #6E6A63; }
+.section--dep .is-sun .flap { color: var(--solari); }
+.section--dep .is-live .c--note .flap { color: var(--flap-ink); }
+.board-sun .board-row { border-top: 0; }
+.dep-gap { border-top: 1px dashed #3A3A3E; margin-top: 10px; transform-origin: 0 50%; }
+@container (max-width: 559px) {
+  .section--dep .board-colheads { display: none; }
+  .section--dep .board-row { padding: 6px 0; }
+}
 
 /* ---------- Your day ---------- */
 
@@ -603,6 +658,8 @@ svg { display: block; }
 .plan-meta .tag { box-shadow: inset 0 0 0 1px var(--hairline); }
 .tag--now { display: none; background: var(--accent); color: var(--on-accent); }
 .plan-item.is-now .tag--now { display: inline-flex; }
+.plan-item { border-radius: 8px; transition: background-color 600ms var(--ease-out); }
+.plan-item.is-flash { background-color: color-mix(in oklch, var(--accent) 16%, transparent); transition-duration: 150ms; }
 .plan-transfer, .plan-free {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
@@ -638,10 +695,15 @@ svg { display: block; }
 
 /* ---------- Wider screens ---------- */
 
-@media (min-width: 640px) {
-  .pick-grid { grid-template-columns: 1fr 1fr; }
+@media (min-width: 768px) {
+  .pick-row {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    overflow: visible;
+    padding: 0;
+    margin-inline: 0;
+  }
 }
-
 @media (min-width: 1024px) {
   .hud-clock { --fw: 17px; }
   .hero { padding-top: calc(env(safe-area-inset-top) + 56px); }
@@ -651,8 +713,6 @@ svg { display: block; }
   .section { padding-top: 112px; }
   .section > h2 { font-size: 2rem; }
   #pick > * { max-width: 1000px; }
-  #pick > .section-lead, #pick > .send { max-width: var(--col); margin-left: max(0px, calc((100% - 1000px) / 2)); }
-  .pick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .plan-title { font-size: 1.75rem; }
 }
 
@@ -683,7 +743,7 @@ svg { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-halo, .pick, .pick-mark svg { transition: none; }
+  .map-halo, .pick, .pick-mark svg, .chip, .note-en, .plan-item { transition: none; }
   body { transition: none; }
   .hud, .hud[data-on] { transition: none; }
   .hud-fill { transition: none; }

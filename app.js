@@ -1,12 +1,13 @@
-/* Venerdì v3: a picker that builds a relaxed Friday. Renders from window.SITE (data.js) and
-   plan.js (the day builder), then wires the sky, HUD, map, persistence and sharing.
-   Every visible string comes from content.json. */
+/* Venerdì v4: a picker that builds a relaxed Friday, played back on a DEPARTURES board.
+   Renders from window.SITE (data.js) and plan.js (the day builder), then wires the boards,
+   the sky, HUD, map, persistence and sharing. Every visible string comes from content.json. */
 (() => {
   'use strict';
 
   const { content: C, images: IMG = {}, map: MAP } = window.SITE;
   const P = window.VenerdiPlan;
   const U = C.ui;
+  const DEPC = C.departures;
   const fmt = P.fmt;
   const toMin = P.toMin;
   const root = document.documentElement;
@@ -29,53 +30,252 @@
   };
 
   /* ------------------------------------------------------------------ */
+  /* Clock: Rome time, with an ?at= override so Felix can preview states */
+  /* ------------------------------------------------------------------ */
+
+  // ?at=2026-10-16T07:00 (Rome time unless an offset is given). Read before the query is stripped.
+  const clockOffset = (() => {
+    const at = new URLSearchParams(location.search).get('at');
+    if (!at) return 0;
+    const zone = C.meta.startsAt.slice(19); // "+02:00"
+    const t = Date.parse(/[zZ]|[+-]\d\d:\d\d$/.test(at) ? at : (at.length === 16 ? at + ':00' : at) + zone);
+    return Number.isFinite(t) ? t - Date.now() : 0;
+  })();
+  const nowMs = () => Date.now() + clockOffset;
+  const romeFmt = new Intl.DateTimeFormat('en-CA', { timeZone: C.meta.tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  function romeNow() {
+    const p = Object.fromEntries(romeFmt.formatToParts(new Date(nowMs())).map((x) => [x.type, x.value]));
+    return { date: `${p.year}-${p.month}-${p.day}`, min: +p.hour * 60 + +p.minute };
+  }
+  const isToday = () => romeNow().date === C.meta.date;
+
+  /* ------------------------------------------------------------------ */
   /* Render helpers                                                      */
   /* ------------------------------------------------------------------ */
 
   const newTab = `<span class="sr-only"> (${esc(U.newTab)})</span>`;
   const linkBtn = (href, label, ctx, cls = 'btn btn--small') =>
     `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)}${ctx ? `<span class="sr-only">: ${esc(ctx)}</span>` : ''}${newTab}${ICON.out}</a>`;
-  // Small decorative photos (the title next to them says what they are).
-  function thumbHTML(key, cls, px) {
+  // Decorative photos (the title next to them says what they are). Missing photos keep a quiet colour block.
+  function thumbHTML(key, cls, sizes, extra = '') {
     const im = key && IMG[key];
-    if (!im) return `<span class="${cls}" aria-hidden="true"></span>`;
-    return `<span class="${cls}" style="--ph:${esc(im.color || '')}"><img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${px}px" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}"></span>`;
+    if (!im) return `<span class="${cls} is-empty">${extra}</span>`;
+    return `<span class="${cls}" style="--ph:${esc(im.color || '')}"><img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${sizes}" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">${extra}</span>`;
   }
 
   /* ------------------------------------------------------------------ */
-  /* Static parts: hero, note, picker, bring, footer                     */
+  /* Split-flap engine                                                   */
   /* ------------------------------------------------------------------ */
 
   const FLAP = '<span class="flap"><span class="ft"><b></b></span><span class="fb"><b></b></span><span class="lt"><b></b></span><span class="lb"><b></b></span></span>';
+  const flaps = new WeakMap();
+  function flapOf(el) {
+    let f = flaps.get(el);
+    if (!f) {
+      const [ft, fb, lt, lb] = el.children;
+      f = { ft: ft.firstChild, fb: fb.firstChild, lt: lt.firstChild, lb: lb.firstChild, ltEl: lt, lbEl: lb, cur: '' };
+      flaps.set(el, f);
+    }
+    return f;
+  }
+  function setFlap(f, ch) {
+    f.ft.textContent = f.fb.textContent = f.lt.textContent = f.lb.textContent = ch;
+    f.cur = ch;
+  }
+  // One flip: the upper leaf with the old glyph folds down, the lower leaf with the new glyph lands.
+  function addFlip(tl, f, next, at, d) {
+    tl.call(() => {
+      f.lt.textContent = f.cur;
+      f.ft.textContent = next;
+      f.lb.textContent = next;
+      gsap.set(f.lbEl, { rotationX: 90 });
+    }, null, at);
+    tl.fromTo(f.ltEl, { rotationX: 0 }, { rotationX: -90, duration: d, ease: 'power1.in', immediateRender: false }, at);
+    tl.fromTo(f.lbEl, { rotationX: 90 }, { rotationX: 0, duration: d, ease: 'power1.out', immediateRender: false }, at + d);
+    tl.call(() => { f.fb.textContent = next; f.cur = next; }, null, at + 2 * d);
+  }
+  const GLYPHS = 'ABCDEFGHIJKLMNOPRSTUVZ0123456789';
+  const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+  // Board text: uppercase, accents dropped, only glyphs a flap carries (A-Z 0-9 space ' , . : + -).
+  const boardText = (s, w) => Array.from(String(s || '').normalize('NFD').replace(/\p{M}/gu, '').toUpperCase())
+    .filter((ch) => /[A-Z0-9 ',.:+-]/.test(ch)).slice(0, w).join('');
+  const cellChar = (s, k) => { const ch = Array.from(s)[k] || ''; return ch === ' ' ? '' : ch; };
 
-  function renderHero() {
-    const H = C.hero;
-    const fields = ['time', 'who', 'note'];
-    const width = fields.map((f) => Math.max(...H.rows.map((r) => [...r[f]].length)));
-    const cells = (text, w) => `<span class="cells" aria-hidden="true" data-text="${esc(text)}">${FLAP.repeat(w)}</span>`;
-    const head = `<div class="board-colheads" role="row">${fields
-      .map((f, i) => `<span class="ch c--${f} label" role="columnheader">${esc(H.columns[i])} <i>${esc(H.columnsEn?.[i] || '')}</i></span>`)
-      .join('')}</div>`;
-    const rows = H.rows
-      .map((r) => `<div class="board-row${r.highlight ? ' is-you' : ''}" role="row">
-        <span class="c c--time" role="cell"><span class="sr-only">${esc(r.time)}</span>${cells(r.time, width[0])}</span>
-        <span class="c c--who" role="cell"><span class="sr-only">${esc(r.who)}</span>${cells(r.who, width[1])}</span>
-        <span class="c c--note" role="cell"><span class="sr-only">${esc(r.note)}${r.noteEn ? ` (${esc(r.noteEn)})` : ''}</span>${cells(r.note, width[2])}<span class="note-en" aria-hidden="true">${esc(r.noteEn || '')}</span></span>
-      </div>`)
-      .join('');
-    slot('board').innerHTML = `<div class="board">
-      <div class="board-head"><p class="board-title">${esc(H.boardTitle)}</p><p class="board-sub label">${esc(H.boardSubtitle)}</p></div>
-      <div class="board-grid" role="table" aria-label="${esc(H.boardTitle)}, ${esc(H.boardSubtitle)}" style="--n1:${width[0]};--n2:${width[1]};--n3:${width[2]}">${head}${rows}</div>
+  /* ------------------------------------------------------------------ */
+  /* Boards: ARRIVALS (hero) and DEPARTURES share one row model          */
+  /* ------------------------------------------------------------------ */
+
+  // A row's data: { time, to, remark, kind, key, target, label, en }. Columns: time | to (who) | remark.
+  const KINDS = ['is-pick', 'is-drop', 'is-anchor', 'is-tbc', 'is-sun', 'is-you', 'is-live'];
+  const rowHTML = (w) => `<div class="board-row" role="row">
+      <span class="c c--time" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(w[0])}</span></span>
+      <span class="c c--who" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(w[1])}</span></span>
+      <span class="c c--note" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(w[2])}</span><span class="note-en" aria-hidden="true"></span></span>
+      <button type="button" class="board-hit" hidden></button>
     </div>`;
+  function rowModel(el, widths) {
+    return {
+      el, widths,
+      cols: $$('.cells', el).map((c) => [...c.children].map(flapOf)),
+      srs: [...el.children].slice(0, 3).map((c) => c.firstElementChild),
+      en: $('.note-en', el),
+      hit: $('.board-hit', el),
+      shown: ['', '', ''],
+      data: null,
+      tls: [],
+    };
+  }
+  function makeBoard(host, { title, sub, label, columns, widths, rows, sun = false }) {
+    const cls = ['time', 'who', 'note'];
+    host.innerHTML = `<div class="board">
+      <div class="board-head"><p class="board-title">${esc(title)}</p><p class="board-sub label">${esc(sub)}</p></div>
+      <div class="board-grid" role="table" aria-label="${esc(label)}" style="--n1:${widths[0]};--n2:${widths[1]};--n3:${widths[2]}">
+        <div class="board-colheads" role="row">${columns.map((c, i) => `<span class="ch c--${cls[i]} label" role="columnheader">${esc(c)}</span>`).join('')}</div>
+        <div class="board-rows" role="rowgroup"></div>
+        ${sun ? `<div class="dep-gap" aria-hidden="true"></div><div class="board-sun" role="rowgroup">${rowHTML(widths)}</div>` : ''}
+      </div>
+    </div>`;
+    const B = { host, widths, rows: [], rowsEl: $('.board-rows', host) };
+    B.ensure = (n) => {
+      while (B.rows.length < n) { B.rowsEl.insertAdjacentHTML('beforeend', rowHTML(widths)); B.rows.push(rowModel(B.rowsEl.lastElementChild, widths)); }
+      while (B.rows.length > n) { const r = B.rows.pop(); r.tls.forEach((t) => t.kill()); r.el.remove(); }
+    };
+    if (sun) B.sun = rowModel($('.board-sun .board-row', host), widths);
+    B.ensure(rows);
+    return B;
+  }
+  const rowTexts = (d, w) => (d ? [d.time, d.to, d.remark] : ['', '', '']).map((t, c) => boardText(t, w[c]));
+  // Classes, screen-reader text, the tap target and the caption follow the row's data.
+  function applyRowMeta(row, d) {
+    row.data = d;
+    KINDS.forEach((k) => row.el.classList.remove(k));
+    if (d && d.kind) row.el.classList.add('is-' + d.kind);
+    if (d && d.live) row.el.classList.add('is-live');
+    const t = rowTexts(d, row.widths);
+    row.srs[0].textContent = d ? (d.srTime ?? d.time ?? '') : '';
+    row.srs[1].textContent = d ? (d.label || d.to || '') : '';
+    row.srs[2].textContent = d ? (d.srRemark || d.remark || '') + (d.en && d.enOn ? ` ${d.en}` : '') : '';
+    row.en.textContent = d && d.en ? d.en : '';
+    row.en.classList.toggle('is-on', !!(d && d.enOn));
+    const hasTarget = !!(d && d.target);
+    row.hit.hidden = !hasTarget;
+    if (hasTarget) row.hit.setAttribute('aria-label', d.hitLabel || fmt(U.boardHit, { time: d.time, to: d.label || d.to }));
+    row.shownTexts = t;
+  }
+  function setRowNow(row, d) {
+    row.tls.forEach((tl) => tl.progress(1).kill());
+    row.tls = [];
+    const t = rowTexts(d, row.widths);
+    t.forEach((s, c) => { row.cols[c].forEach((f, k) => setFlap(f, cellChar(s, k))); row.shown[c] = s; });
+    applyRowMeta(row, d);
+  }
+  // Flip a row to new data on a timeline, touching only the cells whose character changes.
+  function flipRow(tl, row, d, at, { scramble = 1, D = 0.045, stagger = 0.012 } = {}) {
+    tl.call(() => applyRowMeta(row, d), null, at);
+    rowTexts(d, row.widths).forEach((next, c) => {
+      const prev = row.shown[c];
+      if (prev === next) return;
+      row.cols[c].forEach((f, k) => {
+        const a = cellChar(prev, k), b = cellChar(next, k);
+        if (a === b) return;
+        let when = at + k * stagger + (c === 2 ? 0.05 : 0);
+        for (let s = 0; s < scramble; s++) { addFlip(tl, f, randomGlyph(), when, D); when += 2 * D; }
+        addFlip(tl, f, b, when, D);
+      });
+      row.shown[c] = next;
+    });
+  }
+  // A single quiet flip of one row, outside any replay (live statuses, eggs, chips of thought).
+  function flipRowNow(row, d, opts = { scramble: 0, D: 0.07, stagger: 0.02 }) {
+    if (reduced) { setRowNow(row, d); return; }
+    const tl = gsap.timeline({ onComplete: () => { row.tls = row.tls.filter((x) => x !== tl); } });
+    row.tls.push(tl);
+    flipRow(tl, row, d, 0, opts);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* ARRIVALS: live statuses and the SUNRISE egg                         */
+  /* ------------------------------------------------------------------ */
+
+  const H = C.hero;
+  const heroEgg = H.rows.map(() => false);
+  const daysUntil = () => {
+    const [y, m, d] = romeNow().date.split('-').map(Number), [Y, M, D] = C.meta.date.split('-').map(Number);
+    return Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(y, m - 1, d)) / 864e5);
+  };
+  // The last status whose `from` has passed wins; before the first, SASHA counts down.
+  function heroStatus(r) {
+    const t = nowMs();
+    let text = null;
+    for (const s of r.status || []) if (Date.parse(s.from) <= t) text = s.text;
+    if (text === null && r.countdown) {
+      const n = daysUntil();
+      if (n === 1) text = H.countdownStatus.tomorrow;
+      else if (n > 1) text = fmt(H.countdownStatus.days, { n });
+    }
+    return text ?? r.note;
+  }
+  const heroRowData = (r, i) => {
+    const egg = heroEgg[i] && r.tap;
+    const remark = egg ? r.tap.remark : heroStatus(r);
+    return {
+      time: r.time, to: r.who, remark, kind: r.highlight ? 'you' : 'anchor',
+      en: r.tap ? r.tap.en : '', enOn: !!egg,
+      target: r.tap ? 'egg' : null, hitLabel: `${r.who}, ${remark}`,
+    };
+  };
+  // Every text a row can show, so the remark column never truncates.
+  const heroWidths = () => {
+    const variants = H.rows.flatMap((r) => [r.note, ...(r.status || []).map((s) => s.text), r.tap?.remark || '',
+      ...(r.countdown ? [H.countdownStatus.tomorrow, fmt(H.countdownStatus.days, { n: 99 })] : [])]);
+    return [Math.max(...H.rows.map((r) => [...r.time].length)), Math.max(...H.rows.map((r) => [...r.who].length)), Math.max(...variants.map((v) => [...v].length))];
+  };
+  let HERO = null;
+  function renderHero() {
+    HERO = makeBoard(slot('board'), {
+      title: H.boardTitle, sub: H.boardSubtitle, label: `${H.boardTitle}, ${H.boardSubtitle}`,
+      columns: H.columns, widths: heroWidths(), rows: H.rows.length,
+    });
     slot('hero-title').textContent = H.title;
     slot('hero-date').textContent = H.dateLine;
     slot('hero-lead').textContent = H.lead;
-    slot('sunset').innerHTML = fmt(esc(U.sunset), { time: `<time class="tnum">${esc(C.meta.sunset)}</time>` });
-    slot('hero-links').setAttribute('aria-label', U.nav.label);
-    slot('nav-pick').textContent = U.nav.pick;
-    slot('nav-day').textContent = U.nav.day;
-    slot('hero-now').textContent = U.jumpNow;
   }
+  // First visit: the board flips in from blank. Later visits: it opens as it was and only changed cells flip.
+  function heroIntro(tl, start) {
+    const seen = store.get('heroSeen', null);
+    const now = H.rows.map(heroRowData);
+    if (seen && seen.length === now.length) {
+      HERO.rows.forEach((row, i) => { setRowNow(row, { ...now[i], remark: seen[i] }); flipRow(tl, row, now[i], start + 0.4 + i * 0.12, { scramble: 0, D: 0.07, stagger: 0.02 }); });
+    } else {
+      const D = 0.045;
+      HERO.rows.forEach((row, ri) => {
+        setRowNow(row, null);
+        tl.call(() => applyRowMeta(row, now[ri]), null, start);
+        rowTexts(now[ri], row.widths).forEach((s, c) => {
+          row.cols[c].forEach((f, k) => {
+            let at = start + ri * 0.12 + Math.random() * 0.05;
+            const n = 3 + Math.floor(Math.random() * 4);
+            for (let j = 0; j < n; j++) { addFlip(tl, f, randomGlyph(), at, D); at += 2 * D; }
+            addFlip(tl, f, cellChar(s, k), at, D);
+          });
+          row.shown[c] = s;
+        });
+      });
+    }
+    store.set('heroSeen', now.map((d) => d.remark));
+  }
+  function heroFinal() { HERO.rows.forEach((row, i) => setRowNow(row, heroRowData(H.rows[i], i))); store.set('heroSeen', HERO.rows.map((r) => r.data.remark)); }
+  function heroTick() {
+    HERO.rows.forEach((row, i) => {
+      const d = heroRowData(H.rows[i], i);
+      if (row.data && row.data.remark !== d.remark) flipRowNow(row, d); else if (row.data) applyRowMeta(row, d);
+    });
+    store.set('heroSeen', HERO.rows.map((r) => r.data && r.data.remark));
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Static parts: note, picker, bring, footer                           */
+  /* ------------------------------------------------------------------ */
 
   function renderStatic() {
     const N = C.note;
@@ -84,31 +284,36 @@
 
     const K = C.picker;
     slot('pick-title').textContent = K.title;
-    slot('pick-lead').textContent = K.lead;
+    const chip = `<span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span>`;
     slot('pick-groups').innerHTML = K.groups
       .map((g) => {
         const opts = C.options.filter((o) => o.group === g.id);
         if (!opts.length) return '';
-        return `<div class="pick-group"><h3 id="pg-${esc(g.id)}">${esc(g.label)}</h3><div class="pick-grid" role="group" aria-labelledby="pg-${esc(g.id)}">${opts
-          .map((o) => `<button type="button" class="pick" aria-pressed="false" data-id="${esc(o.id)}" aria-labelledby="pk-${esc(o.id)}-t" aria-describedby="pk-${esc(o.id)}-d pk-${esc(o.id)}-g">
-            ${thumbHTML(o.image, 'pick-photo', 88)}
-            <span class="pick-text"><span class="pick-title" id="pk-${esc(o.id)}-t">${esc(o.title)}</span><span class="pick-line" id="pk-${esc(o.id)}-d">${esc(o.line)}</span><span class="tag" id="pk-${esc(o.id)}-g">${esc(o.tag)}</span></span>
-            <span class="pick-mark" aria-hidden="true">${ICON.plus}${ICON.check}</span>
-          </button>`)
+        return `<div class="pick-group"><h3 id="pg-${esc(g.id)}">${esc(g.label)}</h3><div class="pick-row" role="group" aria-labelledby="pg-${esc(g.id)}">${opts
+          .map((o) => {
+            const id = esc(o.id);
+            const described = [`pk-${id}-d`, o.tag ? `pk-${id}-g` : '', `pk-${id}-s`].filter(Boolean).join(' ');
+            return `<button type="button" class="pick" aria-pressed="false" data-id="${id}" aria-labelledby="pk-${id}-t" aria-describedby="${described}">
+              ${thumbHTML(o.image, 'pick-photo', '(min-width: 768px) 320px, 240px', chip)}
+              <span class="pick-text"><span class="pick-title" id="pk-${id}-t">${esc(o.title)}</span><span class="pick-line" id="pk-${id}-d">${esc(o.line)}</span>${o.tag ? `<span class="tag" id="pk-${id}-g">${esc(o.tag)}</span>` : ''}</span>
+              <span class="pick-mark" aria-hidden="true">${ICON.plus}${ICON.check}</span>
+              <span class="sr-only" id="pk-${id}-s"></span>
+            </button>`;
+          })
           .join('')}</div></div>`;
       })
       .join('');
+    slot('dep-title').textContent = DEPC.srTitle;
     slot('free-label').textContent = K.freeTextLabel;
     slot('free-text').placeholder = K.freeTextPlaceholder;
     slot('send').textContent = K.sendLabel;
-    slot('send-hint').textContent = K.sendHint;
 
     slot('day-title').textContent = C.day.title;
     slot('map-title').textContent = U.mapTitle;
     slot('bring-title').textContent = U.bringTitle;
     slot('bring').innerHTML = C.bring.map((b) => `<li>${esc(b)}</li>`).join('');
 
-    // Credits: every photo the page renders (all option cards and dinner) plus hero-rome for og.jpg.
+    // Credits: every photo the page renders (option cards and dinner) plus hero-rome for og.jpg.
     const shown = [];
     const add = (k) => { if (k && IMG[k] && IMG[k].credit && !shown.includes(k)) shown.push(k); };
     C.options.forEach((o) => add(o.image));
@@ -129,15 +334,15 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Picks: state, persistence, the link                                 */
+  /* Picks: state (in tap order), persistence, the link                  */
   /* ------------------------------------------------------------------ */
 
-  let picks = new Set();
+  let picks = new Set();   // insertion order is tap order; the replay and the link keep it
   let freeText = '';
   let fromLink = false;
   let plan = null;
-
   let hasBackup = false;
+
   function loadState() {
     const q = new URLSearchParams(location.search);
     if (q.has('p')) {
@@ -174,26 +379,30 @@
     update();
   }
 
-  const orderedPicks = () => [...picks].sort((a, b) => OPT[a].order - OPT[b].order);
-  // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids) last,
-  // and ! ' ( ) * . are encoded too. The full note is in the message; the link carries a capped copy.
+  // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids, in tap
+  // order) last, and ! ' ( ) * . are encoded too. The link carries a capped copy of the note.
   const NOTE_LINK_MAX = 1000;
   const encodeNote = (s) => encodeURIComponent(s).replace(/[!'()*.]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
   function linkURL() {
     const base = location.href.split(/[?#]/)[0];
     const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
-    return `${base}?${n ? `n=${encodeNote(n)}&` : ''}p=${orderedPicks().join(',')}`;
+    return `${base}?${n ? `n=${encodeNote(n)}&` : ''}p=${[...picks].join(',')}`;
   }
+  // A mini timetable: "10:00 Maritozzo" per stop, then her line, then the link.
   function shareText() {
-    const lines = [C.picker.shareIntro, ...plan.options.map((o) => `- ${o.title}`)];
+    const lines = [C.picker.shareIntro, ...plan.items.filter((it) => it.kind === 'option').map((it) => `${it.rough} ${it.option.title}`)];
     if (freeText.trim()) lines.push(`${C.picker.shareExtra} ${freeText.trim()}`);
     lines.push(linkURL());
     return lines.join('\n');
   }
-  async function send() {
+  // navigator.share is called synchronously inside the tap (WebKit needs the user activation).
+  function send() {
     const text = shareText();
     if (navigator.share) {
-      try { await navigator.share({ title: U.shareTitle, text }); return; } catch (err) { if (err && err.name === 'AbortError') return; }
+      navigator.share({ title: U.shareTitle, text }).catch((err) => {
+        if (!err || err.name !== 'AbortError') window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+      });
+      return;
     }
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
@@ -210,18 +419,342 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Your day                                                            */
+  /* DEPARTURES: rows, the replay, live remarks, eggs                    */
+  /* ------------------------------------------------------------------ */
+
+  const DW = [5, 20, 20];
+  const R = DEPC.rows;
+  const anchorRow = (key, extra = {}) => ({ key, time: R[key].time, to: R[key].to, remark: R[key].remark, kind: 'anchor', ...extra });
+  const skeletonRows = () => [anchorRow('coffee'), anchorRow('dinner'), anchorRow('end')];
+  const sundayRow = (egg) => {
+    const S = DEPC.sunday;
+    return { key: 'sunday', time: S.time, to: S.to, remark: egg ? S.egg.remark : S.remark, kind: 'sun', en: S.egg.en, enOn: !!egg, target: 'sunday', hitLabel: `${S.to}, ${egg ? S.egg.remark : S.remark}` };
+  };
+  const dropRemark = (d) => (d.code === 'sunsetTaken' && d.option.slotTakenRemark ? d.option.slotTakenRemark : fmt(DEPC.drop.reasons[d.code] || '', d.vars || {}));
+
+  // Whole-word, case-insensitive keyword match ("nap" matches "a nap", not "napoli").
+  const escRe = (w) => w.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
+  const wordRe = (w) => new RegExp('(^|[^\\p{L}])' + escRe(w.toLowerCase()) + '($|[^\\p{L}])', 'u');
+  // Her free text as a TBC row: her words on the board, and a dry answer when a keyword matches.
+  function tbcRow() {
+    const text = freeText.trim();
+    if (!text) return null;
+    // Emoji and other glyphs a flap lacks drop out; the spaces around them collapse.
+    const to = boardText(text, text.length).replace(/ +/g, ' ').trim().slice(0, DW[1]);
+    const lower = text.toLowerCase();
+    const hit = DEPC.tbc.keywords.find((k) => k.words.some((w) => wordRe(w).test(lower)));
+    return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.time, remark: hit ? hit.remark : DEPC.tbc.remark, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
+  }
+
+  // The board for a plan: coffee, the stops, her TBC line, dinner, the end, then what didn't fit.
+  function depRows(pl, { tbc = tbcRow(), live = true } = {}) {
+    const heavy = pl.picked.length >= 7 || pl.walkM >= 8000;
+    const rows = [anchorRow('coffee', { target: 'arrival', label: R.coffee.to })];
+    for (const it of pl.items) {
+      if (it.kind === 'lunch-filler') rows.push({ key: 'lunch', time: it.rough, to: R.lunch.to, remark: R.lunch.remark, kind: 'anchor', target: 'lunch', label: C.day.noLunch });
+      else if (it.kind === 'option') rows.push({ key: it.id, time: it.rough, to: it.option.board.to, remark: it.secondBreakfast ? DEPC.secondBreakfast : it.option.board.remark, kind: 'pick', target: it.id, label: it.option.title });
+      else if (it.kind === 'anchor' && it.id === 'dinner') {
+        if (tbc) rows.push(tbc);
+        rows.push(anchorRow('dinner', { target: 'dinner', label: C.anchors.dinner.title }));
+      } else if (it.kind === 'anchor' && it.id === 'end') {
+        rows.push(anchorRow('end', { remark: heavy ? R.end.heavyRemark : R.end.remark, target: 'end', label: C.anchors.end.title }));
+      }
+    }
+    for (const d of pl.didntFit) rows.push({ key: 'x-' + d.option.id, time: DEPC.drop.time, to: d.option.board.to, remark: dropRemark(d), kind: 'drop', label: d.option.title, srTime: '', srRemark: d.reason });
+    // On the day, remarks become status by the clock: DEPARTED for past rows, BOARDING for the current one.
+    if (live && isToday()) {
+      const now = romeNow().min;
+      const timed = rows.filter((r) => /^\d\d:\d\d$/.test(r.time) && r.kind !== 'drop');
+      let current = null;
+      timed.forEach((r) => { if (toMin(r.time) <= now) current = r; });
+      timed.forEach((r) => {
+        if (!current) return;
+        if (r === current) Object.assign(r, { remark: DEPC.live.boarding, live: true });
+        else if (toMin(r.time) < toMin(current.time) || (toMin(r.time) === toMin(current.time) && timed.indexOf(r) < timed.indexOf(current))) Object.assign(r, { remark: DEPC.live.departed, live: true });
+      });
+    }
+    return rows;
+  }
+
+  const DEP = { board: null, replay: null, seen: store.get('depSeen', null), sunEgg: false, shown: [], pending: false, sunPending: false, stats: null };
+  const depSig = () => `${[...picks].join(',')}|${freeText.trim()}`;
+  const plainRows = (rows) => rows.map((r) => (r ? { time: r.time, to: r.to, remark: r.remark, kind: r.kind } : null));
+  const sameRows = (a, b) => JSON.stringify(plainRows(a)) === JSON.stringify(plainRows(b));
+  const gapEl = () => $('.dep-gap', DEP.board.host);
+
+  function renderDepBoard() {
+    DEP.board = makeBoard(slot('dep-board'), {
+      title: DEPC.title, sub: DEPC.sub, label: `${DEPC.title}, ${DEPC.sub}`,
+      columns: DEPC.columns, widths: DW, rows: 0, sun: true,
+    });
+  }
+  // The first 3D transform on a leaf is the expensive one (style read, layer setup), so give every
+  // leaf on the board its resting transform before the replay instead of in the middle of it.
+  const boardLeaves = () => [...DEP.board.rows, DEP.board.sun].flatMap((row) => row.cols.flat()).flatMap((f) => [f.ltEl, f.lbEl]);
+  function warmBoard() {
+    const leaves = boardLeaves().filter((el) => !el._warm);
+    leaves.forEach((el) => { el._warm = true; });
+    if (leaves.length) gsap.set(leaves, { rotationX: 0 });
+  }
+  function setBoardNow(rows) {
+    DEP.board.rows.forEach((row, i) => setRowNow(row, rows[i] || null));
+    DEP.shown = rows;
+  }
+  function setSunNow(on = true) {
+    setRowNow(DEP.board.sun, on ? sundayRow(DEP.sunEgg) : null);
+    gsap.set(gapEl(), { scaleX: on ? 1 : 0 });
+  }
+  // Rows needed: the most any state uses, plus one spare so typing a TBC line never moves the page.
+  const slotsFor = (states) => Math.max(...states.map((s) => s.length)) + 1;
+  function markSeen() {
+    DEP.seen = { sig: depSig(), rows: plainRows(DEP.shown) };
+    store.set('depSeen', DEP.seen);
+  }
+  // The replay: one state per tap, each wave re-sorting the board as the day re-plans itself.
+  function replayStates() {
+    const order = [...picks];
+    const finalRows = depRows(plan);
+    if (!order.length) return [skeletonRows(), finalRows];
+    return [skeletonRows(), ...order.map((_, i) => (i === order.length - 1 ? finalRows : depRows(P.build(C, order.slice(0, i + 1)), { tbc: null })))];
+  }
+  function stopReplay() {
+    const r = DEP.replay;
+    if (!r) return;
+    r.stopping = true;
+    r.tls.forEach((t) => t.progress(1).kill());
+    if (DEP.sunPending) setSunNow(true);
+    DEP.sunPending = false;
+    r.meterOn = false;
+    DEP.replay = null;
+  }
+  // Tap during a replay, or a test: jump to the end.
+  function finishBoard() {
+    const r = DEP.replay;
+    stopReplay();
+    const finalRows = depRows(plan);
+    DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + 1));
+    setBoardNow(finalRows);
+    setSunNow(true);
+    DEP.sunPending = false;
+    if (r) r.done();
+    markSeen();
+    DEP.pending = false;
+  }
+  // One replay run: its timelines plus an rAF frame meter for the stats and the slow-phone fallback.
+  const pct = (xs, q) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length * q)] : 0; };
+  // `key`: where the stats go (the Sunday row on its own keeps them apart from the replay's).
+  function newReplay(key = 'stats') {
+    const r = { tls: [], frames: [], meterOn: true, scramble: 1, stopping: false };
+    let last = performance.now();
+    const t0 = last;
+    const meter = (t) => { if (!r.meterOn) return; r.frames.push(t - last); last = t; requestAnimationFrame(meter); };
+    requestAnimationFrame(meter);
+    r.done = () => {
+      if (!r.meterOn) return;
+      r.meterOn = false;
+      const f = r.frames;
+      DEP[key] = f.length ? { frames: f.length, p50: +pct(f, 0.5).toFixed(1), p90: +pct(f, 0.9).toFixed(1), max: +Math.max(...f).toFixed(1), seconds: +((performance.now() - t0) / 1000).toFixed(2), scramble: r.scramble } : null;
+    };
+    DEP.replay = r;
+    return r;
+  }
+  const sunInView = () => DEP.board.sun.el.getBoundingClientRect().top < innerHeight * 0.85;
+  // The Sunday row, after a short pause. It plays straight after the replay when it is on screen,
+  // otherwise its own trigger plays it when she scrolls down to it (long boards).
+  function playSun(r, pause) {
+    DEP.sunPending = false;
+    r = r || newReplay('sunStats');
+    DEP.replay = r;
+    const tl = gsap.timeline();
+    r.tls.push(tl);
+    tl.fromTo(gapEl(), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: 'power2.out', immediateRender: false }, pause);
+    flipRow(tl, DEP.board.sun, sundayRow(DEP.sunEgg), pause + 0.3, { scramble: 4, D: 0.06, stagger: 0.012 });
+    tl.call(() => { r.done(); DEP.replay = null; markSeen(); });
+  }
+  // Waves `from`.. of the replay on one timeline, built before it plays. Row models track the
+  // state as each wave is added, so later waves only flip what actually changes.
+  function buildWaves(r, states, from, scramble, startAt, full) {
+    const waves = states.length - 1;
+    const wave = Math.min(0.6, 3.2 / Math.max(1, waves));
+    const tl = gsap.timeline({ paused: true });
+    r.tls.push(tl);
+    for (let s = from; s <= waves; s++) {
+      const at = startAt + (s - from) * wave;
+      DEP.board.rows.forEach((row, j) => flipRow(tl, row, states[s][j] || null, at + j * 0.05, { scramble }));
+    }
+    tl.call(() => {
+      markSeen();
+      if (full) {
+        DEP.sunPending = true;
+        if (!r.stopping && sunInView()) { playSun(r, 0.4); return; }
+      }
+      r.done();
+      DEP.replay = null;
+    }, null, Math.max(startAt + (waves - from + 1) * wave, tl.duration()));
+    return { tl, wave };
+  }
+  function playStates(states, { full }) {
+    stopReplay();
+    warmBoard();
+    const r = newReplay();
+    DEP.pending = false;
+    const { tl, wave } = buildWaves(r, states, 1, 1, 0.3, full);
+    DEP.shown = states[states.length - 1];
+    // Safety net for slow phones: if the first wave runs heavy (p90 over 40 ms, or barely any frames), the rest flips without scramble.
+    if (states.length > 2) {
+      tl.call(() => {
+        if (r.stopping || (r.frames.length >= 6 && pct(r.frames, 0.9) <= 40)) return;
+        tl.pause().kill();
+        r.tls.splice(r.tls.indexOf(tl), 1);
+        r.scramble = 0;
+        // After this render pass: flips already under way in it may still write a glyph, so settle
+        // every cell on wave 1 (leaves at rest) before the plain waves start.
+        queueMicrotask(() => {
+          if (r.stopping) return;
+          gsap.set(boardLeaves(), { rotationX: 0 });
+          setBoardNow(states[1]);
+          buildWaves(r, states, 2, 0, 0.02, full).tl.play(0);
+          DEP.shown = states[states.length - 1];
+        });
+      }, null, 0.3 + wave - 0.02);
+    }
+    tl.play(0);
+  }
+  function maybeSun() { if (DEP.sunPending && !DEP.replay && !reduced) playSun(null, 0); }
+  // When the board comes into view: replay her build the first time, one diff wave after a change.
+  function maybePlay() {
+    if (DEP.replay || !DEP.pending) return;
+    if (reduced) { finishBoard(); return; }
+    if (!DEP.seen) {
+      const states = replayStates();
+      DEP.board.ensure(Math.max(DEP.board.rows.length, slotsFor(states)));
+      setBoardNow(states[0]);
+      setSunNow(false);
+      playStates(states, { full: true });
+    } else {
+      const finalRows = depRows(plan);
+      DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + 1));
+      playStates([DEP.shown, finalRows], { full: false });
+    }
+  }
+  const boardInView = () => { const b = DEP.board.host.getBoundingClientRect(); return b.top < innerHeight * 0.85 && b.bottom > 80; };
+  let depTimer = 0;
+  // After picks or her line change: settle the board now if she is looking at it, else on the next visit.
+  function syncDepBoard({ initial = false } = {}) {
+    const finalRows = depRows(plan);
+    const sig = depSig();
+    if (initial) {
+      if (reduced || (DEP.seen && DEP.seen.sig === sig)) {
+        DEP.board.ensure(finalRows.length + 1);
+        setBoardNow(finalRows);
+        setSunNow(true);
+        if (reduced) markSeen();
+        DEP.pending = false;
+      } else if (DEP.seen) {
+        const old = DEP.seen.rows;
+        DEP.board.ensure(Math.max(old.length, finalRows.length) + 1);
+        setBoardNow(old);
+        setSunNow(true);
+        DEP.pending = true;
+      } else {
+        const states = replayStates();
+        DEP.board.ensure(slotsFor(states));
+        setBoardNow(states[0]);
+        setSunNow(false);
+        DEP.pending = true;
+      }
+      return;
+    }
+    if (DEP.replay) stopReplay();
+    if (reduced) { finishBoard(); return; }
+    if (sameRows(DEP.shown, finalRows)) { DEP.shown = finalRows; DEP.board.rows.forEach((row, i) => applyRowMeta(row, finalRows[i] || null)); markSeen(); return; }
+    DEP.pending = true;
+    clearTimeout(depTimer);
+    depTimer = setTimeout(() => { if (boardInView()) maybePlay(); }, 250);
+  }
+  // On the day, the minute tick flips only the remarks that changed.
+  function depTick() {
+    if (DEP.replay || DEP.pending || !plan) return;
+    const finalRows = depRows(plan);
+    DEP.board.rows.forEach((row, i) => {
+      const d = finalRows[i] || null;
+      if (JSON.stringify(plainRows([row.data])) !== JSON.stringify(plainRows([d]))) flipRowNow(row, d);
+    });
+    DEP.shown = finalRows;
+    markSeen();
+  }
+
+  // Board taps: finish a running replay; the Sunday and SASHA eggs; otherwise go to the stop in Details.
+  function onBoardClick(e) {
+    if (DEP.replay) { e.preventDefault(); finishBoard(); return; }
+    const hit = e.target.closest('.board-hit');
+    if (!hit) return;
+    const row = DEP.board.rows.find((r) => r.hit === hit) || (DEP.board.sun.hit === hit ? DEP.board.sun : null);
+    if (!row || !row.data) return;
+    const t = row.data.target;
+    if (t === 'sunday') { DEP.sunEgg = !DEP.sunEgg; flipRowNow(DEP.board.sun, sundayRow(DEP.sunEgg)); return; }
+    if (t === 'tbc') { slot('free-text').focus(); return; }
+    const el = $(`.plan-item[data-key="${CSS.escape(t)}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
+    el.classList.remove('is-flash');
+    void el.offsetWidth;
+    el.classList.add('is-flash');
+    setTimeout(() => el.classList.remove('is-flash'), 1200);
+  }
+  function onHeroClick(e) {
+    const hit = e.target.closest('.board-hit');
+    if (!hit) return;
+    const i = HERO.rows.findIndex((r) => r.hit === hit);
+    if (i < 0 || !H.rows[i].tap) return;
+    heroEgg[i] = !heroEgg[i];
+    flipRowNow(HERO.rows[i], heroRowData(H.rows[i], i));
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Card chips: her departure time on each picked card                  */
+  /* ------------------------------------------------------------------ */
+
+  function syncChips() {
+    $$('.pick').forEach((card) => {
+      const id = card.dataset.id;
+      const sr = $(`#pk-${CSS.escape(id)}-s`, card);
+      if (!picks.has(id)) { sr.textContent = ''; return; }
+      const it = plan.items.find((x) => x.kind === 'option' && x.id === id);
+      const text = it ? it.rough : DEPC.drop.time;
+      sr.textContent = it ? fmt(U.pickedAt, { time: it.rough }) : U.pickedDrop;
+      const chip = $('.chip', card);
+      chip.classList.toggle('is-drop', !it);
+      const fl = [...chip.children].map(flapOf);
+      const fresh = fl.every((f) => !f.cur);
+      if (chip.tl) { chip.tl.progress(1).kill(); chip.tl = null; }
+      if (fresh || reduced) { fl.forEach((f, k) => setFlap(f, cellChar(text, k))); return; }
+      const tl = gsap.timeline({ onComplete: () => { chip.tl = null; } });
+      fl.forEach((f, k) => { const b = cellChar(text, k); if (f.cur !== b) addFlip(tl, f, b, k * 0.03, 0.07); });
+      chip.tl = tl;
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Details: the plan list                                              */
   /* ------------------------------------------------------------------ */
 
   const placeOf = (it) => (it.kind === 'option' ? it.option : it.kind === 'anchor' && typeof it.anchor.lat === 'number' ? it.anchor : null);
 
+  function renderDepNote() {
+    const D = C.day;
+    const back = hasBackup ? ` <button class="btn btn--small" type="button" data-action="back-to-mine">${esc(D.backToMine)}</button>` : '';
+    slot('dep-note').innerHTML = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
+    const books = plan.options.filter((o) => o.book).map((o) => o.book).concat(U.bookDinner);
+    const after = [`<p>${esc(fmt(D.willBook, { list: books.join(U.listJoin) }))}</p>`];
+    if (C.options.some((o) => o.default && !plan.options.includes(o))) after.push(`<p>${esc(D.bibsSaturday)}</p>`);
+    slot('send-after').innerHTML = after.join('');
+  }
+
   function renderDay() {
     const D = C.day;
     const body = slot('day-body');
-    const back = hasBackup ? ` <button class="btn btn--small" type="button" data-action="back-to-mine">${esc(D.backToMine)}</button>` : '';
-    const note = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
-    if (!picks.size) { body.innerHTML = `${note}<p class="day-empty">${esc(D.empty)}</p>`; return; }
-
+    if (!picks.size) { body.innerHTML = `<p class="day-empty">${esc(D.empty)}</p>`; return; }
     let html = '', group = '', walked = 0;
     for (const it of plan.items) {
       if (it.kind === 'transfer') { walked += it.transfer.m; html += `<li class="plan-transfer"><p>${esc(it.transfer.text)}</p></li>`; continue; }
@@ -229,7 +762,8 @@
       if (it.slot !== group) { group = it.slot; html += `<li class="plan-group"><h3 class="label">${esc(D.slots[group])}</h3></li>`; }
       const time = it.exact ? it.rough : fmt(U.around, { time: it.rough });
       const timeRow = `<p class="plan-time"><span aria-hidden="true">${esc(time)}</span> <span class="tag tag--now">${esc(U.nowTag)}</span></p>`;
-      const attrs = `data-min="${toMin(it.rough)}" data-km="${walked}"`;
+      const key = it.kind === 'lunch-filler' ? 'lunch' : it.id;
+      const attrs = `data-min="${toMin(it.rough)}" data-km="${walked}" data-key="${esc(key)}"`;
       if (it.kind === 'lunch-filler') {
         html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
         continue;
@@ -238,24 +772,17 @@
       const title = o.title;
       const line = it.kind === 'option' ? o.line : o.body;
       const link = o.links?.[0] ? linkBtn(o.links[0].url, o.links[0].label, title) : '';
-      const tag = it.kind === 'option' ? `<span class="tag">${esc(o.tag)}</span>` : '';
-      const photo = o.image ? thumbHTML(o.image, 'plan-photo', 64) : '';
+      const tag = it.kind === 'option' && o.tag ? `<span class="tag">${esc(o.tag)}</span>` : '';
+      const photo = o.image ? thumbHTML(o.image, 'plan-photo', '64px') : '';
       html += `<li class="plan-item${photo ? '' : ' plan-item--text'}" ${attrs} data-dot="${placeOf(it) ? esc(it.id) : ''}" data-hud-title="${esc(o.hud || title)}">
         ${photo}<div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(title)}</h4>${line ? `<p class="plan-line">${esc(line)}</p>` : ''}${tag || link ? `<div class="plan-meta">${tag}${link}</div>` : ''}</div>
       </li>`;
     }
-
-    const after = [];
-    after.push(`<p class="day-summary">${esc(fmt(D.summary, { n: picks.size, km: (plan.walkM / 1000).toFixed(1) }))}</p>`);
-    if (picks.size >= 7) after.push(`<p>${esc(D.manyLine)}</p>`);
-    const books = plan.options.filter((o) => o.book).map((o) => o.book).concat(U.bookDinner);
-    after.push(`<p>${esc(fmt(D.willBook, { list: books.join(U.listJoin) }))}</p>`);
-    if (C.options.some((o) => o.default && !plan.options.includes(o))) after.push(`<p>${esc(D.bibsSaturday)}</p>`);
-    if (plan.didntFit.length) {
-      after.push(`<div class="didnt"><h3>${esc(D.didntFitTitle)}</h3><ul>${plan.didntFit
-        .map((d) => `<li><span class="didnt-title">${esc(d.option.title)}</span>: ${esc(d.reason)}</li>`).join('')}</ul></div>`);
-    }
-    body.innerHTML = `${note}<ol class="plan">${html}</ol><div class="day-after">${after.join('')}</div>`;
+    // What didn't fit is on the board as dim rows; screen readers get the reasons here.
+    const didnt = plan.didntFit.length
+      ? `<div class="sr-only"><h3>${esc(D.didntFitTitle)}</h3><ul>${plan.didntFit.map((d) => `<li>${esc(d.option.title)}: ${esc(d.reason)}</li>`).join('')}</ul></div>`
+      : '';
+    body.innerHTML = `<ol class="plan">${html}</ol>${didnt}`;
   }
 
   /* ------------------------------------------------------------------ */
@@ -481,59 +1008,6 @@
     else if (!varTimer) varTimer = setTimeout(syncSkyVar, 140);
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Split-flap                                                          */
-  /* ------------------------------------------------------------------ */
-
-  const flaps = new WeakMap();
-  function flapOf(el) {
-    let f = flaps.get(el);
-    if (!f) {
-      const [ft, fb, lt, lb] = el.children;
-      f = { ft: ft.firstChild, fb: fb.firstChild, lt: lt.firstChild, lb: lb.firstChild, ltEl: lt, lbEl: lb, cur: '' };
-      flaps.set(el, f);
-    }
-    return f;
-  }
-  function setFlap(f, ch) {
-    f.ft.textContent = f.fb.textContent = f.lt.textContent = f.lb.textContent = ch;
-    f.cur = ch;
-  }
-  // One flip: the upper leaf with the old glyph folds down, the lower leaf with the new glyph lands.
-  function addFlip(tl, f, next, at, d) {
-    tl.call(() => {
-      f.lt.textContent = f.cur;
-      f.ft.textContent = next;
-      f.lb.textContent = next;
-      gsap.set(f.lbEl, { rotationX: 90 });
-    }, null, at);
-    tl.fromTo(f.ltEl, { rotationX: 0 }, { rotationX: -90, duration: d, ease: 'power1.in', immediateRender: false }, at);
-    tl.fromTo(f.lbEl, { rotationX: 90 }, { rotationX: 0, duration: d, ease: 'power1.out', immediateRender: false }, at + d);
-    tl.call(() => { f.fb.textContent = next; f.cur = next; }, null, at + 2 * d);
-  }
-  const GLYPHS = 'ABCDEFGHIJKLMNOPRSTUVZ0123456789';
-
-  function boardTargets() {
-    return $$('.board-row').map((row) =>
-      $$('.cells', row).flatMap((cellsEl) => {
-        const chars = [...cellsEl.dataset.text];
-        return [...cellsEl.children].map((el, i) => ({ f: flapOf(el), ch: chars[i] || ' ' }));
-      }));
-  }
-  function boardFinal() { boardTargets().flat().forEach(({ f, ch }) => setFlap(f, ch)); }
-  function boardIntro(tl, start) {
-    const D = 0.045;
-    boardTargets().forEach((cells, ri) => {
-      cells.forEach(({ f, ch }) => {
-        setFlap(f, ' ');
-        let at = start + ri * 0.12 + Math.random() * 0.05;
-        const n = 3 + Math.floor(Math.random() * 4);
-        for (let k = 0; k < n; k++) { addFlip(tl, f, GLYPHS[Math.floor(Math.random() * GLYPHS.length)], at, D); at += 2 * D; }
-        addFlip(tl, f, ch, at, D);
-      });
-    });
-  }
-
   // HUD clock: four flaps, flipped only when a digit changes.
   const hudClock = $('.hud-clock');
   hudClock.innerHTML = FLAP + FLAP + '<span class="colon">:</span>' + FLAP + FLAP;
@@ -619,38 +1093,20 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Time: countdown, "now"                                              */
+  /* Time: the minute tick (live boards, "now" in Details and the HUD)   */
   /* ------------------------------------------------------------------ */
 
-  const romeFmt = new Intl.DateTimeFormat('en-CA', { timeZone: C.meta.tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-  function romeNow() {
-    const p = Object.fromEntries(romeFmt.formatToParts(new Date()).map((x) => [x.type, x.value]));
-    return { date: `${p.year}-${p.month}-${p.day}`, min: +p.hour * 60 + +p.minute };
-  }
-  const W = U.countdown;
-  const unit = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-  function countdownText(r) {
-    if (r.date === C.meta.date) return W.today;
-    if (r.date > C.meta.date) return W.after;
-    const mins = Math.max(0, Math.floor((new Date(C.meta.startsAt) - Date.now()) / 60000));
-    const d = Math.floor(mins / 1440), h = Math.floor((mins % 1440) / 60), m = mins % 60;
-    const parts = d > 0 ? [[d, W.day, W.days], [h, W.hour, W.hours]] : h > 0 ? [[h, W.hour, W.hours], [m, W.minute, W.minutes]] : [[m, W.minute, W.minutes]];
-    const shown = parts.filter(([n], i) => n > 0 || (i === 0 && parts.length === 1));
-    return fmt(W.startsIn, { time: shown.map(([n, one, many]) => unit(n, one, many)).join(W.join) });
-  }
-  const nowBtns = $$('.hud-now, .hero-now');
+  const nowBtns = $$('.hud-now');
   let jumpEl = null;
   function tick() {
     const r = romeNow();
-    slot('countdown').textContent = countdownText(r);
-    const row = $('.countdown'), today = slot('hero-today'), isToday = r.date === C.meta.date;
-    if (isToday && row.parentElement !== today) today.append(row);
-    if (!isToday && row.parentElement === today) $('.hero-meta:not(.hero-today)').prepend(row);
-    today.hidden = !isToday;
+    const today = r.date === C.meta.date;
+    if (HERO && HERO.rows[0].data) heroTick();
+    if (DEP.board) depTick();
     const items = $$('.plan-item');
     let nowEl = null;
     jumpEl = null;
-    if (isToday && items.length) {
+    if (today && items.length) {
       items.forEach((el, i) => { const end = i < items.length - 1 ? +items[i + 1].dataset.min : 24 * 60; if (r.min >= +el.dataset.min && r.min < end) nowEl = el; });
       jumpEl = nowEl || (r.min < +items[0].dataset.min ? items[0] : null);
     }
@@ -735,9 +1191,12 @@
   function update() {
     plan = P.build(C, [...picks]);
     syncSend();
+    renderDepNote();
     renderDay();
     renderMapPlan();
+    syncChips();
     if (booted) {
+      syncDepBoard();
       tick();
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 60);
@@ -756,7 +1215,8 @@
       skyHex = '';
 
       if (reduced) {
-        boardFinal();
+        heroFinal();
+        finishBoard();
         mapRevealed = true;
         ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (self) => render(self.scroll()) });
         render(scrollY);
@@ -773,12 +1233,17 @@
       });
       render(scrollY);
 
-      // Hero: the board flips in row by row, then the word and the lead.
+      // Hero: the ARRIVALS board flips in (or only its changed cells on a return visit), then the word and the lead.
       const intro = gsap.timeline();
-      boardIntro(intro, 0.2);
-      intro.from(['.hero-title', '.hero-date', '.hero-lead', '.hero-meta', '.hero-links'], {
+      heroIntro(intro, 0.2);
+      intro.from(['.hero-title', '.hero-date', '.hero-lead', '.hero-meta'], {
         autoAlpha: 0, y: 18, duration: 0.8, ease: 'power3.out', stagger: 0.1, clearProps: 'transform,visibility,opacity',
       }, 0.75);
+
+      // DEPARTURES: her build replays when the board comes into view.
+      ScrollTrigger.create({ trigger: '#dep .board', start: 'top 45%', onEnter: maybePlay, onEnterBack: maybePlay });
+      // A long board pushes the Sunday row below the fold; it then waits for its own trigger.
+      ScrollTrigger.create({ trigger: '#dep .board-sun', start: 'top 85%', onEnter: maybeSun });
 
       // Map: the first time it scrolls in, the lines draw and the dots pop in plan order.
       revealMap = () => {
@@ -817,19 +1282,31 @@
   gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
   renderHero();
   renderStatic();
+  renderDepBoard();
   renderMapFrame();
   placeMap();
   loadState();
   syncCards();
   slot('free-text').value = freeText;
   update();
+  syncDepBoard({ initial: true });
 
   slot('pick-groups').addEventListener('click', (e) => {
     const b = e.target.closest('.pick');
     if (b) toggle(b.dataset.id);
   });
-  slot('free-text').addEventListener('input', (e) => { freeText = e.target.value; saveState(); syncSend(); });
-  slot('day-body').addEventListener('click', (e) => { if (e.target.closest('[data-action="back-to-mine"]')) backToMine(); });
+  let textTimer = 0;
+  slot('free-text').addEventListener('input', (e) => {
+    freeText = e.target.value;
+    saveState();
+    syncSend();
+    // Her line shows up on the board as a TBC row, half a second after she stops typing.
+    clearTimeout(textTimer);
+    textTimer = setTimeout(() => { if (booted) syncDepBoard(); }, 500);
+  });
+  slot('dep-note').addEventListener('click', (e) => { if (e.target.closest('[data-action="back-to-mine"]')) backToMine(); });
+  slot('dep-board').addEventListener('click', onBoardClick);
+  slot('board').addEventListener('click', onHeroClick);
   slot('send').addEventListener('click', send);
   nowBtns.forEach((b) => b.addEventListener('click', jumpToNow));
   wideMQ.addEventListener('change', () => { placeMap(); renderMapPlan(); ScrollTrigger.refresh(); });
@@ -838,8 +1315,10 @@
   setupMotion();
   booted = true;
   tick();
-  setTimeout(() => { tick(); setInterval(tick, 60000); }, 60000 - (Date.now() % 60000) + 50);
+  setTimeout(() => { tick(); setInterval(tick, 60000); }, 60000 - (nowMs() % 60000) + 50);
   loadWeather();
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => warmBoard(), { timeout: 3000 });
+  window.__venerdi = { finishBoard, depRows: () => depRows(plan), boardRows: () => DEP.board.rows.map((r) => r.shown), replayStats: () => DEP.stats, plan: () => plan, state: () => ({ replaying: !!DEP.replay, pending: DEP.pending, seen: !!DEP.seen, sun: DEP.board.sun.shown }) };
 
   $$('details').forEach((d) => d.addEventListener('toggle', () => ScrollTrigger.refresh()));
   if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());

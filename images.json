@@ -366,5 +366,213 @@
    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Maratona_di_Roma_2019_-_Rome,_Italy_-_DSC01373.jpg"
   }
+ },
+ "colosseum-arena": {
+  "src800": "img/colosseum-arena-800.webp",
+  "src1600": "img/colosseum-arena-1600.webp",
+  "w": 1600,
+  "h": 1056,
+  "alt": "Inside the Colosseum: the rebuilt arena floor and ruined tiers all around, under a cloudy blue sky",
+  "focal": "52% 65%",
+  "color": "#948980",
+  "credit": {
+   "title": "Colosseum interior 2012",
+   "author": "Colin",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Colosseum_interior_2012.jpg"
+  }
+ },
+ "domus-aurea": {
+  "src800": "img/domus-aurea-800.webp",
+  "src1600": "img/domus-aurea-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Looking up into the domed octagonal room of Nero's Domus Aurea, light pouring through the round oculus",
+  "focal": "50% 35%",
+  "color": "#7b7264",
+  "credit": {
+   "title": "Dome Octogonal Room Aurea 04 2024 7968",
+   "author": "Mariordo",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dome_Octogonal_Room_Aurea_04_2024_7968.jpg"
+  }
+ },
+ "san-clemente": {
+  "src800": "img/san-clemente-800.webp",
+  "src1600": "img/san-clemente-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "The Mithraeum under San Clemente: a carved altar between stone benches in a low, vaulted, lamp-lit room",
+  "focal": "48% 55%",
+  "color": "#69441a",
+  "credit": {
+   "title": "Basilica San Clemente Rom 7",
+   "author": "Edelmauswaldgeist",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Basilica_San_Clemente_Rom_7.jpg"
+  }
+ },
+ "finish-line": {
+  "src800": "img/finish-line-800.webp",
+  "src1600": "img/finish-line-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Via degli Annibaldi at dusk, car light trails leading to the lit-up Colosseum at the end of the street",
+  "focal": "57% 35%",
+  "color": "#6b6056",
+  "credit": {
+   "title": "View of Colosseo from Ponte degli Annibaldi",
+   "author": "Wilfredo Rafael Rodriguez Hernandez (Wilfredor)",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:View_of_Colosseo_from_Ponte_degli_Annibaldi.jpg"
+  }
+ },
+ "borghese": {
+  "src800": "img/borghese-800.webp",
+  "src1600": "img/borghese-1600.webp",
+  "w": 1600,
+  "h": 1147,
+  "alt": "Bernini's marble Apollo reaching Daphne as laurel leaves sprout from her raised fingers",
+  "focal": "50% 35%",
+  "color": "#645743",
+  "credit": {
+   "title": "Apollo & Daphne September 2015-1a",
+   "author": "Alvesgaspar",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Apollo_%26_Daphne_September_2015-1a.jpg"
+  }
+ },
+ "coppede": {
+  "src800": "img/coppede-800.webp",
+  "src1600": "img/coppede-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Carved stone arch over Via Dora in Quartiere Coppedè, an iron chandelier hanging beneath it",
+  "focal": "50% 45%",
+  "color": "#605f5b",
+  "credit": {
+   "title": "Q17 - q Coppedé 1050985 arco d'ingresso",
+   "author": "Lalupa (cropped)",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Q17_-_q_Copped%C3%A9_1050985_arco_d%27ingresso.JPG"
+  }
+ },
+ "film-fest": {
+  "src800": "img/film-fest-800.webp",
+  "src1600": "img/film-fest-1600.webp",
+  "w": 1600,
+  "h": 915,
+  "alt": "Metal-clad dome of a concert hall at the Auditorium Parco della Musica above the open-air cavea seats",
+  "focal": "52% 50%",
+  "color": "#3f445a",
+  "credit": {
+   "title": "WTTC - Auditorium Parco della Musica - GS Rome (54819520486)",
+   "author": "World Travel & Tourism Council (cropped)",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:WTTC_-_Auditorium_Parco_della_Musica_-_GS_Rome_(54819520486).jpg"
+  }
+ },
+ "cannon": {
+  "src800": "img/cannon-800.webp",
+  "src1600": "img/cannon-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Uniformed soldiers fire the Gianicolo noon cannon in a burst of white smoke as a crowd watches from the wall",
+  "focal": "60% 45%",
+  "color": "#7e826a",
+  "credit": {
+   "title": "Per Santa Barbara!",
+   "author": "Sorciosecco",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Per_Santa_Barbara!.jpg"
+  }
+ },
+ "acquedotti": {
+  "src800": "img/acquedotti-800.webp",
+  "src1600": "img/acquedotti-1600.webp",
+  "w": 1600,
+  "h": 1071,
+  "alt": "Tall stone arches of the Aqua Claudia aqueduct running along a dry grass field beside a dirt path",
+  "focal": "40% 50%",
+  "color": "#826650",
+  "credit": {
+   "title": "2 - Parco degli Acquedotti",
+   "author": "DonZaucker",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:2_-_Parco_degli_Acquedotti.jpg"
+  }
+ },
+ "appia": {
+  "src800": "img/appia-800.webp",
+  "src1600": "img/appia-1600.webp",
+  "w": 1600,
+  "h": 1063,
+  "alt": "Worn Roman paving stones of the Via Appia Antica, lined with umbrella pines and tall cypresses",
+  "focal": "50% 60%",
+  "color": "#6b665e",
+  "credit": {
+   "title": "Rome Via Appia Antica 13-01-2011 13-21-18",
+   "author": "Paul Hermans",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rome_Via_Appia_Antica_13-01-2011_13-21-18.JPG"
+  }
+ },
+ "sidecar": {
+  "src800": "img/sidecar-800.webp",
+  "src1600": "img/sidecar-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A red and a lime green Vespa with sidecars carrying helmeted riders on a street in Rome",
+  "focal": "50% 55%",
+  "color": "#72645a",
+  "credit": {
+   "title": "Two Vespa sidecars",
+   "author": "Vsatinet",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Two_Vespa_sidecars.jpg"
+  }
+ },
+ "innocenti": {
+  "src800": "img/innocenti-800.webp",
+  "src1600": "img/innocenti-1600.webp",
+  "w": 1260,
+  "h": 840,
+  "alt": "Trays of brutti ma buoni and almond-topped jam biscuits behind the glass counter at Innocenti",
+  "focal": "50% 50%",
+  "color": "#958168",
+  "credit": {
+   "title": "Biscotti (15116728518)",
+   "author": "daryl_mitchell from Saskatoon, Saskatchewan, Canada (cropped)",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Biscotti_(15116728518).jpg"
+  }
+ },
+ "pasta": {
+  "src800": "img/pasta-800.webp",
+  "src1600": "img/pasta-1600.webp",
+  "w": 1200,
+  "h": 800,
+  "alt": "A hand slicing a rolled sheet of fresh egg pasta into fettuccine with a long knife on a wooden board",
+  "focal": "35% 50%",
+  "color": "#c9a778",
+  "credit": {
+   "title": "How to cut the fresh egg pasta with a knife The art of pasta making in Italy",
+   "author": "Isacookinpadua",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:How_to_cut_the_fresh_egg_pasta_with_a_knife_The_art_of_pasta_making_in_Italy.JPG"
+  }
  }
 }

@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Friday in Rome</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="You land at 08:10, Laurin and Olivia land around 9 tonight. The bit in between is up to you.">
+<meta name="description" content="The bit in between is up to you.">
 <meta name="theme-color" content="#CFE4F1">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Friday in Rome">
-<meta property="og:description" content="You land at 08:10, Laurin and Olivia land around 9 tonight. The bit in between is up to you.">
+<meta property="og:description" content="The bit in between is up to you.">
 <meta property="og:image" content="https://whaamkabaam.github.io/venerdi/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -17,7 +17,7 @@
 <meta property="og:url" content="https://whaamkabaam.github.io/venerdi/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Friday in Rome">
-<meta name="twitter:description" content="You land at 08:10, Laurin and Olivia land around 9 tonight. The bit in between is up to you.">
+<meta name="twitter:description" content="The bit in between is up to you.">
 <meta name="twitter:image" content="https://whaamkabaam.github.io/venerdi/og.jpg">
 <meta name="twitter:image:alt" content="An arrivals split-flap board above the word Friday">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -51,17 +51,10 @@
   <div class="hero-text">
     <h1 class="hero-title" data-slot="hero-title"></h1>
     <p class="hero-date" data-slot="hero-date"></p>
-    <ul class="hero-meta hero-today" data-slot="hero-today" hidden></ul>
     <p class="hero-lead" data-slot="hero-lead"></p>
     <ul class="hero-meta">
-      <li class="countdown"><span data-slot="countdown"></span><button class="btn hero-now" type="button" hidden data-slot="hero-now"></button></li>
       <li class="weather" data-slot="weather"></li>
-      <li class="sunset" data-slot="sunset"></li>
     </ul>
-    <nav class="hero-links" data-slot="hero-links">
-      <a href="#pick" data-slot="nav-pick"></a>
-      <a href="#day" data-slot="nav-day"></a>
-    </nav>
   </div>
   <noscript><p class="noscript">This page needs JavaScript to show the picker.</p></noscript>
 </header>
@@ -74,13 +67,18 @@
 
   <section class="section" id="pick" aria-labelledby="pick-h">
     <h2 id="pick-h" data-slot="pick-title"></h2>
-    <p class="section-lead" data-slot="pick-lead"></p>
     <div class="pick-groups" data-slot="pick-groups"></div>
+  </section>
+
+  <section class="section section--dep" id="dep" aria-labelledby="dep-h">
+    <h2 id="dep-h" class="sr-only" data-slot="dep-title"></h2>
+    <div data-slot="dep-note"></div>
+    <div class="board-wrap" data-slot="dep-board"></div>
     <div class="send">
       <label class="send-label" for="free-text" data-slot="free-label"></label>
-      <textarea id="free-text" class="send-text" rows="3" maxlength="1000" data-slot="free-text"></textarea>
+      <textarea id="free-text" class="send-text" rows="2" maxlength="1000" data-slot="free-text"></textarea>
       <button class="btn btn--primary send-btn" type="button" data-slot="send"></button>
-      <p class="send-hint" data-slot="send-hint"></p>
+      <div class="send-after" data-slot="send-after"></div>
     </div>
   </section>
 
