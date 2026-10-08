@@ -14,885 +14,750 @@
     "walkCapKm": 10
   },
   "hero": {
-    "boardTitle": "Arrivi",
-    "boardSubtitle": "Arrivals · Roma",
+    "boardTitle": "Arrivals",
+    "boardSubtitle": "Rome",
     "columns": [
-      "Orario",
-      "Chi",
-      "Note"
-    ],
-    "columnsEn": [
       "Time",
       "Who",
-      "Remarks"
+      "Status"
+    ],
+    "columnsEn": [
+      "",
+      "",
+      ""
     ],
     "rows": [
       {
-        "time": "MAR 13",
+        "time": "TUE 13",
         "who": "FELIX",
-        "note": "GIÀ QUI",
-        "noteEn": "already here"
+        "note": "ALREADY HERE",
+        "noteEn": ""
       },
       {
-        "time": "VEN 16 08:10",
+        "time": "FRI 16 08:10",
         "who": "SASHA",
-        "note": "IN ARRIVO",
-        "noteEn": "inbound",
+        "note": "LANDING",
+        "noteEn": "",
         "highlight": true
       },
       {
-        "time": "VEN 16 21:00",
+        "time": "FRI 16 21:00",
         "who": "LAURIN+OLIVIA",
-        "note": "STASERA",
-        "noteEn": "tonight"
+        "note": "TONIGHT",
+        "noteEn": ""
       }
     ],
-    "title": "Venerdì",
-    "dateLine": "16 ottobre 2026 · Roma",
-    "lead": "You land in the morning, Laurin and Olivia land at night. This is the bit in between."
+    "title": "Friday",
+    "dateLine": "16 October · Rome",
+    "lead": "You land at 08:10, Laurin and Olivia land around 9 tonight. The bit in between is up to you."
   },
-  "arrival": {
-    "title": "From the airport",
-    "lead": "If you're on the 06:00 Ryanair (FR134), you land at Fiumicino at 08:10. It's the only direct morning flight from Berlin, and lately it's been landing early. From Termini, bus 40 or 64 to Argentina is about 20 min. Drop your bag off first, I'll be at breakfast from 09:45, no rush.",
-    "options": [
+  "note": {
+    "greeting": "Hey Sasha,",
+    "paras": [
+      "Instead of me planning every minute, you pick. Tap whatever sounds good below and the page puts a relaxed day together. Then send it to me.",
+      "Two things or ten, both fine. Nothing's booked yet, I'll sort tickets once you've picked.",
+      "Dinner's early either way, Sunday's the race :)"
+    ],
+    "sign": "Felix"
+  },
+  "picker": {
+    "title": "What sounds good?",
+    "lead": "Tap whatever you'd like to do. The day below builds itself from your picks.",
+    "groups": [
       {
-        "from": "Easiest",
-        "how": "Leonardo Express to Termini",
-        "detail": "32 min non-stop, every 15 min, €14. Tap your card or phone at the platform gate, no ticket needed.",
-        "time": "≈ 60–80 min from landing to Termini"
+        "id": "food",
+        "label": "Food"
       },
       {
-        "from": "Cheapest",
-        "how": "FL1 regional train",
-        "detail": "€8, every 15 min. It skips Termini and stops at Trastevere and Ostiense instead.",
-        "time": "≈ 30 min to Trastevere"
+        "id": "see",
+        "label": "Things to see"
       },
       {
-        "from": "Door to door",
-        "how": "White taxi, fixed fare",
-        "detail": "€55 to anywhere inside the old walls. Say 'tariffa fissa' before you get in, and ignore anyone offering a ride inside the terminal.",
-        "time": "45–60 min in Friday traffic"
+        "id": "views",
+        "label": "Views and wandering"
+      },
+      {
+        "id": "weird",
+        "label": "Weird stuff"
+      },
+      {
+        "id": "race",
+        "label": "Race stuff"
       }
     ],
-    "warning": "No strikes listed for Ryanair or Rome transport on Friday (checked 8 Oct)."
+    "freeTextLabel": "Anything else you want to do?",
+    "freeTextPlaceholder": "Type it here, it goes into the message",
+    "sendLabel": "Send to Felix",
+    "sendHint": "Opens WhatsApp or your share menu.",
+    "shareIntro": "My picks for Friday:",
+    "shareExtra": "Also:"
   },
-  "stops": [
-    {
-      "id": "breakfast",
-      "kind": "major",
-      "time": "09:45",
-      "phase": "morning",
-      "plaque": {
-        "rione": "R. VII Regola",
-        "street": "Piazza Benedetto Cairoli"
-      },
-      "title": "Maritozzo, standing up",
-      "place": "Roscioli Caffè",
-      "body": "Basically a soft bun with way too much whipped cream in it. They fill it when you order.",
-      "move": "Order 'un maritozzo e un cappuccino al banco'. Al banco just means at the counter, and it's about half the price of sitting down.",
-      "facts": [
-        "≈ €6 each",
-        "20 min",
-        "Open from 07:00"
+  "day": {
+    "title": "Your Friday",
+    "empty": "Pick a few things above and your day shows up here.",
+    "manyLine": "That's a lot for two days before a race. Maybe drop one or two?",
+    "didntFitTitle": "Didn't fit",
+    "summary": "Picked: {n}. About {km} km on foot.",
+    "willBook": "I'll book: {list}.",
+    "noLunch": "Lunch wherever we are.",
+    "fromLink": "These are the picks from the link. Tap any card to change them.",
+    "slots": {
+      "morning": "Morning",
+      "lunch": "Lunch",
+      "afternoon": "Afternoon",
+      "sunset": "Sunset",
+      "evening": "Evening"
+    },
+    "bibsSaturday": "Bibs on Saturday then.",
+    "freeTime": "Nothing planned. Coffee, sit somewhere, whatever."
+  },
+  "anchors": {
+    "arrival": {
+      "time": "08:10",
+      "title": "You land",
+      "body": "Fiumicino at 08:10. Leonardo Express to Termini: 32 min, €14, just tap your card at the gate. Drop your bag and I'll meet you for coffee around 09:45.",
+      "hud": "Landing"
+    },
+    "dinner": {
+      "time": "19:30",
+      "title": "Dinner",
+      "place": "Li Rioni",
+      "body": "Pizza at Li Rioni, behind the Colosseum. I'll book it.",
+      "area": "celio",
+      "lat": 41.88869,
+      "lon": 12.49783,
+      "image": "suppli",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Li+Rioni+a+Santiquattro+Via+dei+Santi+Quattro+24+Roma"
+        }
       ],
+      "hud": "Dinner"
+    },
+    "end": {
+      "time": "21:00",
+      "title": "That's Friday",
+      "body": "Laurin and Olivia land around 9.",
+      "hud": "Done"
+    }
+  },
+  "options": [
+    {
+      "id": "maritozzo",
+      "group": "food",
+      "title": "Maritozzo for breakfast",
+      "line": "Soft bun filled with whipped cream when you order. Roscioli Caffè, near Campo de' Fiori.",
+      "tag": "From 07:00",
+      "image": "maritozzo",
+      "area": "centro",
+      "lat": 41.89415,
+      "lon": 12.47443,
+      "minutes": 25,
+      "open": "07:00",
+      "close": "18:00",
+      "slot": "morning",
+      "order": 1,
       "links": [
         {
           "label": "Map",
           "url": "https://maps.google.com/?q=Roscioli+Caff%C3%A8+Pasticceria+Piazza+Benedetto+Cairoli+16+Roma"
         }
       ],
-      "image": "maritozzo",
-      "swaps": [
-        {
-          "title": "Coming through Termini?",
-          "place": "Pasticceria Regoli",
-          "body": "Regoli is 8 minutes from the station and does the other famous maritozzo. Open from 06:30.",
-          "facts": [
-            "€2.50 a maritozzo",
-            "Esquilino"
-          ],
-          "links": [
-            {
-              "label": "Map",
-              "url": "https://maps.google.com/?q=Pasticceria+Regoli+Via+dello+Statuto+60+Roma"
-            }
-          ]
-        }
-      ],
-      "walkToNext": {
-        "m": 280,
-        "min": 4
-      },
-      "hud": "Roscioli Caffè"
+      "hud": "Breakfast"
     },
     {
       "id": "boccione",
-      "kind": "pit",
-      "time": "10:10",
-      "phase": "morning",
-      "hud": "Boccione",
-      "plaque": {
-        "rione": "R. XI S. Angelo",
-        "street": "Via del Portico d'Ottavia"
-      },
-      "title": "Second breakfast",
-      "place": "Pasticceria Boccione",
-      "body": "Old-school Jewish bakery. No sign, not much smiling, and the cakes look burnt on purpose. The ricotta and sour cherry tart is the one, and it's not too sweet.",
-      "move": "Cash, and know what you want before the counter. The tart tends to sell out before noon.",
-      "facts": [
-        "≈ €5 a slice",
-        "10 min",
-        "Fridays until about 15:30"
-      ],
+      "group": "food",
+      "title": "Boccione bakery",
+      "line": "Tiny Jewish bakery with no sign. The sour cherry and ricotta tart.",
+      "tag": "Mornings only",
+      "image": "ghetto",
+      "area": "centro",
+      "lat": 41.89323,
+      "lon": 12.47691,
+      "minutes": 15,
+      "open": "08:00",
+      "close": "12:00",
+      "slot": "morning",
+      "order": 2,
       "links": [
         {
           "label": "Map",
           "url": "https://maps.google.com/?q=Pasticceria+Boccione+Via+del+Portico+d%27Ottavia+1+Roma"
         }
       ],
-      "image": "ghetto",
-      "walkToNext": {
-        "m": 339,
-        "min": 5
-      }
+      "hud": "Boccione"
     },
     {
-      "id": "largo-argentina",
-      "kind": "pit",
-      "time": "10:25",
-      "phase": "morning",
-      "plaque": {
-        "rione": "R. IX Pigna",
-        "street": "Largo di Torre Argentina"
-      },
-      "title": "Caesar was stabbed here. Now it's cats.",
-      "place": "Largo di Torre Argentina",
-      "body": "You see all of it from the railing, for free.",
-      "move": "The cat sanctuary only lets people in from noon.",
-      "facts": [
-        "Free from the railing",
-        "10 min"
-      ],
+      "id": "market",
+      "group": "food",
+      "title": "Lunch at Testaccio market",
+      "line": "Covered food market. Beef sandwich at Mordi e Vai, trapizzino around the corner.",
+      "tag": "Bring cash",
+      "image": "trapizzino",
+      "area": "testaccio",
+      "lat": 41.8776,
+      "lon": 12.47358,
+      "minutes": 50,
+      "open": "12:00",
+      "close": "14:30",
+      "slot": "lunch",
+      "order": 20,
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Largo+di+Torre+Argentina+Roma"
+          "url": "https://maps.google.com/?q=Nuovo+Mercato+di+Testaccio+Roma"
         }
       ],
-      "image": "largo-argentina",
-      "walkToNext": {
-        "m": 640,
-        "min": 9
-      },
-      "hud": "Largo Argentina"
+      "hud": "Testaccio"
     },
     {
-      "id": "sant-ignazio",
-      "kind": "major",
-      "time": "10:45",
-      "phase": "morning",
-      "plaque": {
-        "rione": "R. IX Pigna",
-        "street": "Piazza di S. Ignazio"
-      },
-      "title": "The dome that isn't there",
-      "place": "Sant'Ignazio di Loyola",
-      "body": "Not a church visit, promise. They ran out of money for a real dome, so in 1685 a painter faked one on a flat ceiling. Stand on the little marble disc in the middle and it looks 3D. Keep walking and it falls apart.",
-      "move": "",
-      "facts": [
-        "Free",
-        "20 min",
-        "09:00–23:30"
+      "id": "suppli",
+      "group": "food",
+      "title": "Supplì at Supplizio",
+      "line": "Fried rice balls with mozzarella inside, a few minutes from Navona.",
+      "tag": "Cheap",
+      "image": "suppli",
+      "area": "centro",
+      "lat": 41.89745,
+      "lon": 12.46789,
+      "minutes": 30,
+      "open": "12:00",
+      "close": "15:00",
+      "slot": "lunch",
+      "order": 9,
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Supplizio+Via+dei+Banchi+Vecchi+143+Roma"
+        }
       ],
+      "hud": "Supplì"
+    },
+    {
+      "id": "pantheon",
+      "group": "see",
+      "title": "Pantheon",
+      "line": "2,000-year-old dome with a hole in the roof. Half an hour.",
+      "tag": "Book ahead",
+      "book": "Pantheon tickets",
+      "image": "pantheon-oculus",
+      "area": "centro",
+      "lat": 41.89862,
+      "lon": 12.47683,
+      "minutes": 30,
+      "open": "09:00",
+      "close": "18:30",
+      "slot": "any",
+      "order": 5,
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Pantheon+Roma"
+        }
+      ],
+      "hud": "Pantheon"
+    },
+    {
+      "id": "ignazio",
+      "group": "see",
+      "title": "Fake dome at Sant'Ignazio",
+      "line": "A flat ceiling painted to look like a dome. Works from exactly one spot.",
+      "tag": "Free",
+      "image": "sant-ignazio-ceiling",
+      "area": "centro",
+      "lat": 41.899,
+      "lon": 12.47976,
+      "minutes": 20,
+      "open": "09:00",
+      "close": "23:00",
+      "slot": "any",
+      "order": 4,
       "links": [
         {
           "label": "Map",
           "url": "https://maps.google.com/?q=Chiesa+di+Sant%27Ignazio+di+Loyola+Roma"
         }
       ],
-      "image": "sant-ignazio-ceiling",
-      "walkToNext": {
-        "m": 445,
-        "min": 6
-      },
       "hud": "Sant'Ignazio"
     },
     {
-      "id": "sant-eustachio",
-      "kind": "pit",
-      "time": "11:10",
-      "phase": "morning",
-      "plaque": {
-        "rione": "R. VIII S. Eustachio",
-        "street": "Piazza di S. Eustachio"
-      },
-      "title": "Coffee, round two",
-      "place": "Sant'Eustachio Il Caffè",
-      "body": "Get the gran caffè. It comes already sweetened, with a thick foam on top. Pay at the till first, then hand the receipt over.",
-      "move": "Say 'amaro' and they leave the sugar out.",
-      "facts": [
-        "≈ €2–3 at the bar",
-        "10 min"
-      ],
+      "id": "spada",
+      "group": "see",
+      "title": "Galleria Spada",
+      "line": "A corridor that looks long and is about 9 metres. Ten minutes.",
+      "tag": "Indoors",
+      "image": "galleria-spada",
+      "area": "centro",
+      "lat": 41.89435,
+      "lon": 12.472,
+      "minutes": 30,
+      "open": "08:30",
+      "close": "18:30",
+      "slot": "any",
+      "order": 7,
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Sant%27Eustachio+Il+Caff%C3%A8+Roma"
+          "url": "https://maps.google.com/?q=Galleria+Spada+Roma"
         }
       ],
-      "image": "sant-eustachio",
-      "walkToNext": {
-        "m": 226,
-        "min": 3
-      },
-      "hud": "Sant'Eustachio"
+      "hud": "Spada"
     },
     {
-      "id": "pantheon",
-      "kind": "major",
-      "time": "11:25",
-      "phase": "morning",
-      "plaque": {
-        "rione": "R. IX Pigna",
-        "street": "Piazza della Rotonda"
-      },
-      "title": "Look up",
-      "place": "Pantheon",
-      "body": "A 2,000-year-old concrete dome with a hole in the roof. Stand right under the hole. If it rains, it rains inside.",
-      "move": "I'm booking the 11:00–12:00 slot for both of us. The tickets have our names on them, so bring ID.",
-      "facts": [
-        "€7 (€2 if EU, 18–25)",
-        "30 min",
-        "09:00–19:00"
-      ],
-      "links": [
-        {
-          "label": "Tickets",
-          "url": "https://portale.museiitaliani.it/b2c/buyTicketless/33f77159-0acd-40c4-8524-701f33aae108"
-        },
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Pantheon+Roma"
-        }
-      ],
-      "image": "pantheon-oculus",
-      "walkToNext": {
-        "m": 412,
-        "min": 5
-      },
-      "hud": "Pantheon"
-    },
-    {
-      "id": "navona",
-      "kind": "pit",
-      "time": "12:05",
-      "phase": "midday",
-      "plaque": {
-        "rione": "R. VI Parione",
-        "street": "Piazza Navona"
-      },
-      "title": "Just passing through",
-      "place": "Piazza Navona",
-      "body": "It sits on top of a Roman stadium, that's why it's so long. We walk it end to end, don't eat here, then take bus 30 south.",
-      "move": "",
-      "facts": [
-        "Free",
-        "5 min"
-      ],
+      "id": "montemartini",
+      "group": "see",
+      "title": "Statues in a power station",
+      "line": "Roman statues next to old engines at Centrale Montemartini. Usually empty.",
+      "tag": "Indoors",
+      "image": "montemartini",
+      "area": "ostiense",
+      "lat": 41.86703,
+      "lon": 12.47899,
+      "minutes": 60,
+      "open": "09:00",
+      "close": "18:00",
+      "slot": "afternoon",
+      "order": 31,
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Piazza+Navona+Roma"
+          "url": "https://maps.google.com/?q=Centrale+Montemartini+Roma"
         }
       ],
-      "image": "navona",
-      "transferToNext": {
-        "mode": "Bus 30 or taxi",
-        "min": 30,
-        "note": "Bus 30 (every 10 min) from the Rinascimento stop, direction Laurentina: 12 min to Marmorata/Vanvitelli, then 8 min on foot. Taxi about €12–15."
-      },
-      "hud": "Navona"
-    },
-    {
-      "id": "lunch",
-      "kind": "major",
-      "time": "12:45",
-      "phase": "midday",
-      "plaque": {
-        "rione": "R. XX Testaccio",
-        "street": "Via Aldo Manuzio"
-      },
-      "title": "Lunch at the market",
-      "place": "Mercato di Testaccio",
-      "body": "Testaccio's covered market. The stall we want is Mordi e Vai: slow-cooked beef in a roll dipped in its own broth. Then we split a trapizzino from the shop around the corner that invented them.",
-      "move": "Bring cash and don't wear white. The good stalls sell out by about 13:30.",
-      "facts": [
-        "€10–15 each",
-        "50 min",
-        "Market until 15:30"
-      ],
-      "links": [
-        {
-          "label": "Market",
-          "url": "https://maps.google.com/?q=Nuovo+Mercato+di+Testaccio+Roma"
-        },
-        {
-          "label": "Trapizzino",
-          "url": "https://maps.google.com/?q=Trapizzino+Via+Giovanni+Branca+88+Roma"
-        }
-      ],
-      "image": "trapizzino",
-      "swaps": [
-        {
-          "title": "If we stay central",
-          "place": "Supplizio + Antico Forno Roscioli",
-          "body": "Supplì at Supplizio, then pizza bianca by the slice from Roscioli's bakery. Both five minutes from Navona.",
-          "facts": [
-            "€8–12 each",
-            "Supplizio shuts 15:30–17:00"
-          ],
-          "links": [
-            {
-              "label": "Supplizio",
-              "url": "https://maps.google.com/?q=Supplizio+Via+dei+Banchi+Vecchi+143+Roma"
-            },
-            {
-              "label": "Forno Roscioli",
-              "url": "https://maps.google.com/?q=Antico+Forno+Roscioli+Roma"
-            }
-          ]
-        },
-        {
-          "title": "Pastry number three",
-          "place": "Pasticceria Barberini",
-          "body": "On Via Marmorata, on the way from the market to the cemetery. Cornetti, or a few mignon (tiny pastries).",
-          "facts": [
-            "Open 06:00–21:00",
-            "Counter is cheaper"
-          ],
-          "links": [
-            {
-              "label": "Map",
-              "url": "https://maps.google.com/?q=Pasticceria+Barberini+Via+Marmorata+41+Roma"
-            }
-          ]
-        }
-      ],
-      "walkToNext": {
-        "m": 702,
-        "min": 9
-      },
-      "hud": "Testaccio"
+      "hud": "Montemartini"
     },
     {
       "id": "cemetery",
-      "kind": "major",
-      "time": "13:45",
-      "phase": "afternoon",
-      "plaque": {
-        "rione": "R. XX Testaccio",
-        "street": "Via Caio Cestio"
-      },
-      "title": "A pyramid and a poet",
-      "place": "Non-Catholic Cemetery",
-      "body": "Rome has a pyramid, a tomb from 12 BC, and behind it a really quiet garden. Keats is buried here under a stone that doesn't even have his name on it.",
-      "move": "They ask for €5 each at the gate. A couple of photos is fine, just not for Instagram.",
-      "facts": [
-        "€5 each",
-        "45 min",
-        "Last entry 16:30"
-      ],
+      "group": "see",
+      "title": "The pyramid and Keats",
+      "line": "Quiet cemetery behind an actual pyramid. Keats is buried there.",
+      "tag": "Until 16:30",
+      "image": "cemetery-pyramid",
+      "area": "testaccio",
+      "lat": 41.87636,
+      "lon": 12.47944,
+      "minutes": 40,
+      "open": "09:00",
+      "close": "16:30",
+      "slot": "afternoon",
+      "order": 21,
       "links": [
         {
           "label": "Map",
           "url": "https://maps.google.com/?q=Cimitero+Acattolico+Roma"
         }
       ],
-      "image": "cemetery-pyramid",
-      "rain": {
-        "title": "Statues in a power plant",
-        "place": "Centrale Montemartini",
-        "body": "Marble gods and emperors standing next to giant diesel engines in an old power station. Weird mix, and usually pretty empty.",
-        "move": "Go straight to the engine hall.",
-        "facts": [
-          "€11 (€6.50 if 25 or under)",
-          "40 min",
-          "Last entry 18:00"
-        ],
-        "image": "montemartini",
-        "links": [
-          {
-            "label": "Map",
-            "url": "https://maps.google.com/?q=Centrale+Montemartini+Roma"
-          }
-        ],
-        "transferIn": {
-          "mode": "Metro B",
-          "min": 20,
-          "note": "Walk 10 minutes to Piramide, one stop to Garbatella, then 7 minutes on foot."
-        },
-        "walkToNext": {
-          "m": 1400,
-          "min": 18
-        },
-        "hud": "Montemartini"
-      },
-      "walkToNext": {
-        "m": 1190,
-        "min": 16
-      },
       "hud": "Cemetery"
     },
     {
-      "id": "expo",
-      "kind": "bib",
-      "time": "14:45",
-      "phase": "afternoon",
-      "plaque": {
-        "rione": "Q. X Ostiense",
-        "street": "Piazzale XII Ottobre 1492"
-      },
-      "title": "Pick up the bibs",
-      "place": "Rome Half Marathon expo",
-      "body": "Startnummern (start numbers) for Sunday :) The race village is right next to Eataly, so snacks are sorted too.",
-      "move": "We each need our printed confirmation letter and ID, and the wave time is on the letter. From Piramide, take the underpass towards Eataly instead of crossing the big square.",
-      "facts": [
-        "Free",
-        "30–45 min",
-        "Fri 09:00–19:00 · Sat 09:00–20:00"
-      ],
-      "links": [
-        {
-          "label": "Confirmation letter",
-          "url": "https://www.bancariromani.it/iscrizioniRomeHalfMarathon/index.php?lang=english"
-        },
-        {
-          "label": "Expo info",
-          "url": "https://www.romehalfmarathon.it/expo/"
-        },
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Piazzale+XII+Ottobre+1492+Roma"
-        }
-      ],
-      "bib": {
-        "race": "Rome Half Marathon",
-        "distance": "21.1 km",
-        "date": "Sun 18 Oct · check your wave"
-      },
-      "transferToNext": {
-        "mode": "Taxi",
-        "min": 8,
-        "note": "The Aventine is the day's only real hill. A taxi up is about €10. Walking it is 1.9 km and 25 minutes: flat until the last stretch, then 30 m up Via di Porta Lavernale."
-      },
-      "hud": "Race expo"
-    },
-    {
-      "id": "keyhole",
-      "kind": "major",
-      "time": "15:35",
-      "phase": "afternoon",
-      "plaque": {
-        "rione": "R. XII Ripa",
-        "street": "Piazza dei Cavalieri di Malta"
-      },
-      "title": "Look through the keyhole",
-      "place": "Knights of Malta keyhole",
-      "body": "A green door with a queue in front of it. Through the keyhole: a hedge tunnel, and St Peter's dome at the end of it. Then Santa Sabina next door, where a little window in the porch shows an orange tree that's supposedly 800 years old.",
-      "move": "If the queue is huge, we do Santa Sabina first and come back.",
-      "facts": [
-        "Free",
-        "35 min with Santa Sabina"
-      ],
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Buco+della+Serratura+Piazza+dei+Cavalieri+di+Malta+Roma"
-        }
-      ],
+      "id": "aventine",
+      "group": "views",
+      "title": "Keyhole and orange garden",
+      "line": "A keyhole with St Peter's dome in it, then a garden with a view over the city.",
+      "tag": "Free",
       "image": "keyhole",
-      "walkToNext": {
-        "m": 417,
-        "min": 6
-      },
-      "hud": "Keyhole"
-    },
-    {
-      "id": "orange-garden",
-      "kind": "major",
-      "time": "16:15",
-      "phase": "golden",
-      "plaque": {
-        "rione": "R. XII Ripa",
-        "street": "Via di Santa Sabina"
-      },
-      "title": "The orange garden",
-      "place": "Giardino degli Aranci",
-      "body": "Free view over the whole city. The gates close at 18:00, so around 17:10 we take the old cobbled lane down at the back.",
-      "move": "",
-      "facts": [
-        "Free",
-        "55 min",
-        "Closes 18:00"
-      ],
+      "area": "aventine",
+      "lat": 41.884,
+      "lon": 12.479,
+      "minutes": 60,
+      "open": "09:00",
+      "close": "17:45",
+      "slot": "afternoon",
+      "order": 40,
       "links": [
         {
           "label": "Map",
           "url": "https://maps.google.com/?q=Giardino+degli+Aranci+Roma"
         }
       ],
-      "image": "orange-garden",
-      "walkToNext": {
-        "m": 465,
-        "min": 6
-      },
-      "rain": {
-        "title": "A corridor that lies",
-        "place": "Galleria Spada",
-        "body": "A colonnade that looks like a long gallery with a life-size statue at the end. It's under 9 metres deep and the statue is tiny. Roscioli's bakery is round the corner if we need pizza bianca.",
-        "move": "Last access to the colonnade is 18:30.",
-        "facts": [
-          "€6 (€2 if EU, 18–25)",
-          "30 min",
-          "Open until 19:30"
-        ],
-        "image": "galleria-spada",
-        "links": [
-          {
-            "label": "Map",
-            "url": "https://maps.google.com/?q=Galleria+Spada+Roma"
-          }
-        ],
-        "hud": "Galleria Spada",
-        "transferIn": {
-          "mode": "Taxi",
-          "min": 12,
-          "note": "From the keyhole, about €10. Skip the Orange Garden in the rain."
-        },
-        "walkToNext": {
-          "m": 1294,
-          "min": 17
-        }
-      },
-      "hud": "Orange Garden"
-    },
-    {
-      "id": "bocca",
-      "kind": "pit",
-      "time": "17:20",
-      "phase": "golden",
-      "plaque": {
-        "rione": "R. XII Ripa",
-        "street": "Piazza della Bocca della Verità"
-      },
-      "title": "The medieval lie detector",
-      "place": "Bocca della Verità",
-      "body": "A giant stone face that supposedly bites liars. Worth it if the queue is short. If not, we wave through the gate and move on.",
-      "move": "",
-      "facts": [
-        "≈ €2 offering",
-        "15 min",
-        "Closes 17:50"
-      ],
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Bocca+della+Verit%C3%A0+Roma"
-        }
-      ],
-      "image": "bocca",
-      "walkToNext": {
-        "m": 856,
-        "min": 11
-      },
-      "hud": "Bocca"
+      "hud": "Aventine"
     },
     {
       "id": "vittoriano",
-      "kind": "major",
-      "time": "17:50",
-      "phase": "sunset",
-      "plaque": {
-        "rione": "R. X Campitelli",
-        "street": "Piazza Venezia"
-      },
-      "title": "Sunset from the typewriter",
-      "place": "Vittoriano rooftop",
-      "body": "Romans call this giant white monument 'the typewriter' and mostly complain about it. But a glass lift goes to the roof, and the view up there is huge. Sunset is 18:29.",
-      "move": "We need to be inside by 18:45. Stairs up to the first terrace, then the lift does the rest.",
-      "facts": [
-        "€18 (€5 if EU, 18–24)",
-        "75 min",
-        "Terrace until 19:30"
-      ],
-      "links": [
-        {
-          "label": "Tickets",
-          "url": "https://vive.midaticket.com/eventi/ingresso/"
-        },
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Vittoriano+Terrazza+delle+Quadrighe+Roma"
-        }
-      ],
+      "group": "views",
+      "title": "Sunset on the Vittoriano roof",
+      "line": "Glass lift to the top of the big white monument. Sunset is 18:29.",
+      "tag": "Book ahead",
+      "book": "Vittoriano tickets",
       "image": "hero-rome",
-      "swaps": [
-        {
-          "title": "If we skip the ticket",
-          "place": "Terrazza Caffarelli",
-          "body": "The Capitoline museums' café terrace, a few minutes away, looks west over the domes. Part of it has a roof.",
-          "facts": [
-            "No ticket",
-            "Last entry 18:30"
-          ],
-          "image": "caffarelli",
-          "links": [
-            {
-              "label": "Map",
-              "url": "https://maps.google.com/?q=Terrazza+Caffarelli+Roma"
-            }
-          ]
-        }
-      ],
-      "rain": {
-        "title": "Kandinsky instead",
-        "place": "Palazzo Bonaparte",
-        "body": "A big Kandinsky show right on Piazza Venezia, open until 21:00 on Fridays. Mostly colour and shapes.",
-        "move": "",
-        "facts": [
-          "€18 + €1.50 online",
-          "75 min",
-          "Last entry 20:00"
-        ],
-        "links": [
-          {
-            "label": "Tickets",
-            "url": "https://www.ticket.it/mostre/evento/kandinsky.aspx"
-          }
-        ],
-        "hud": "Kandinsky"
-      },
-      "hud": "Vittoriano",
-      "walkToNext": {
-        "m": 1815,
-        "min": 24
-      }
-    },
-    {
-      "id": "dinner",
-      "kind": "major",
-      "time": "19:30",
-      "phase": "night",
-      "plaque": {
-        "rione": "R. XIX Celio",
-        "street": "Via dei Santi Quattro"
-      },
-      "title": "Carbs, early",
-      "place": "Li Rioni a Santiquattro",
-      "body": "Loud, packed pizzeria right behind the Colosseum, so we walk past it on the way. Really thin pizza, and supplì: pull one apart and the cheese stretches like a phone cord.",
-      "move": "I'll book 19:30. They only take bookings a week ahead, so the form goes in on Friday 9 October.",
-      "facts": [
-        "≈ €15–20 each",
-        "75 min",
-        "Opens 19:00"
-      ],
+      "area": "venezia",
+      "lat": 41.89424,
+      "lon": 12.48311,
+      "minutes": 60,
+      "open": "09:30",
+      "close": "18:45",
+      "slot": "sunset",
+      "order": 50,
       "links": [
         {
-          "label": "Book",
-          "url": "https://lirioni.it/prenotazione/"
-        },
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Vittoriano+Roma"
+        }
+      ],
+      "hud": "Vittoriano"
+    },
+    {
+      "id": "pincio",
+      "group": "views",
+      "title": "Sunset at the Pincio",
+      "line": "Free terrace above Piazza del Popolo, looking west.",
+      "tag": "Free",
+      "image": "pincio-sunset",
+      "area": "north",
+      "lat": 41.91128,
+      "lon": 12.47855,
+      "minutes": 45,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "sunset",
+      "order": 51,
+      "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Li+Rioni+a+Santiquattro+Via+dei+Santi+Quattro+24+Roma"
+          "url": "https://maps.google.com/?q=Terrazza+del+Pincio+Roma"
         }
       ],
-      "image": "suppli",
-      "swaps": [
+      "hud": "Pincio"
+    },
+    {
+      "id": "trastevere",
+      "group": "views",
+      "title": "Wander Trastevere",
+      "line": "Small streets across the river. No plan, just walking.",
+      "tag": "Free",
+      "image": "trastevere",
+      "area": "trastevere",
+      "lat": 41.88956,
+      "lon": 12.47051,
+      "minutes": 60,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "any",
+      "order": 12,
+      "links": [
         {
-          "title": "If Li Rioni is full",
-          "place": "Alle Carrette, Monti",
-          "body": "Big, noisy pizzeria in Monti, 9 minutes from the Vittoriano, good fried starters. Phone bookings only.",
-          "facts": [
-            "≈ €10–20 each",
-            "From 19:00"
-          ],
-          "links": [
-            {
-              "label": "Call",
-              "url": "tel:+390667927770"
-            },
-            {
-              "label": "Map",
-              "url": "https://maps.google.com/?q=Alle+Carrette+Via+della+Madonna+dei+Monti+95+Roma"
-            }
-          ]
-        },
-        {
-          "title": "If we'd rather have pasta",
-          "place": "La Taverna dei Fori Imperiali",
-          "body": "Small family trattoria in Monti, all the Roman pastas for about €14. Dinner starts at 19:30, phone to book.",
-          "facts": [
-            "≈ €18–30 each",
-            "From 19:30"
-          ],
-          "links": [
-            {
-              "label": "Call",
-              "url": "tel:+39066798643"
-            },
-            {
-              "label": "Map",
-              "url": "https://maps.google.com/?q=La+Taverna+dei+Fori+Imperiali+Roma"
-            }
-          ]
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Piazza+di+Santa+Maria+in+Trastevere+Roma"
         }
       ],
-      "hud": "Li Rioni"
+      "hud": "Trastevere"
     },
     {
-      "id": "end",
-      "kind": "break",
-      "time": "21:00",
-      "phase": "night",
-      "title": "That's Friday",
-      "body": "Laurin and Olivia land around nine, and by then the day is done. Saturday is for doing nothing :)",
-      "facts": [],
-      "hud": "Done"
-    }
-  ],
-  "book": [
-    {
-      "id": "pantheon",
-      "owner": "Me",
-      "label": "Pantheon tickets",
-      "detail": "Named, 11:00–12:00 slot. I need your full name as it is on your ID.",
-      "cta": "Buy",
-      "url": "https://portale.museiitaliani.it/b2c/buyTicketless/33f77159-0acd-40c4-8524-701f33aae108"
+      "id": "centre",
+      "group": "views",
+      "title": "Wander the old centre",
+      "line": "Navona, Campo de' Fiori and the little streets in between.",
+      "tag": "Free",
+      "image": "navona",
+      "area": "centro",
+      "lat": 41.899,
+      "lon": 12.4731,
+      "minutes": 45,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "any",
+      "order": 8,
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Piazza+Navona+Roma"
+        }
+      ],
+      "hud": "Old centre"
     },
     {
-      "id": "vittoriano",
-      "owner": "Me",
-      "label": "Vittoriano rooftop",
-      "detail": "Dated ticket, no time slot. €18, or €5 if EU and 18–24.",
-      "cta": "Buy",
-      "url": "https://vive.midaticket.com/eventi/ingresso/"
+      "id": "largo",
+      "group": "weird",
+      "title": "Caesar's cats",
+      "line": "The ruins where Caesar was killed. There's a cat sanctuary in them now.",
+      "tag": "Free",
+      "image": "largo-argentina",
+      "area": "centro",
+      "lat": 41.89532,
+      "lon": 12.47688,
+      "minutes": 10,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "any",
+      "order": 3,
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Largo+di+Torre+Argentina+Roma"
+        }
+      ],
+      "hud": "Largo Argentina"
     },
     {
-      "id": "dinner",
-      "owner": "Me",
-      "label": "Li Rioni, 19:30",
-      "detail": "Booking form opens Friday 9 Oct. I'll call after 19:00 that day to make sure.",
-      "cta": "Book",
-      "url": "https://lirioni.it/prenotazione/"
+      "id": "capuchin",
+      "group": "weird",
+      "title": "Bone crypt",
+      "line": "Chapels decorated with the bones of monks. Strange more than scary.",
+      "tag": "Indoors",
+      "image": "capuchin-crypt",
+      "area": "north",
+      "lat": 41.90464,
+      "lon": 12.48867,
+      "minutes": 40,
+      "open": "09:30",
+      "close": "17:30",
+      "closedFrom": "13:30",
+      "closedTo": "14:30",
+      "slot": "morning",
+      "order": 0,
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Cripta+dei+Cappuccini+Via+Veneto+27+Roma"
+        }
+      ],
+      "hud": "Bone crypt"
     },
     {
       "id": "bibs",
-      "owner": "Both",
-      "label": "Race confirmation letters",
-      "detail": "Download, print, check for the two green OKs and the wave time.",
-      "cta": "Download",
-      "url": "https://www.bancariromani.it/iscrizioniRomeHalfMarathon/index.php?lang=english"
-    },
-    {
-      "id": "checks",
-      "owner": "Me",
-      "label": "Thursday night checks",
-      "detail": "Strikes and Vittoriano closure notices.",
+      "group": "race",
+      "title": "Pick up our bibs",
+      "line": "Race expo next to Eataly. Or we go on Saturday.",
+      "tag": "Free",
+      "image": "expo-run",
+      "area": "ostiense",
+      "lat": 41.87124,
+      "lon": 12.48664,
+      "minutes": 40,
+      "open": "09:00",
+      "close": "18:30",
+      "slot": "afternoon",
+      "order": 30,
+      "default": true,
       "links": [
         {
-          "label": "Strike register",
-          "url": "https://scioperi.mit.gov.it/mit2/public/scioperi"
-        },
-        {
-          "label": "Vittoriano notices",
-          "url": "https://vive.cultura.gov.it/it/avvisi"
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Piazzale+XII+Ottobre+1492+Roma"
         }
-      ]
+      ],
+      "hud": "Bibs"
     }
   ],
-  "practical": [
+  "areas": [
+    "north",
+    "centro",
+    "trastevere",
+    "testaccio",
+    "ostiense",
+    "aventine",
+    "venezia",
+    "celio"
+  ],
+  "transfers": [
     {
-      "title": "ID",
-      "body": "The Pantheon checks names, and the race checks everything."
+      "from": "centro",
+      "to": "north",
+      "text": "20 min walk, or metro to Barberini",
+      "m": 1500,
+      "min": 20
     },
     {
-      "title": "Your race letter, printed",
-      "body": "We each need our own to get the bibs."
+      "from": "north",
+      "to": "centro",
+      "text": "20 min walk downhill",
+      "m": 1500,
+      "min": 20
     },
     {
-      "title": "A light layer",
-      "body": "Some churches want shoulders covered, and evenings get cool."
+      "from": "centro",
+      "to": "trastevere",
+      "text": "15 min walk over Ponte Sisto",
+      "m": 1200,
+      "min": 15
     },
     {
-      "title": "A water bottle",
-      "body": "The little iron fountains everywhere (nasoni) are drinking water. Block the spout with a finger and it shoots up."
+      "from": "centro",
+      "to": "testaccio",
+      "text": "Bus 30 from Corso Rinascimento, about 20 min",
+      "m": 900,
+      "min": 25
     },
     {
-      "title": "Your card or phone",
-      "body": "Buses take contactless: tap once per ride, €1.50. Phone in the front pocket around Termini."
+      "from": "trastevere",
+      "to": "testaccio",
+      "text": "Taxi, 10 min",
+      "m": 0,
+      "min": 10
     },
     {
-      "title": "Comfy shoes",
-      "body": "About 8 km, a lot of it cobbles."
+      "from": "testaccio",
+      "to": "ostiense",
+      "text": "15 min walk",
+      "m": 1200,
+      "min": 15
+    },
+    {
+      "from": "testaccio",
+      "to": "aventine",
+      "text": "Taxi up the hill, 5 min",
+      "m": 0,
+      "min": 10
+    },
+    {
+      "from": "ostiense",
+      "to": "aventine",
+      "text": "Taxi up the hill, 8 min",
+      "m": 0,
+      "min": 12
+    },
+    {
+      "from": "aventine",
+      "to": "venezia",
+      "text": "20 min walk, downhill",
+      "m": 1300,
+      "min": 20
+    },
+    {
+      "from": "centro",
+      "to": "venezia",
+      "text": "10 min walk",
+      "m": 800,
+      "min": 10
+    },
+    {
+      "from": "trastevere",
+      "to": "venezia",
+      "text": "Tram 8 to Piazza Venezia, 10 min",
+      "m": 200,
+      "min": 15
+    },
+    {
+      "from": "venezia",
+      "to": "celio",
+      "text": "25 min walk past the Colosseum",
+      "m": 1800,
+      "min": 25
+    },
+    {
+      "from": "ostiense",
+      "to": "celio",
+      "text": "Metro B to Colosseo, then a 10 min walk",
+      "m": 800,
+      "min": 20
+    },
+    {
+      "from": "testaccio",
+      "to": "celio",
+      "text": "Metro B to Colosseo, then a 10 min walk",
+      "m": 1000,
+      "min": 20
+    },
+    {
+      "from": "north",
+      "to": "celio",
+      "text": "Metro A then B, or a taxi, 15 min",
+      "m": 300,
+      "min": 20
     }
   ],
-  "budget": [
-    {
-      "label": "Maritozzo + cappuccino",
-      "eur": 6
-    },
-    {
-      "label": "Second breakfast",
-      "eur": 5
-    },
-    {
-      "label": "Coffee, round two",
-      "eur": 3
-    },
-    {
-      "label": "Pantheon",
-      "eur": 7
-    },
-    {
-      "label": "Market lunch",
-      "eur": 13
-    },
-    {
-      "label": "Cemetery",
-      "eur": 5
-    },
-    {
-      "label": "Taxi up the hill (split)",
-      "eur": 5
-    },
-    {
-      "label": "Bocca della Verità",
-      "eur": 2
-    },
-    {
-      "label": "Vittoriano rooftop",
-      "eur": 18
-    },
-    {
-      "label": "Pizza at Li Rioni",
-      "eur": 18
-    },
-    {
-      "label": "Buses",
-      "eur": 3
-    }
+  "bring": [
+    "ID",
+    "Your race letter, printed",
+    "A light layer",
+    "A water bottle"
   ],
-  "budgetNote": "EU and 18–24? The Pantheon drops to €2 and the Vittoriano to €5.",
   "footer": {
     "line": "Hours and prices checked on 8 October."
   },
-  "note": {
-    "greeting": "Ciao Sasha,",
-    "paras": [
-      "You were here three years ago. I was here as a kid and remember basically nothing. So I skipped most of the big stuff and went for things you probably didn't do last time: a fake dome, a pyramid, a keyhole, and a lot of pastries.",
-      "Sunday is our first Halbmarathon (half marathon), so legs come first. About 8 km of walking all day, a taxi up the one real hill, and dinner early.",
-      "Everything outdoors has a backup if it rains. I'm sorting the tickets, you just bring ID :)"
-    ],
-    "sign": "Felix"
+  "ui": {
+    "pageTitle": "Friday in Rome",
+    "ogTitle": "Friday in Rome",
+    "ogImageAlt": "An arrivals split-flap board above the word Friday",
+    "noscript": "This page needs JavaScript to show the picker.",
+    "nav": {
+      "label": "Jump to a section",
+      "pick": "Pick",
+      "day": "Your day"
+    },
+    "hud": {
+      "label": "Day progress",
+      "note": "Hi",
+      "pick": "Pick",
+      "day": "Your day",
+      "map": "Map",
+      "bring": "Bring"
+    },
+    "noteTitle": "A note from Felix",
+    "mapTitle": "On the map",
+    "mapLabel": "Map of central Rome with your picks and their rough times",
+    "mapCredit": "Map data © OpenStreetMap contributors",
+    "bringTitle": "Bring",
+    "credits": "Photo credits",
+    "creditBy": "by",
+    "newTab": "opens in a new tab",
+    "jumpNow": "Jump to now",
+    "jumpNowShort": "Now",
+    "nowTag": "Now",
+    "sunset": "Sunset {time}",
+    "around": "around {time}",
+    "walk": "{min} min walk",
+    "taxi": "Taxi, about {min} min",
+    "km": "{km} km",
+    "kmSr": "{km} km on foot so far",
+    "bookDinner": "dinner",
+    "listJoin": ", ",
+    "shareTitle": "Friday in Rome",
+    "reasons": {
+      "sunsetTaken": "Sunset's already on the Vittoriano roof.",
+      "lunchTaken": "Lunch is already at the market.",
+      "closes": "Closes at {time}, we'd get there too late.",
+      "closedGap": "Closed {from} to {to}, the timing doesn't work.",
+      "noTimeSunset": "Not enough time before sunset.",
+      "noTimeDinner": "Not enough time before dinner."
+    },
+    "countdown": {
+      "startsIn": "Starts in {time}",
+      "today": "It's today.",
+      "after": "That was Friday.",
+      "join": ", ",
+      "day": "day",
+      "days": "days",
+      "hour": "hour",
+      "hours": "hours",
+      "minute": "minute",
+      "minutes": "minutes"
+    },
+    "weather": {
+      "climate": "Mid-October is usually 22° / 12°, with rain about one day in four.",
+      "temps": "Friday: {hi}° / {lo}°",
+      "then": "{a} then {b}",
+      "chance": "{pct}% chance of {what}{when}",
+      "rain": "rain",
+      "late": " late",
+      "early": " early",
+      "afternoon": " in the afternoon",
+      "sky": {
+        "sun": [
+          "sunny",
+          "sun"
+        ],
+        "mixed": [
+          "partly cloudy",
+          "sunny spells"
+        ],
+        "cloud": [
+          "cloudy",
+          "cloud"
+        ],
+        "fog": [
+          "foggy",
+          "fog"
+        ]
+      },
+      "wet": {
+        "drizzle": "drizzle",
+        "rain": "rain",
+        "showers": "showers",
+        "storms": "storms",
+        "snow": "snow"
+      }
+    }
   }
 }

@@ -1,25 +1,25 @@
 <!doctype html>
-<html lang="en" data-plan="sun">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Venerdì · 16 ottobre</title>
+<title>Friday in Rome</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="You land in the morning, Laurin and Olivia land at night. This is the bit in between.">
+<meta name="description" content="You land at 08:10, Laurin and Olivia land around 9 tonight. The bit in between is up to you.">
 <meta name="theme-color" content="#CFE4F1">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Venerdì · Friday in Rome">
-<meta property="og:description" content="You land in the morning, Laurin and Olivia land at night. This is the bit in between.">
+<meta property="og:title" content="Friday in Rome">
+<meta property="og:description" content="You land at 08:10, Laurin and Olivia land around 9 tonight. The bit in between is up to you.">
 <meta property="og:image" content="https://whaamkabaam.github.io/venerdi/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="An ARRIVI split-flap board above the word Venerdì">
+<meta property="og:image:alt" content="An arrivals split-flap board above the word Friday">
 <meta property="og:url" content="https://whaamkabaam.github.io/venerdi/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Venerdì · Friday in Rome">
-<meta name="twitter:description" content="You land in the morning, Laurin and Olivia land at night. This is the bit in between.">
+<meta name="twitter:title" content="Friday in Rome">
+<meta name="twitter:description" content="You land at 08:10, Laurin and Olivia land around 9 tonight. The bit in between is up to you.">
 <meta name="twitter:image" content="https://whaamkabaam.github.io/venerdi/og.jpg">
-<meta name="twitter:image:alt" content="An ARRIVI split-flap board above the word Venerdì">
+<meta name="twitter:image:alt" content="An arrivals split-flap board above the word Friday">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script>
@@ -34,7 +34,7 @@
 </head>
 <body>
 
-<aside class="hud" aria-label="Day progress">
+<aside class="hud" data-slot="hud">
   <div class="hud-inner">
     <div class="hud-clock" aria-hidden="true"></div>
     <p class="hud-place"><span class="sr-only" data-slot="hud-time"></span><span data-slot="hud-place"></span></p>
@@ -42,7 +42,7 @@
       <p class="hud-km" data-slot="hud-km"></p>
       <span class="hud-bar" aria-hidden="true"><span class="hud-fill"></span></span>
     </div>
-    <button class="btn btn--small hud-now" type="button" aria-label="Jump to now" hidden><span class="now-long">Jump to now</span><span class="now-short">Now</span></button>
+    <button class="btn btn--small hud-now" type="button" hidden><span class="now-long" data-slot="now-long"></span><span class="now-short" data-slot="now-short"></span></button>
   </div>
 </aside>
 
@@ -54,64 +54,51 @@
     <ul class="hero-meta hero-today" data-slot="hero-today" hidden></ul>
     <p class="hero-lead" data-slot="hero-lead"></p>
     <ul class="hero-meta">
-      <li class="countdown"><span data-slot="countdown"></span><button class="btn hero-now" type="button" hidden>Jump to now</button></li>
+      <li class="countdown"><span data-slot="countdown"></span><button class="btn hero-now" type="button" hidden data-slot="hero-now"></button></li>
       <li class="weather" data-slot="weather"></li>
       <li class="sunset" data-slot="sunset"></li>
     </ul>
-    <nav class="hero-links" aria-label="Jump to a section">
-      <a href="#day">The day</a>
-      <a href="#book">To sort</a>
-      <a href="#budget">Costs</a>
+    <nav class="hero-links" data-slot="hero-links">
+      <a href="#pick" data-slot="nav-pick"></a>
+      <a href="#day" data-slot="nav-day"></a>
     </nav>
   </div>
-  <noscript><p class="noscript">This page needs JavaScript to show the plan.</p></noscript>
+  <noscript><p class="noscript">This page needs JavaScript to show the picker.</p></noscript>
 </header>
 
 <main>
-  <section class="section" id="note" aria-labelledby="note-h" data-hud="Hi">
-    <h2 id="note-h" class="sr-only">A note from Felix</h2>
+  <section class="section" id="note" aria-labelledby="note-h">
+    <h2 id="note-h" class="sr-only" data-slot="note-title"></h2>
     <div class="note" data-slot="note"></div>
   </section>
 
-  <section class="section" id="arrival" aria-labelledby="arrival-h" data-hud="Airport">
-    <h2 id="arrival-h" data-slot="arrival-title"></h2>
-    <p class="section-lead" data-slot="arrival-lead"></p>
-    <div class="options" data-slot="arrival-options"></div>
-    <p class="notice" role="note" data-slot="arrival-warning"></p>
+  <section class="section" id="pick" aria-labelledby="pick-h">
+    <h2 id="pick-h" data-slot="pick-title"></h2>
+    <p class="section-lead" data-slot="pick-lead"></p>
+    <div class="pick-groups" data-slot="pick-groups"></div>
+    <div class="send">
+      <label class="send-label" for="free-text" data-slot="free-label"></label>
+      <textarea id="free-text" class="send-text" rows="3" data-slot="free-text"></textarea>
+      <button class="btn btn--primary send-btn" type="button" data-slot="send"></button>
+      <p class="send-hint" data-slot="send-hint"></p>
+    </div>
   </section>
 
-  <section class="section" id="map" aria-labelledby="map-h" data-hud="Map">
-    <h2 id="map-h">The route</h2>
+  <section class="section section--day" id="day" aria-labelledby="day-h">
+    <h2 id="day-h" data-slot="day-title"></h2>
+    <div class="day-map" data-slot="day-map"></div>
+    <div class="day-body" data-slot="day-body"></div>
+  </section>
+
+  <section class="section" id="map" aria-labelledby="map-h">
+    <h2 id="map-h" data-slot="map-title"></h2>
     <div data-slot="map-home"></div>
   </section>
 
-  <section class="section section--day" id="day" aria-labelledby="day-h" data-hud="The day">
-    <h2 id="day-h">The day</h2>
-    <div class="day-map" data-slot="day-map"></div>
-    <fieldset class="plan">
-      <legend class="sr-only">Plan</legend>
-      <label><input type="radio" name="plan" value="sun" checked><span>Sun plan</span></label>
-      <label><input type="radio" name="plan" value="rain"><span>Rain plan</span></label>
-    </fieldset>
-    <ol class="stops" data-slot="stops"></ol>
+  <section class="section" id="bring" aria-labelledby="bring-h">
+    <h2 id="bring-h" data-slot="bring-title"></h2>
+    <ul class="bring" data-slot="bring"></ul>
   </section>
-
-  <section class="section" id="book" aria-labelledby="book-h" data-hud="To sort">
-    <h2 id="book-h">Stuff to sort before Friday</h2>
-    <ul class="checklist" data-slot="book"></ul>
-  </section>
-
-  <section class="section" id="budget" aria-labelledby="budget-h" data-hud="Costs">
-    <h2 id="budget-h">Roughly what it costs</h2>
-    <div class="receipt-wrap" data-slot="receipt"></div>
-    <p class="budget-note" data-slot="budget-note"></p>
-  </section>
-
-  <section class="section" id="practical" aria-labelledby="practical-h" data-hud="Bring">
-    <h2 id="practical-h">Bring</h2>
-    <div class="practical" data-slot="practical"></div>
-  </section>
-
 </main>
 
 <footer class="footer">
@@ -120,6 +107,7 @@
 </footer>
 
 <script src="data.js"></script>
+<script src="plan.js"></script>
 <script src="vendor/gsap.min.js"></script>
 <script src="vendor/ScrollTrigger.min.js"></script>
 <script src="vendor/DrawSVGPlugin.min.js"></script>

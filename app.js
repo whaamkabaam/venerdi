@@ -1,60 +1,49 @@
-/* Venerdì: renders the page from window.SITE (data.js), then wires the sky, HUD and motion. */
+/* Venerdì v3: a picker that builds a relaxed Friday. Renders from window.SITE (data.js) and
+   plan.js (the day builder), then wires the sky, HUD, map, persistence and sharing.
+   Every visible string comes from content.json. */
 (() => {
   'use strict';
 
   const { content: C, images: IMG = {}, map: MAP } = window.SITE;
+  const P = window.VenerdiPlan;
+  const U = C.ui;
+  const fmt = P.fmt;
+  const toMin = P.toMin;
   const root = document.documentElement;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const slot = (name) => $(`[data-slot="${name}"]`);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const toMin = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
-  const dist = (m) => (m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`);
   const store = {
-    get(k, d) { try { const v = localStorage.getItem('venerdi:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-    set(k, v) { try { localStorage.setItem('venerdi:' + k, JSON.stringify(v)); } catch { /* private mode */ } },
+    get(k, d) { try { const v = localStorage.getItem('venerdi:v3:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem('venerdi:v3:' + k, JSON.stringify(v)); } catch { /* private mode */ } },
   };
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const OPT = Object.fromEntries(C.options.map((o) => [o.id, o]));
 
   const ICON = {
     out: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6.5 5H11v4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     chev: '<svg class="i" viewBox="0 0 18 18" aria-hidden="true"><path d="m5 7 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    alert: '<svg class="i" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 2.5 16.5h15L10 3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 8.5v3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14.2" r="0.9" fill="currentColor"/></svg>',
+    plus: '<svg class="mark-off" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.75v8.5M7.75 12h8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    check: '<svg class="mark-on" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path class="tick" d="m7.5 12.4 3 3 6-6.7" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
   /* ------------------------------------------------------------------ */
-  /* Small render helpers                                                */
+  /* Render helpers                                                      */
   /* ------------------------------------------------------------------ */
 
-  const newTab = '<span class="sr-only"> (opens in a new tab)</span>';
-  const linkBtn = (href, label, extra = '') =>
-    `<a class="btn" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)}${extra}${newTab}${ICON.out}</a>`;
-  const ctxSr = (ctx) => (ctx ? `<span class="sr-only">: ${esc(ctx)}</span>` : '');
-  const linksHTML = (ls, ctx) => (ls?.length ? `<div class="links">${ls.map((l) => linkBtn(l.url, l.label, ctxSr(ctx))).join('')}</div>` : '');
-  const factsHTML = (fs) => (fs?.length ? `<ul class="facts">${fs.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : '');
-  const moveHTML = (m) => (m ? `<p class="stop-body stop-tip">${esc(m)}</p>` : '');
-  const plaqueHTML = (p, small = false) =>
-    p ? `<p class="plaque${small ? ' plaque--small' : ''}"><span class="plaque-rione">${esc(p.rione)}</span><span class="sr-only">, </span><span class="plaque-street">${esc(p.street)}</span></p>` : '';
-  const timeRow = (s, rain = false) =>
-    `<p class="stop-time"><time datetime="${C.meta.date}T${esc(s.time)}">${esc(s.time)}</time><span class="tag tag--now">Now</span>${rain ? '<span class="tag tag--rain">Rain plan</span>' : ''}</p>`;
-  // Headings carry the time for screen-reader heading navigation (the visible time sits above them).
-  const titleHTML = (s, title, cls = 'stop-title') => `<h3 class="${cls}"><span class="sr-only">${esc(s.time)}, </span>${esc(title)}</h3>`;
-  const planBtn = (to) =>
-    `<p class="plan-inline"><button class="btn" type="button" data-set-plan="${to}">${to === 'rain' ? 'Raining? Indoor option' : 'Back to the sun plan'}</button></p>`;
-
-  const SIZES = {
-    major: '(min-width: 1280px) 760px, (min-width: 1024px) min(1000px, calc(100vw - 48px)), calc(100vw - 40px)',
-    pit: '96px',
-    swap: '(min-width: 640px) 320px, calc(100vw - 40px)',
-  };
-  function photoHTML(key, kind) {
+  const newTab = `<span class="sr-only"> (${esc(U.newTab)})</span>`;
+  const linkBtn = (href, label, ctx, cls = 'btn btn--small') =>
+    `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)}${ctx ? `<span class="sr-only">: ${esc(ctx)}</span>` : ''}${newTab}${ICON.out}</a>`;
+  // Small decorative photos (the title next to them says what they are).
+  function thumbHTML(key, cls, px) {
     const im = key && IMG[key];
-    if (!im) return `<figure class="photo photo--${kind} is-empty" aria-hidden="true"></figure>`;
-    return `<figure class="photo photo--${kind}" style="--ph:${esc(im.color || '')}"><img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${SIZES[kind]}" width="${+im.w}" height="${+im.h}" alt="${esc(im.alt)}" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}"></figure>`;
+    if (!im) return `<span class="${cls}" aria-hidden="true"></span>`;
+    return `<span class="${cls}" style="--ph:${esc(im.color || '')}"><img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${px}px" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}"></span>`;
   }
 
   /* ------------------------------------------------------------------ */
-  /* Hero                                                                */
+  /* Static parts: hero, note, picker, bring, footer                     */
   /* ------------------------------------------------------------------ */
 
   const FLAP = '<span class="flap"><span class="ft"><b></b></span><span class="fb"><b></b></span><span class="lt"><b></b></span><span class="lb"><b></b></span></span>';
@@ -65,13 +54,13 @@
     const width = fields.map((f) => Math.max(...H.rows.map((r) => [...r[f]].length)));
     const cells = (text, w) => `<span class="cells" aria-hidden="true" data-text="${esc(text)}">${FLAP.repeat(w)}</span>`;
     const head = `<div class="board-colheads" role="row">${fields
-      .map((f, i) => `<span class="ch c--${f} label" role="columnheader">${esc(H.columns[i])} <i>${esc(H.columnsEn[i])}</i></span>`)
+      .map((f, i) => `<span class="ch c--${f} label" role="columnheader">${esc(H.columns[i])} <i>${esc(H.columnsEn?.[i] || '')}</i></span>`)
       .join('')}</div>`;
     const rows = H.rows
       .map((r) => `<div class="board-row${r.highlight ? ' is-you' : ''}" role="row">
         <span class="c c--time" role="cell"><span class="sr-only">${esc(r.time)}</span>${cells(r.time, width[0])}</span>
         <span class="c c--who" role="cell"><span class="sr-only">${esc(r.who)}</span>${cells(r.who, width[1])}</span>
-        <span class="c c--note" role="cell"><span class="sr-only">${esc(r.note)} (${esc(r.noteEn)})</span>${cells(r.note, width[2])}<span class="note-en" aria-hidden="true">${esc(r.noteEn)}</span></span>
+        <span class="c c--note" role="cell"><span class="sr-only">${esc(r.note)}${r.noteEn ? ` (${esc(r.noteEn)})` : ''}</span>${cells(r.note, width[2])}<span class="note-en" aria-hidden="true">${esc(r.noteEn || '')}</span></span>
       </div>`)
       .join('');
     slot('board').innerHTML = `<div class="board">
@@ -81,132 +70,165 @@
     slot('hero-title').textContent = H.title;
     slot('hero-date').textContent = H.dateLine;
     slot('hero-lead').textContent = H.lead;
-    slot('sunset').innerHTML = `Sunset <time class="tnum">${esc(C.meta.sunset)}</time>`;
+    slot('sunset').innerHTML = fmt(esc(U.sunset), { time: `<time class="tnum">${esc(C.meta.sunset)}</time>` });
+    slot('hero-links').setAttribute('aria-label', U.nav.label);
+    slot('nav-pick').textContent = U.nav.pick;
+    slot('nav-day').textContent = U.nav.day;
+    slot('hero-now').textContent = U.jumpNow;
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Sections                                                            */
-  /* ------------------------------------------------------------------ */
-
-  function renderSections() {
+  function renderStatic() {
     const N = C.note;
+    slot('note-title').textContent = U.noteTitle;
     slot('note').innerHTML = `<p class="note-greeting">${esc(N.greeting)}</p>${N.paras.map((p) => `<p>${esc(p)}</p>`).join('')}<p class="note-sign">${esc(N.sign)}</p>`;
 
-    const A = C.arrival;
-    slot('arrival-title').textContent = A.title;
-    slot('arrival-lead').textContent = A.lead;
-    slot('arrival-options').innerHTML = A.options
-      .map((o) => `<article class="option"><p class="label">${esc(o.from)}</p><h3>${esc(o.how)}</h3><p>${esc(o.detail)}</p><p class="option-time">${esc(o.time)}</p></article>`)
-      .join('');
-    slot('arrival-warning').innerHTML = `${ICON.alert}<span>${esc(A.warning)}</span>`;
-
-    // Each item: owner as a small tag, cta as the button label (or one button per entry in `links`).
-    slot('book').innerHTML = C.book
-      .map((b) => {
-        const links = b.links || [{ label: b.cta || 'Open', url: b.url }];
-        const btns = links.map((l) => linkBtn(l.url, l.label, ctxSr(b.label))).join('');
-        const owner = b.owner ? ` <span class="tag tag--owner"><span class="sr-only">Who: </span>${esc(b.owner)}</span>` : '';
-        return `<li class="check${links.length > 1 ? ' check--multi' : ''}">
-        <label class="check-row"><input type="checkbox" data-id="${esc(b.id)}"${store.get('book:' + b.id, false) ? ' checked' : ''}><span><span class="check-label"><span class="check-name">${esc(b.label)}</span>${owner}</span><span class="check-detail">${esc(b.detail)}</span></span></label>
-        <div class="check-links">${btns}</div>
-      </li>`;
+    const K = C.picker;
+    slot('pick-title').textContent = K.title;
+    slot('pick-lead').textContent = K.lead;
+    slot('pick-groups').innerHTML = K.groups
+      .map((g) => {
+        const opts = C.options.filter((o) => o.group === g.id);
+        if (!opts.length) return '';
+        return `<div class="pick-group"><h3 id="pg-${esc(g.id)}">${esc(g.label)}</h3><div class="pick-grid" role="group" aria-labelledby="pg-${esc(g.id)}">${opts
+          .map((o) => `<button type="button" class="pick" aria-pressed="false" data-id="${esc(o.id)}" aria-labelledby="pk-${esc(o.id)}-t" aria-describedby="pk-${esc(o.id)}-d pk-${esc(o.id)}-g">
+            ${thumbHTML(o.image, 'pick-photo', 88)}
+            <span class="pick-text"><span class="pick-title" id="pk-${esc(o.id)}-t">${esc(o.title)}</span><span class="pick-line" id="pk-${esc(o.id)}-d">${esc(o.line)}</span><span class="tag" id="pk-${esc(o.id)}-g">${esc(o.tag)}</span></span>
+            <span class="pick-mark" aria-hidden="true">${ICON.plus}${ICON.check}</span>
+          </button>`)
+          .join('')}</div></div>`;
       })
       .join('');
+    slot('free-label').textContent = K.freeTextLabel;
+    slot('free-text').placeholder = K.freeTextPlaceholder;
+    slot('send').textContent = K.sendLabel;
+    slot('send-hint').textContent = K.sendHint;
 
-    const euro = (n) => n.toFixed(2).replace('.', ',');
-    const total = C.budget.reduce((sum, b) => sum + b.eur, 0);
-    const [y, m, d] = C.meta.date.split('-');
-    slot('receipt').innerHTML = `<div class="receipt">
-      <p class="receipt-head">${esc(C.hero.title)} · <span class="tnum">${d}.${m}.${y}</span></p>
-      <ul>${C.budget.map((b) => `<li class="receipt-line"><span class="what">${esc(b.label)}</span><span class="leader" aria-hidden="true"></span><span class="amt">€ ${euro(b.eur)}</span></li>`).join('')}</ul>
-      <p class="receipt-line receipt-total"><span class="what">Totale</span><span class="leader" aria-hidden="true"></span><span class="amt">€ ${euro(total)}</span></p>
-    </div>`;
-    slot('budget-note').textContent = C.budgetNote;
+    slot('day-title').textContent = C.day.title;
+    slot('map-title').textContent = U.mapTitle;
+    slot('bring-title').textContent = U.bringTitle;
+    slot('bring').innerHTML = C.bring.map((b) => `<li>${esc(b)}</li>`).join('');
 
-    slot('practical').innerHTML = C.practical.map((p) => `<div class="tip"><h3>${esc(p.title)}</h3><p>${esc(p.body)}</p></div>`).join('');
-    if (slot('also')) slot('also').innerHTML = (C.alsoOn || [])
-      .map((a) => `<article class="also-item"><h3>${esc(a.title)}</h3><p>${esc(a.body)}</p><div class="links">${linkBtn(a.url, 'Info', ctxSr(a.title))}</div></article>`)
-      .join('');
-
-    // Credit only the photos this page renders, in page order, plus hero-rome (used by og.jpg).
+    // Credits: every photo the page renders (all option cards and dinner) plus hero-rome for og.jpg.
     const shown = [];
     const add = (k) => { if (k && IMG[k] && IMG[k].credit && !shown.includes(k)) shown.push(k); };
-    C.stops.forEach((s) => { add(s.image); add(s.rain?.image); (s.swaps || []).forEach((w) => add(w.image)); });
+    C.options.forEach((o) => add(o.image));
+    add(C.anchors.dinner?.image);
     add('hero-rome');
     slot('credits').innerHTML = shown.length
-      ? `<details class="credits"><summary>Photo credits${ICON.chev}</summary><ul>${shown
-          .map((k) => { const c = IMG[k].credit; return `<li><a href="${esc(c.sourceUrl)}" target="_blank" rel="noopener">${esc(c.title)}</a>${c.author ? ` by ${esc(c.author)}` : ''}, ${c.licenseUrl ? `<a href="${esc(c.licenseUrl)}" target="_blank" rel="noopener">${esc(c.license)}</a>` : esc(c.license)}</li>`; })
+      ? `<details class="credits"><summary>${esc(U.credits)}${ICON.chev}</summary><ul>${shown
+          .map((k) => { const c = IMG[k].credit; return `<li><a href="${esc(c.sourceUrl)}" target="_blank" rel="noopener">${esc(c.title)}</a>${c.author ? ` ${esc(U.creditBy)} ${esc(c.author)}` : ''}, ${c.licenseUrl ? `<a href="${esc(c.licenseUrl)}" target="_blank" rel="noopener">${esc(c.license)}</a>` : esc(c.license)}</li>`; })
           .join('')}</ul></details>`
       : '';
     slot('footer').textContent = C.footer.line;
+
+    slot('hud').setAttribute('aria-label', U.hud.label);
+    $$('main > section').forEach((sec) => { if (U.hud[sec.id]) sec.dataset.hud = U.hud[sec.id]; });
+    slot('now-long').textContent = U.jumpNow;
+    slot('now-short').textContent = U.jumpNowShort;
+    $('.hud-now').setAttribute('aria-label', U.jumpNow);
   }
 
   /* ------------------------------------------------------------------ */
-  /* Stops                                                               */
+  /* Picks: state, persistence, the link                                 */
   /* ------------------------------------------------------------------ */
 
-  function majorHTML(v, s, rain) {
-    return `${rain ? '' : plaqueHTML(s.plaque)}${timeRow(s, rain)}${v.image ? photoHTML(v.image, 'major') : ''}
-      ${titleHTML(s, v.title)}
-      <p class="stop-place label">${esc(v.place)}</p>
-      <p class="stop-body">${esc(v.body)}</p>
-      ${!rain && s.walk ? `<p class="walk-route"><span class="label tnum">${s.walk.min} min · ${dist(s.walk.m)}</span><span>${esc(s.walk.note)}</span></p>` : ''}
-      ${moveHTML(v.move)}${factsHTML(v.facts)}${linksHTML(v.links, v.title)}`;
-  }
-  const pitHTML = (s) => `${plaqueHTML(s.plaque, true)}
-    <div class="pit-head">${photoHTML(s.image, 'pit')}<div>${timeRow(s)}${titleHTML(s, s.title)}<p class="stop-place label">${esc(s.place)}</p></div></div>
-    <p class="stop-body">${esc(s.body)}</p>${moveHTML(s.move)}${factsHTML(s.facts)}${linksHTML(s.links, s.title)}`;
-  const bibHTML = (s) => `${plaqueHTML(s.plaque)}${timeRow(s)}
-    <div class="bib"><span class="bib-holes" aria-hidden="true"></span>
-      <p class="bib-race label">${esc(s.bib.race)}</p>
-      ${titleHTML(s, s.title, 'bib-number')}
-      <p class="bib-foot label"><span>${esc(s.bib.distance)}</span><span>${esc(s.bib.date)}</span></p>
-    </div>
-    <p class="stop-place label">${esc(s.place)}</p>
-    <p class="stop-body">${esc(s.body)}</p>${moveHTML(s.move)}${factsHTML(s.facts)}${linksHTML(s.links, s.title)}`;
-  const breakHTML = (s) => `${timeRow(s)}${titleHTML(s, s.title)}<p class="stop-body">${esc(s.body)}</p>${factsHTML(s.facts)}`;
+  let picks = new Set();
+  let freeText = '';
+  let fromLink = false;
+  let plan = null;
 
-  function swapsHTML(s) {
-    if (!s.swaps?.length) return '';
-    return `<details class="swaps"><summary>Other options<span class="sr-only">: ${esc(s.title)}</span>${ICON.chev}</summary><div class="swap-cards">${s.swaps
-      .map((w) => `<article class="swap">${w.image ? photoHTML(w.image, 'swap') : ''}<div class="swap-text">
-        <h4>${esc(w.title)}</h4><p class="label">${esc(w.place)}</p><p class="swap-body">${esc(w.body)}</p>${factsHTML(w.facts)}${linksHTML(w.links, w.title)}
-      </div></article>`)
-      .join('')}</div></details>`;
-  }
-
-  // One connector element. `plan` is "all", "sun" or "rain"; data-m feeds the legs meter.
-  function connectorHTML(walk, transfer, plan) {
-    const attrs = `data-plan="${plan}" data-m="${walk ? walk.m : 0}"`;
-    if (walk) {
-      return `<div class="walk walk--foot" ${attrs}><div class="walk-inner"><span class="walk-line" aria-hidden="true"></span><p class="walk-label label">${walk.min} min · ${dist(walk.m)}</p></div></div>`;
+  function loadState() {
+    const q = new URLSearchParams(location.search);
+    if (q.has('p')) {
+      picks = new Set(q.get('p').split(',').map((s) => s.trim()).filter((id) => OPT[id]));
+      freeText = q.get('n') || '';
+      fromLink = true;
+      saveState();
+      return;
     }
-    if (transfer) {
-      return `<div class="walk walk--transfer" ${attrs}><div class="walk-inner"><span class="walk-line" aria-hidden="true"></span><p class="walk-label label">${esc(transfer.mode)} · ${transfer.min} min</p><p class="walk-note">${esc(transfer.note)}</p></div></div>`;
-    }
-    return '';
+    const saved = store.get('picks', null);
+    picks = new Set(Array.isArray(saved) ? saved.filter((id) => OPT[id]) : C.options.filter((o) => o.default).map((o) => o.id));
+    freeText = store.get('note', '');
   }
-  // The connector after stop s. With the rain plan on, a rain stop can bring its own way in
-  // (next.rain.transferIn) and its own way out (s.rain.walkToNext / transferToNext).
-  function connectorsHTML(s, next) {
-    const sun = connectorHTML(s.walkToNext, s.transferToNext, 'sun');
-    let rain = '';
-    if (next?.rain?.transferIn) rain = connectorHTML(null, next.rain.transferIn, 'rain');
-    else if (s.rain && (s.rain.walkToNext || s.rain.transferToNext)) rain = connectorHTML(s.rain.walkToNext, s.rain.transferToNext, 'rain');
-    if (!rain) return sun ? sun.replace('data-plan="sun"', 'data-plan="all"') : '<div class="stop-gap" aria-hidden="true"></div>';
-    return sun + rain;
+  function saveState() { store.set('picks', [...picks]); store.set('note', freeText); }
+
+  const orderedPicks = () => [...picks].sort((a, b) => OPT[a].order - OPT[b].order);
+  function linkURL() {
+    const base = location.href.split(/[?#]/)[0];
+    const n = freeText.trim();
+    return `${base}?p=${orderedPicks().join(',')}${n ? `&n=${encodeURIComponent(n)}` : ''}`;
+  }
+  function shareText() {
+    const lines = [C.picker.shareIntro, ...plan.options.map((o) => `- ${o.title}`)];
+    if (freeText.trim()) lines.push(`${C.picker.shareExtra} ${freeText.trim()}`);
+    lines.push(linkURL());
+    return lines.join('\n');
+  }
+  async function send() {
+    const text = shareText();
+    if (navigator.share) {
+      try { await navigator.share({ title: U.shareTitle, text }); return; } catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 
-  function renderStops() {
-    slot('stops').innerHTML = C.stops
-      .map((s, i) => {
-        const sun = s.kind === 'major' ? majorHTML(s, s, false) : s.kind === 'pit' ? pitHTML(s) : s.kind === 'bib' ? bibHTML(s) : breakHTML(s);
-        const rain = s.rain ? `<div class="variant variant--rain" inert>${majorHTML(s.rain, s, true)}${planBtn('sun')}</div>` : '';
-        return `<li class="stop-item"><article class="stop stop--${esc(s.kind)}" id="${esc(s.id)}">
-          <div class="variant variant--sun">${sun}${s.rain ? planBtn('rain') : ''}</div>${rain}${swapsHTML(s)}
-        </article>${connectorsHTML(s, C.stops[i + 1])}</li>`;
-      })
-      .join('');
+  function syncCards() {
+    $$('.pick').forEach((b) => b.setAttribute('aria-pressed', String(picks.has(b.dataset.id))));
+  }
+  function toggle(id) {
+    if (picks.has(id)) picks.delete(id); else picks.add(id);
+    if (fromLink) { fromLink = false; history.replaceState(null, '', location.pathname + location.hash); }
+    saveState();
+    syncCards();
+    update();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Your day                                                            */
+  /* ------------------------------------------------------------------ */
+
+  const placeOf = (it) => (it.kind === 'option' ? it.option : it.kind === 'anchor' && typeof it.anchor.lat === 'number' ? it.anchor : null);
+
+  function renderDay() {
+    const D = C.day;
+    const body = slot('day-body');
+    const note = fromLink ? `<p class="day-note">${esc(D.fromLink)}</p>` : '';
+    if (!picks.size) { body.innerHTML = `${note}<p class="day-empty">${esc(D.empty)}</p>`; return; }
+
+    let html = '', group = '', walked = 0;
+    for (const it of plan.items) {
+      if (it.kind === 'transfer') { walked += it.transfer.m; html += `<li class="plan-transfer"><p>${esc(it.transfer.text)}</p></li>`; continue; }
+      if (it.kind === 'free') { html += `<li class="plan-free"><p>${esc(D.freeTime)}</p></li>`; continue; }
+      if (it.slot !== group) { group = it.slot; html += `<li class="plan-group"><h3 class="label">${esc(D.slots[group])}</h3></li>`; }
+      const time = it.exact ? it.rough : fmt(U.around, { time: it.rough });
+      const timeRow = `<p class="plan-time"><span aria-hidden="true">${esc(time)}</span> <span class="tag tag--now">${esc(U.nowTag)}</span></p>`;
+      const attrs = `data-min="${toMin(it.rough)}" data-km="${walked}"`;
+      if (it.kind === 'lunch-filler') {
+        html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
+        continue;
+      }
+      const o = it.kind === 'option' ? it.option : it.anchor;
+      const title = o.title;
+      const line = it.kind === 'option' ? o.line : o.body;
+      const link = o.links?.[0] ? linkBtn(o.links[0].url, o.links[0].label, title) : '';
+      const tag = it.kind === 'option' ? `<span class="tag">${esc(o.tag)}</span>` : '';
+      const photo = o.image ? thumbHTML(o.image, 'plan-photo', 64) : '';
+      html += `<li class="plan-item${photo ? '' : ' plan-item--text'}" ${attrs} data-dot="${placeOf(it) ? esc(it.id) : ''}" data-hud-title="${esc(o.hud || title)}">
+        ${photo}<div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(title)}</h4>${line ? `<p class="plan-line">${esc(line)}</p>` : ''}${tag || link ? `<div class="plan-meta">${tag}${link}</div>` : ''}</div>
+      </li>`;
+    }
+
+    const after = [];
+    after.push(`<p class="day-summary">${esc(fmt(D.summary, { n: plan.options.length, km: (plan.walkM / 1000).toFixed(1) }))}</p>`);
+    if (picks.size >= 7) after.push(`<p>${esc(D.manyLine)}</p>`);
+    const books = plan.options.filter((o) => o.book).map((o) => o.book).concat(U.bookDinner);
+    after.push(`<p>${esc(fmt(D.willBook, { list: books.join(U.listJoin) }))}</p>`);
+    if (C.options.some((o) => o.default && !plan.options.includes(o))) after.push(`<p>${esc(D.bibsSaturday)}</p>`);
+    if (plan.didntFit.length) {
+      after.push(`<div class="didnt"><h3>${esc(D.didntFitTitle)}</h3><ul>${plan.didntFit
+        .map((d) => `<li><span class="didnt-title">${esc(d.option.title)}</span>: ${esc(d.reason)}</li>`).join('')}</ul></div>`);
+    }
+    body.innerHTML = `${note}<ol class="plan">${html}</ol><div class="day-after">${after.join('')}</div>`;
   }
 
   /* ------------------------------------------------------------------ */
@@ -215,45 +237,61 @@
 
   const mapFig = document.createElement('figure');
   mapFig.className = 'map';
-  const ROUTE_PTS = MAP.legs.flatMap((l) => l.d.slice(1).split('L').map((p) => p.split(' ').map(Number))).filter((_, i) => i % 3 === 0);
+  const PR = MAP.proj;
+  const rad = (d) => (d * Math.PI) / 180;
+  const project = (lat, lon) => [PR.R * rad(lon - PR.lon0) * Math.cos(rad(PR.phi0)), PR.R * rad(PR.lat0 - lat)];
+  let mapPts = [];
+  let mapRevealed = false;
+  let revealMap = null;
 
-  function renderMap() {
+  function renderMapFrame() {
     const [vx, vy, vw, vh] = MAP.viewBox;
-    const timeOf = Object.fromEntries(C.stops.map((s) => [s.id, s.time]));
-    const defs = [];
     // The river is clipped to the frame; fade its ends into the sky instead of a hard cut.
     const fade = (id, x2, y2) => `<linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="${vx}" y1="${vy}" x2="${x2}" y2="${y2}">
         <stop offset="0" stop-color="#000"/><stop offset="0.09" stop-color="#fff"/><stop offset="0.91" stop-color="#fff"/><stop offset="1" stop-color="#000"/>
       </linearGradient>
       <mask id="${id}" maskUnits="userSpaceOnUse" x="${vx}" y="${vy}" width="${vw}" height="${vh}"><rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="url(#${id}g)"/></mask>`;
-    defs.push(fade('mapFadeX', vx + vw, vy), fade('mapFadeY', vx, vy + vh));
-    const legs = MAP.legs.map((l, i) => {
-      if (l.kind === 'transfer') {
-        defs.push(`<mask id="mk${i}" maskUnits="userSpaceOnUse" x="${vx - 500}" y="${vy - 500}" width="${vw + 1000}" height="${vh + 1000}"><path class="leg-mask" data-i="${i}" d="${l.d}" fill="none" stroke="#fff" stroke-linecap="round"/></mask>`);
-        return `<path class="leg leg--transfer" d="${l.d}" mask="url(#mk${i})"/>`;
-      }
-      return `<path class="leg leg--${l.kind}" data-i="${i}" d="${l.d}"/>`;
-    });
-    const stops = MAP.stops
-      .map((s) => `<g class="map-stop" data-id="${esc(s.id)}" data-o="${s.x} ${s.y}">
-        <circle class="map-halo" cx="${s.x}" cy="${s.y}"/>
-        <circle class="map-dot" cx="${s.x}" cy="${s.y}"/>
-        <text class="map-label" x="${s.x}" y="${s.y}" dominant-baseline="central">${esc(timeOf[s.id] || '')}</text>
-      </g>`)
-      .join('');
-    const ways = MAP.waypoints
-      .map((w) => `<g class="map-stop" data-id="${esc(w.id)}" data-o="${w.x} ${w.y}"><circle class="map-dot map-dot--way" cx="${w.x}" cy="${w.y}"/></g>`)
-      .join('');
-    mapFig.innerHTML = `<svg viewBox="${vx} ${vy} ${vw} ${vh}" role="img" aria-label="Map of central Rome with the walking route and the time of each stop">
-        <defs>${defs.join('')}</defs>
+    mapFig.innerHTML = `<svg viewBox="${vx} ${vy} ${vw} ${vh}" role="img" aria-label="${esc(U.mapLabel)}">
+        <defs>${fade('mapFadeX', vx + vw, vy)}${fade('mapFadeY', vx, vy + vh)}<g class="map-masks"></g></defs>
         <g mask="url(#mapFadeY)"><path class="map-river" d="${MAP.river}" mask="url(#mapFadeX)"/></g>
-        ${legs.join('')}${ways}${stops}
+        <g class="map-plan"></g>
       </svg>
-      <figcaption class="label">Map data © OpenStreetMap contributors</figcaption>`;
+      <figcaption class="label">${esc(U.mapCredit)}</figcaption>`;
   }
 
-  // Sizes in the SVG are set per rendered width so lines, dots and labels keep a fixed
-  // on-screen size (labels 12.5 px) whether the map is 250 px wide on a phone or sticky on desktop.
+  // The plan's stops as dots, joined in plan order by straight dashed lines. Labels are rough times.
+  function renderMapPlan() {
+    const svg = $('svg', mapFig);
+    const [vx, vy, vw, vh] = MAP.viewBox;
+    mapPts = (picks.size ? plan.items : []).filter(placeOf).map((it) => {
+      const p = placeOf(it);
+      const [x, y] = project(p.lat, p.lon);
+      return { id: it.id, x: Math.round(x), y: Math.round(y), label: it.rough };
+    });
+    const lines = mapPts.slice(1).map((b, i) => ({ a: mapPts[i], b }));
+    $('.map-masks', svg).innerHTML = lines
+      .map((l, i) => `<mask id="mk${i}" maskUnits="userSpaceOnUse" x="${vx - 500}" y="${vy - 500}" width="${vw + 1000}" height="${vh + 1000}"><path class="leg-mask" data-i="${i}" d="M${l.a.x} ${l.a.y}L${l.b.x} ${l.b.y}" fill="none" stroke="#fff" stroke-linecap="round"/></mask>`)
+      .join('');
+    $('.map-plan', svg).innerHTML = lines
+      .map((l, i) => `<path class="leg leg--dash" d="M${l.a.x} ${l.a.y}L${l.b.x} ${l.b.y}" mask="url(#mk${i})"/>`)
+      .join('') + mapPts
+      .map((p) => `<g class="map-stop" data-id="${esc(p.id)}" data-o="${p.x} ${p.y}">
+        <circle class="map-halo" cx="${p.x}" cy="${p.y}"/>
+        <circle class="map-dot" cx="${p.x}" cy="${p.y}"/>
+        <text class="map-label" x="${p.x}" y="${p.y}" dominant-baseline="central">${esc(p.label)}</text>
+      </g>`)
+      .join('');
+    mapUnit = 0;
+    mapCurrent = null;
+    layoutMap();
+    if (!mapRevealed && !reduced && window.gsap) {
+      $$('.leg-mask', svg).forEach((el) => gsap.set(el, { drawSVG: '0%' }));
+      $$('.map-stop', svg).forEach((g) => gsap.set(g, { scale: 0, autoAlpha: 0, svgOrigin: g.dataset.o }));
+    }
+  }
+
+  // Sizes in the SVG follow the rendered width so lines, dots and labels keep a fixed on-screen size
+  // (labels 12.5 px) whether the map is 250 px wide on a phone or sticky on desktop.
   let mapUnit = 0;
   function layoutMap() {
     const svg = $('svg', mapFig);
@@ -264,19 +302,16 @@
     mapUnit = u;
     const set = (sel, attrs) => $$(sel, svg).forEach((el) => Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v)));
     set('.map-river', { 'stroke-width': 80 });
-    set('.leg--walk', { 'stroke-width': 2.75 * u });
-    set('.leg--night', { 'stroke-width': 2 * u });
-    set('.leg--transfer', { 'stroke-width': 2 * u, 'stroke-dasharray': `${5 * u} ${5 * u}` });
+    set('.leg--dash', { 'stroke-width': 2.25 * u, 'stroke-dasharray': `${6 * u} ${5 * u}` });
     set('.leg-mask', { 'stroke-width': 10 * u });
     set('.map-dot', { r: 4.5 * u, 'stroke-width': 1.75 * u });
-    set('.map-dot--way', { r: 3.2 * u, 'stroke-width': 2 * u });
     set('.map-halo', { r: 9.5 * u, 'stroke-width': 2 * u });
     set('.map-label', { 'font-size': 12.5 * u, 'stroke-width': 3.5 * u });
     placeLabels(svg, u);
   }
 
   // Greedy label placement: crowded dots first, eight candidate spots each, scored by overlap
-  // with placed labels, other dots, the route and the frame edge.
+  // with placed labels, other dots, the lines and the frame edge.
   function placeLabels(svg, u) {
     const [vx, vy, vw, vh] = MAP.viewBox;
     const font = 12.5 * u, dotR = 4.5 * u;
@@ -291,18 +326,20 @@
     const box = (x, y, anchor) => { const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2; return [x0, y - h / 2, x0 + w, y + h / 2]; };
     const overlap = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
     const frame = [vx + 2 * u, vy + 2 * u, vx + vw - 2 * u, vy + vh - 2 * u];
-    const stops = MAP.stops;
-    const dots = stops.map((s) => [s.x - dotR * 1.6, s.y - dotR * 1.6, s.x + dotR * 1.6, s.y + dotR * 1.6]);
-    const crowd = (s) => stops.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < w * 1.6).length;
+    const pts = mapPts;
+    const linePts = [];
+    pts.slice(1).forEach((b, i) => { const a = pts[i]; for (let k = 1; k < 12; k++) linePts.push([a.x + ((b.x - a.x) * k) / 12, a.y + ((b.y - a.y) * k) / 12]); });
+    const dots = pts.map((s) => [s.x - dotR * 1.6, s.y - dotR * 1.6, s.x + dotR * 1.6, s.y + dotR * 1.6]);
+    const crowd = (s) => pts.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < w * 1.6).length;
     const placed = [];
-    [...stops].sort((a, b) => crowd(b) - crowd(a)).forEach((s) => {
+    [...pts].sort((a, b) => crowd(b) - crowd(a)).forEach((s) => {
       let best = null;
       cands.forEach(([dx, dy, anchor], ci) => {
         const b = box(s.x + dx, s.y + dy, anchor);
         let score = ci * 0.01 * w * h;
         for (const p of placed) score += overlap(b, p) * 50;
-        dots.forEach((d, i) => { if (stops[i] !== s) score += overlap(b, d) * 30; });
-        for (const [px, py] of ROUTE_PTS) if (px > b[0] && px < b[2] && py > b[1] && py < b[3]) score += w * h * 0.04;
+        dots.forEach((d, i) => { if (pts[i] !== s) score += overlap(b, d) * 30; });
+        for (const [px, py] of linePts) if (px > b[0] && px < b[2] && py > b[1] && py < b[3]) score += w * h * 0.05;
         score += (w * h - overlap(b, frame)) * 60;
         if (!best || score < best.score) best = { score, b, x: s.x + dx, y: s.y + dy, anchor };
       });
@@ -314,7 +351,7 @@
     });
   }
 
-  // Below 1280 px the map has its own section; from 1280 px it sits sticky beside the stops.
+  // Below 1280 px the map has its own section; from 1280 px it sits sticky beside the plan.
   const wideMQ = matchMedia('(min-width: 1280px)');
   function placeMap() {
     const host = wideMQ.matches ? slot('day-map') : slot('map-home');
@@ -384,9 +421,8 @@
   }
 
   // Every frame: write the page and HUD backgrounds directly (cheap, no inheritance).
-  // The --sky custom property (cards, river, bib holes, colour-mix tokens) restyles the whole
-  // document, so it follows at most every 120 ms, when the colour has visibly moved, and once
-  // more when scrolling settles.
+  // The --sky custom property restyles the whole document, so it follows at most every 120 ms,
+  // when the colour has visibly moved, and once more when scrolling settles.
   const themeMeta = $('meta[name="theme-color"]');
   const hud = $('.hud');
   let skyHex = '', skyRgb = [0, 0, 0], varHex = '', varLch = null, varAt = 0, varTimer = 0;
@@ -491,39 +527,27 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Scroll model: page position -> time of day, current stop, legs      */
+  /* Scroll model: page position -> time of day, current item, km       */
   /* ------------------------------------------------------------------ */
 
-  const stopsData = C.stops;
-  const stopMin = stopsData.map((s) => toMin(s.time));
   const START = C.meta.startsAt.slice(11, 16);
   const START_MIN = toMin(START);
-  const LAST_IDX = stopsData.length - 1;
-  let stopEls = [];
+  let itemEls = [];
   let anchors = [];
-  let legMarks = [];
   let sectionMarks = [];
   let reduced = reduceMotion();
   let lastY = 0;
-  let booted = false;
-  let skyTrigger = null;
 
   function measure() {
     layoutMap();
+    itemEls = $$('.plan-item');
     const mid = innerHeight / 2;
     const top = (el) => el.getBoundingClientRect().top + scrollY;
     anchors = [{ y: 0, t: START_MIN }];
-    stopEls.forEach((el, i) => anchors.push({ y: Math.max(top(el) - mid, anchors[anchors.length - 1].y + 1), t: stopMin[i] }));
-    legMarks = [];
-    stopsData.forEach((s, i) => {
-      // The connector shown for the active plan carries its metres in data-m (0 for rides).
-      const w = $('.walk:not([hidden])', stopEls[i].parentElement);
-      if (w && +w.dataset.m > 0) legMarks.push({ y: top(w) + w.offsetHeight - mid, m: +w.dataset.m });
-      if (s.walk) legMarks.push({ y: anchors[i + 1].y, m: s.walk.m });
-    });
+    itemEls.forEach((el) => anchors.push({ y: Math.max(top(el) - mid, anchors[anchors.length - 1].y + 1), t: +el.dataset.min, el }));
     sectionMarks = $$('main > section')
       .filter((sec) => sec.offsetParent !== null)
-      .map((sec) => ({ y: top(sec) - mid, id: sec.id, name: sec.dataset.hud || $('h2', sec).textContent }));
+      .map((sec) => ({ y: top(sec) - mid, id: sec.id, name: sec.dataset.hud || '' }));
   }
 
   function timeAt(y) {
@@ -537,79 +561,34 @@
 
   const hudPlace = $('[data-slot="hud-place"]');
   const hudKm = $('[data-slot="hud-km"]');
-  let hudPlaceText = '', hudKmKey = '', hudLegs = -1, mapCurrent = null;
+  let hudPlaceText = '', hudKmText = '', mapCurrent = null;
+  const minToHHMM = (m) => P.hhmm(m);
 
   function render(y) {
     lastY = y;
     let idx = -1;
     for (let i = 1; i < anchors.length; i++) if (y >= anchors[i].y) idx = i - 1;
-    applySky(reduced ? (idx < 0 ? START_MIN : stopMin[idx]) : timeAt(y));
+    const el = idx >= 0 ? anchors[idx + 1].el : null;
+    applySky(reduced ? (el ? +el.dataset.min : START_MIN) : timeAt(y));
 
     let sec = null;
     for (const s of sectionMarks) if (y >= s.y) sec = s;
-    const inDay = sec && sec.id === 'day' && idx >= 0;
-    const s = idx >= 0 ? stopsData[idx] : null;
-    setClock(idx >= 0 ? s.time : START, !reduced && hud.hasAttribute('data-on'));
-    const v = s && root.dataset.plan === 'rain' && s.rain ? s.rain : s;
-    const place = inDay ? (v === s ? s.hud || s.place || s.title : v.hud || v.place) : sec ? sec.name : '';
+    const inDay = sec && sec.id === 'day' && el;
+    setClock(el ? minToHHMM(+el.dataset.min) : START, !reduced && hud.hasAttribute('data-on'));
+    const place = inDay ? el.dataset.hudTitle : sec ? sec.name : '';
     if (place !== hudPlaceText) { hudPlaceText = place; hudPlace.textContent = place; }
 
-    // Sticky desktop map: mark the current stop's dot.
-    const cur = s && v === s ? $(`.map-stop[data-id="${s.id}"]`, mapFig) : null; // rain variants have no dot
+    // Sticky desktop map: mark the current item's dot.
+    const cur = el && el.dataset.dot ? $(`.map-stop[data-id="${el.dataset.dot}"]`, mapFig) : null;
     if (cur !== mapCurrent) { mapCurrent?.classList.remove('is-current'); cur?.classList.add('is-current'); mapCurrent = cur; }
 
-    const m = legMarks.reduce((sum, l) => sum + (y >= l.y ? l.m : 0), 0);
-    const sorted = idx === LAST_IDX;
-    const key = `${m}|${sorted}`;
-    if (key !== hudKmKey) {
-      hudKmKey = key;
-      const km = (m / 1000).toFixed(1);
-      const cap = C.meta.walkCapKm;
-      // Phones show "4.0 km"; from 480 px "4.0 / 10 km", and at the night walk "7.7 km · Sunday's sorted".
-      hudKm.classList.toggle('is-sorted', sorted);
-      hudKm.innerHTML = `<span aria-hidden="true">${km}<span class="km-cap"> / ${cap}</span> km${sorted ? '<span class="km-sorted"> · done</span>' : ''}</span><span class="sr-only">${km} of ${cap} km walked${sorted ? ", done" : ''}</span>`;
-    }
-    if (m !== hudLegs) {
-      hudLegs = m;
+    const m = el ? +el.dataset.km : 0;
+    const km = (m / 1000).toFixed(1);
+    if (km !== hudKmText) {
+      hudKmText = km;
+      hudKm.innerHTML = `<span aria-hidden="true">${esc(fmt(U.km, { km }))}</span><span class="sr-only">${esc(fmt(U.kmSr, { km }))}</span>`;
       hud.style.setProperty('--legs', Math.min(1, m / (C.meta.walkCapKm * 1000)).toFixed(3));
     }
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Plan switch                                                         */
-  /* ------------------------------------------------------------------ */
-
-  // `anchor` (a stop) keeps its place on screen: rain variants above it change height, so the
-  // page is shifted by the difference before measuring. If the stop's top is out of view, the
-  // same instant shift puts it under the HUD; an animated scroll would pass over the following
-  // stops and flash the HUD and sky through the evening. The sky scrub is then snapped.
-  function setPlan(plan, save = true, anchor = null) {
-    const before = anchor ? anchor.getBoundingClientRect().top : 0;
-    root.dataset.plan = plan;
-    $$('.stop').forEach((st) => {
-      const rain = $('.variant--rain', st);
-      if (!rain) return;
-      $('.variant--sun', st).inert = plan === 'rain';
-      rain.inert = plan !== 'rain';
-    });
-    $$('.walk[data-plan="sun"]').forEach((w) => { w.hidden = plan === 'rain'; });
-    $$('.walk[data-plan="rain"]').forEach((w) => { w.hidden = plan !== 'rain'; });
-    $$('.plan input').forEach((i) => { i.checked = i.value === plan; });
-    const wet = $('[data-action="rain"]');
-    if (wet) { wet.disabled = plan === 'rain'; wet.firstChild.textContent = plan === 'rain' ? 'Rain plan is on' : 'Switch to the rain plan'; }
-    if (save) store.set('plan', plan);
-    hudPlaceText = '';
-    hudKmKey = '';
-    if (!booted) return;
-    if (anchor) {
-      const gap = parseFloat(getComputedStyle(anchor).scrollMarginTop) || 0;
-      const target = before < gap ? gap : before;
-      const delta = anchor.getBoundingClientRect().top - target;
-      if (Math.abs(delta) > 0.5) window.scrollBy({ top: delta, behavior: 'instant' });
-    }
-    lastY = scrollY;
-    ScrollTrigger.refresh(); // heights and walking metres changed
-    skyTrigger?.getTween()?.progress(1);
   }
 
   /* ------------------------------------------------------------------ */
@@ -621,18 +600,19 @@
     const p = Object.fromEntries(romeFmt.formatToParts(new Date()).map((x) => [x.type, x.value]));
     return { date: `${p.year}-${p.month}-${p.day}`, min: +p.hour * 60 + +p.minute };
   }
-  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const W = U.countdown;
+  const unit = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   function countdownText(r) {
-    if (r.date === C.meta.date) return "It's today.";
-    if (r.date > C.meta.date) return 'That was Friday.';
+    if (r.date === C.meta.date) return W.today;
+    if (r.date > C.meta.date) return W.after;
     const mins = Math.max(0, Math.floor((new Date(C.meta.startsAt) - Date.now()) / 60000));
     const d = Math.floor(mins / 1440), h = Math.floor((mins % 1440) / 60), m = mins % 60;
-    const parts = d > 0 ? [[d, 'day'], [h, 'hour']] : h > 0 ? [[h, 'hour'], [m, 'minute']] : [[m, 'minute']];
+    const parts = d > 0 ? [[d, W.day, W.days], [h, W.hour, W.hours]] : h > 0 ? [[h, W.hour, W.hours], [m, W.minute, W.minutes]] : [[m, W.minute, W.minutes]];
     const shown = parts.filter(([n], i) => n > 0 || (i === 0 && parts.length === 1));
-    return 'Starts in ' + shown.map(([n, w]) => plural(n, w)).join(', ');
+    return fmt(W.startsIn, { time: shown.map(([n, one, many]) => unit(n, one, many)).join(W.join) });
   }
   const nowBtns = $$('.hud-now, .hero-now');
-  let jumpIdx = -1;
+  let jumpEl = null;
   function tick() {
     const r = romeNow();
     slot('countdown').textContent = countdownText(r);
@@ -640,22 +620,21 @@
     if (isToday && row.parentElement !== today) today.append(row);
     if (!isToday && row.parentElement === today) $('.hero-meta:not(.hero-today)').prepend(row);
     today.hidden = !isToday;
-    let nowIdx = -1;
-    jumpIdx = -1;
-    if (r.date === C.meta.date) {
-      stopMin.forEach((t, i) => { const end = i < LAST_IDX ? stopMin[i + 1] : 24 * 60; if (r.min >= t && r.min < end) nowIdx = i; });
-      // Before the first stop, "now" means the first stop.
-      jumpIdx = nowIdx >= 0 ? nowIdx : r.min < stopMin[0] ? 0 : -1;
+    const items = $$('.plan-item');
+    let nowEl = null;
+    jumpEl = null;
+    if (isToday && items.length) {
+      items.forEach((el, i) => { const end = i < items.length - 1 ? +items[i + 1].dataset.min : 24 * 60; if (r.min >= +el.dataset.min && r.min < end) nowEl = el; });
+      jumpEl = nowEl || (r.min < +items[0].dataset.min ? items[0] : null);
     }
-    stopEls.forEach((el, i) => el.classList.toggle('is-now', i === nowIdx));
-    nowBtns.forEach((b) => { b.hidden = jumpIdx < 0; });
-    hud.toggleAttribute('data-today', jumpIdx >= 0);
+    items.forEach((el) => el.classList.toggle('is-now', el === nowEl));
+    nowBtns.forEach((b) => { b.hidden = !jumpEl; });
+    hud.toggleAttribute('data-today', !!jumpEl);
   }
   function jumpToNow() {
-    const el = stopEls[jumpIdx];
-    if (!el) return;
-    el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
-    const h = $('.variant:not([inert]) h3', el);
+    if (!jumpEl) return;
+    jumpEl.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
+    const h = $('h4', jumpEl);
     if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
   }
 
@@ -664,11 +643,10 @@
   /* ------------------------------------------------------------------ */
 
   // Sky words come from daytime hourly codes; wet hours are named separately, so "rain" never repeats.
+  const WX = U.weather;
   const SKY_CAT = (c) => (c <= 1 ? 'sun' : c === 2 ? 'mixed' : c === 45 || c === 48 ? 'fog' : 'cloud');
-  const SKY_WORDS = { sun: ['sunny', 'sun'], mixed: ['partly cloudy', 'sunny spells'], cloud: ['cloudy', 'cloud'], fog: ['foggy', 'fog'] };
   const WET_CAT = (c) => (c >= 95 ? 'storms' : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'snow' : c >= 80 ? 'showers' : c >= 61 ? 'rain' : c >= 51 ? 'drizzle' : null);
   const modeOf = (arr) => { const n = {}; let best = null; for (const x of arr) { n[x] = (n[x] || 0) + 1; if (best === null || n[x] > n[best]) best = x; } return best; };
-  const CLIMATE = 'Mid-October is usually 22° / 12°, with rain about one day in four.';
 
   function describeWeather(data) {
     const d = data?.daily, H = data?.hourly;
@@ -680,46 +658,32 @@
     let sky = '';
     if (am.length && pm.length) {
       const a = modeOf(am), b = modeOf(pm);
-      sky = a === b ? SKY_WORDS[a][0] : `${SKY_WORDS[a][1]} then ${SKY_WORDS[b][1]}`;
-    } else if (typeof d.weather_code?.[0] === 'number') sky = SKY_WORDS[SKY_CAT(d.weather_code[0])][0];
+      sky = a === b ? WX.sky[a][0] : fmt(WX.then, { a: WX.sky[a][1], b: WX.sky[b][1] });
+    } else if (typeof d.weather_code?.[0] === 'number') sky = WX.sky[SKY_CAT(d.weather_code[0])][0];
     let wetText = '';
     if (typeof prob === 'number') {
       const wet = [];
       for (let h = 7; h <= 23; h++) { const c = codeAt(h); if (c !== null && WET_CAT(c)) wet.push({ h, cat: WET_CAT(c) }); }
+      let what = WX.rain, when = '';
       if (wet.length) {
         const hs = wet.map((x) => x.h);
-        const when = Math.min(...hs) >= 19 ? ' late' : Math.max(...hs) <= 12 ? ' early' : Math.min(...hs) >= 13 && Math.max(...hs) <= 18 ? ' in the afternoon' : '';
-        wetText = `<span class="tnum">${Math.round(prob)}%</span> chance of ${modeOf(wet.map((x) => x.cat))}${when}`;
-      } else wetText = `<span class="tnum">${Math.round(prob)}%</span> chance of rain`;
+        what = WX.wet[modeOf(wet.map((x) => x.cat))];
+        when = Math.min(...hs) >= 19 ? WX.late : Math.max(...hs) <= 12 ? WX.early : Math.min(...hs) >= 13 && Math.max(...hs) <= 18 ? WX.afternoon : '';
+      }
+      wetText = fmt(esc(WX.chance), { pct: `<span class="tnum">${Math.round(prob)}</span>`, what: esc(what), when: esc(when) });
     }
-    const html = [`Friday: <span class="tnum">${Math.round(hi)}° / ${Math.round(lo)}°</span>`, sky, wetText].filter(Boolean).join(', ');
-    return { html, prob: typeof prob === 'number' ? prob : 0 };
+    const temps = fmt(esc(WX.temps), { hi: `<span class="tnum">${Math.round(hi)}</span>`, lo: `<span class="tnum">${Math.round(lo)}</span>` });
+    return [temps, esc(sky), wetText].filter(Boolean).join(', ');
   }
 
   async function loadWeather() {
     const el = slot('weather');
     const M = C.meta;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${M.lat}&longitude=${M.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&hourly=precipitation_probability,weather_code&timezone=Europe%2FRome&start_date=${M.date}&end_date=${M.date}`;
-    const show = (data) => {
-      const w = describeWeather(data);
-      if (!w) return false;
-      let html = w.html;
-      if (w.prob >= 50) html += `<span class="weather-wet"><span>Looks wet.</span><button class="btn" type="button" data-action="rain"><span>Switch to the rain plan</span></button></span>`;
-      el.innerHTML = html;
-      const btn = $('[data-action="rain"]', el);
-      if (btn) {
-        btn.addEventListener('click', () => {
-          const hadFocus = document.activeElement === btn;
-          setPlan('rain');
-          if (hadFocus) $('.plan input[value="rain"]').focus({ preventScroll: true });
-        });
-        setPlan(root.dataset.plan, false);
-      }
-      return true;
-    };
+    const show = (data) => { const html = describeWeather(data); if (!html) return false; el.innerHTML = html; return true; };
     const cached = store.get('wx', null);
     if (cached && Date.now() - cached.t < 3600e3 && show(cached.d)) return;
-    el.textContent = CLIMATE;
+    el.textContent = WX.climate;
     try {
       const ctl = new AbortController();
       const timer = setTimeout(() => ctl.abort(), 8000);
@@ -733,20 +697,36 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Update cycle                                                        */
+  /* ------------------------------------------------------------------ */
+
+  let booted = false;
+  let refreshTimer = 0;
+  function update() {
+    plan = P.build(C, [...picks]);
+    renderDay();
+    renderMapPlan();
+    if (booted) {
+      tick();
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 60);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Motion                                                              */
   /* ------------------------------------------------------------------ */
 
   function setupMotion() {
-    gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
     const mm = gsap.matchMedia();
 
     mm.add({ motion: '(prefers-reduced-motion: no-preference)', still: '(prefers-reduced-motion: reduce)' }, (ctx) => {
       reduced = !ctx.conditions.motion;
       skyHex = '';
-      skyTrigger = null;
 
       if (reduced) {
         boardFinal();
+        mapRevealed = true;
         ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (self) => render(self.scroll()) });
         render(scrollY);
         return;
@@ -754,12 +734,12 @@
 
       // Sky scrub: smoothed scroll position drives the time of day.
       const st = { y: scrollY };
-      skyTrigger = gsap.fromTo(st, { y: 0 }, {
+      gsap.fromTo(st, { y: 0 }, {
         y: () => ScrollTrigger.maxScroll(window),
         ease: 'none',
         onUpdate: () => render(st.y),
         scrollTrigger: { start: 0, end: 'max', scrub: 0.4, invalidateOnRefresh: true },
-      }).scrollTrigger;
+      });
       render(scrollY);
 
       // Hero: the board flips in row by row, then the word and the lead.
@@ -769,55 +749,21 @@
         autoAlpha: 0, y: 18, duration: 0.8, ease: 'power3.out', stagger: 0.1, clearProps: 'transform,visibility,opacity',
       }, 0.75);
 
-      // Map: the route draws itself, stop dots pop in day order.
-      const svg = $('svg', mapFig);
-      const legEl = (i) => $(MAP.legs[i].kind === 'transfer' ? `.leg-mask[data-i="${i}"]` : `.leg[data-i="${i}"]`, svg);
-      const dot = Object.fromEntries($$('.map-stop', svg).map((g) => [g.dataset.id, g]));
-      MAP.legs.forEach((_, i) => gsap.set(legEl(i), { drawSVG: '0%' }));
-      Object.values(dot).forEach((g) => gsap.set(g, { scale: 0, autoAlpha: 0, svgOrigin: g.dataset.o }));
-      const route = gsap.timeline({ paused: true });
-      const raw = MAP.legs.map((l) => Math.sqrt(l.len));
-      const k = 2.6 / raw.reduce((a, b) => a + b, 0);
-      const shown = new Set();
-      let at = 0;
-      const pop = (id) => {
-        if (shown.has(id) || !dot[id]) return;
-        shown.add(id);
-        route.to(dot[id], { scale: 1, autoAlpha: 1, duration: 0.35, ease: 'back.out(2.4)' }, at);
-        at += 0.05;
-      };
-      MAP.legs.forEach((l, i) => {
-        pop(l.from);
-        const d = raw[i] * k;
-        route.to(legEl(i), { drawSVG: '100%', duration: d, ease: 'power1.inOut' }, at);
-        at += d;
-        pop(l.to);
-      });
-      Object.keys(dot).forEach(pop); // any dot not on a leg
-      ScrollTrigger.create({ trigger: svg, start: 'top 75%', once: true, onEnter: () => route.play() });
-
-      // Photos: clip reveal from the bottom, slight settle in scale. Once.
-      const photos = $$('.variant .photo');
-      gsap.set(photos, { clipPath: 'inset(100% 0% 0% 0%)' });
-      const revealImgs = photos.map((p) => $('img', p)).filter(Boolean);
-      if (revealImgs.length) gsap.set(revealImgs, { scale: 1.06 });
-      ScrollTrigger.batch(photos, {
-        start: 'top 92%',
-        once: true,
-        onEnter: (els) => {
-          gsap.to(els, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.1, ease: 'power3.out', stagger: 0.08 });
-          const imgs = els.map((e) => $('img', e)).filter(Boolean);
-          if (imgs.length) gsap.to(imgs, { scale: 1, duration: 1.4, ease: 'power3.out', stagger: 0.08 });
-        },
-      });
-
-      // Walk connectors draw as you pass them.
-      $$('.walk').forEach((w) => {
-        gsap.fromTo($('.walk-line', w), { clipPath: 'inset(0% 0% 100% 0%)' }, {
-          clipPath: 'inset(0% 0% 0% 0%)', ease: 'none',
-          scrollTrigger: { trigger: w, start: 'top 92%', end: 'bottom 62%', scrub: 0.3 },
+      // Map: the first time it scrolls in, the lines draw and the dots pop in plan order.
+      revealMap = () => {
+        if (mapRevealed) return;
+        mapRevealed = true;
+        const svg = $('svg', mapFig);
+        const tl = gsap.timeline();
+        let at = 0;
+        $$('.map-stop', svg).forEach((g, i) => {
+          tl.to(g, { scale: 1, autoAlpha: 1, duration: 0.35, ease: 'back.out(2.4)' }, at);
+          const line = $(`.leg-mask[data-i="${i}"]`, svg);
+          if (line) { tl.to(line, { drawSVG: '100%', duration: 0.3, ease: 'power1.inOut' }, at + 0.1); at += 0.3; }
+          at += 0.08;
         });
-      });
+      };
+      ScrollTrigger.create({ trigger: mapFig, start: 'top 75%', once: true, onEnter: () => revealMap() });
     });
 
     // HUD appears once the hero has scrolled away.
@@ -837,27 +783,24 @@
   /* Boot                                                                */
   /* ------------------------------------------------------------------ */
 
+  gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
   renderHero();
-  renderSections();
-  renderMap();
-  renderStops();
+  renderStatic();
+  renderMapFrame();
   placeMap();
-  stopEls = $$('.stop');
+  loadState();
+  syncCards();
+  slot('free-text').value = freeText;
+  update();
 
-  setPlan(store.get('plan', 'sun') === 'rain' ? 'rain' : 'sun', false);
-  $$('.plan input').forEach((i) => i.addEventListener('change', () => setPlan(i.value)));
-  // Inline switches on the stops themselves: swap, then bring the stop's top into view.
-  slot('stops').addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-set-plan]');
-    if (!btn) return;
-    const stop = btn.closest('.stop');
-    setPlan(btn.dataset.setPlan, true, stop);
-    const h = $('.variant:not([inert]) h3', stop);
-    if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+  slot('pick-groups').addEventListener('click', (e) => {
+    const b = e.target.closest('.pick');
+    if (b) toggle(b.dataset.id);
   });
-  $$('.checklist input').forEach((i) => i.addEventListener('change', () => store.set('book:' + i.dataset.id, i.checked)));
+  slot('free-text').addEventListener('input', (e) => { freeText = e.target.value; saveState(); });
+  slot('send').addEventListener('click', send);
   nowBtns.forEach((b) => b.addEventListener('click', jumpToNow));
-  wideMQ.addEventListener('change', () => { placeMap(); ScrollTrigger.refresh(); });
+  wideMQ.addEventListener('change', () => { placeMap(); renderMapPlan(); ScrollTrigger.refresh(); });
 
   measure();
   setupMotion();

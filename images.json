@@ -302,5 +302,69 @@
    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roma-_Portico_d%27Ottavia_-_52350512476.jpg"
   }
+ },
+ "trastevere": {
+  "src800": "img/trastevere-800.webp",
+  "src1600": "img/trastevere-1600.webp",
+  "w": 1600,
+  "h": 925,
+  "alt": "Trastevere's rooftops and the bell tower of Santa Maria in Trastevere in soft afternoon light",
+  "focal": "40% 50%",
+  "color": "#918e87",
+  "credit": {
+   "title": "Santa Maria in Trastevere church in Rome (1)",
+   "author": "Krzysztof Golik",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Santa_Maria_in_Trastevere_church_in_Rome_(1).jpg"
+  }
+ },
+ "capuchin-crypt": {
+  "src800": "img/capuchin-crypt-800.webp",
+  "src1600": "img/capuchin-crypt-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "A chapel in the Capuchin Crypt: an arch and walls built from stacked skulls and bones above rows of crosses",
+  "focal": "45% 45%",
+  "color": "#867060",
+  "credit": {
+   "title": "Rom (IT), Kapuzinergruft -- 2024 -- 0666",
+   "author": "Anil Öztas",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rom_(IT),_Kapuzinergruft_--_2024_--_0666.jpg"
+  }
+ },
+ "pincio-sunset": {
+  "src800": "img/pincio-sunset-800.webp",
+  "src1600": "img/pincio-sunset-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Sunset over Piazza del Popolo and St Peter's dome from the Pincio terrace",
+  "focal": "50% 40%",
+  "color": "#6b5c48",
+  "credit": {
+   "title": "Piazza del Popolo Sunset - Flickr - radkuch.13",
+   "author": "Radek Kucharski from Warsaw, Poland",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Piazza_del_Popolo_Sunset_-_Flickr_-_radkuch.13.jpg"
+  }
+ },
+ "expo-run": {
+  "src800": "img/expo-run-800.webp",
+  "src1600": "img/expo-run-1600.webp",
+  "w": 1600,
+  "h": 1019,
+  "alt": "Rome Marathon runners passing umbrella pines toward the Colosseum, with the Arch of Constantine on the left",
+  "focal": "60% 50%",
+  "color": "#97988f",
+  "credit": {
+   "title": "Maratona di Roma 2019 - Rome, Italy - DSC01373",
+   "author": "Daderot",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Maratona_di_Roma_2019_-_Rome,_Italy_-_DSC01373.jpg"
+  }
  }
 }
