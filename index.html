@@ -48,15 +48,8 @@
 
 <header class="hero" id="top">
   <div class="board-wrap" data-slot="board"></div>
-  <div class="hero-text">
-    <h1 class="hero-title" data-slot="hero-title"></h1>
-    <p class="hero-date" data-slot="hero-date"></p>
-    <p class="hero-lead" data-slot="hero-lead"></p>
-    <ul class="hero-meta">
-      <li class="weather" data-slot="weather"></li>
-    </ul>
-  </div>
-  <noscript><p class="noscript">This page needs JavaScript to show the picker.</p></noscript>
+  <h1 class="sr-only" data-slot="hero-title"></h1>
+  <noscript><p class="noscript">This page needs JavaScript.</p></noscript>
 </header>
 
 <main>
@@ -65,27 +58,36 @@
     <div class="note" data-slot="note"></div>
   </section>
 
-  <section class="section" id="pick" aria-labelledby="pick-h">
-    <h2 id="pick-h" data-slot="pick-title"></h2>
-    <div class="pick-groups" data-slot="pick-groups"></div>
+  <section class="section section--ask" id="ask" aria-labelledby="ask-h">
+    <h2 id="ask-h" class="sr-only" data-slot="ask-title"></h2>
+    <div class="stage" data-slot="stage"></div>
   </section>
 
   <section class="section section--dep" id="dep" aria-labelledby="dep-h">
     <h2 id="dep-h" class="sr-only" data-slot="dep-title"></h2>
     <div data-slot="dep-note"></div>
     <div class="board-wrap" data-slot="dep-board"></div>
+  </section>
+
+  <section class="section section--day" id="day" aria-labelledby="day-h">
+    <div class="day-head">
+      <h2 id="day-h" data-slot="day-title"></h2>
+      <button class="day-change" type="button" data-slot="change-answers"></button>
+    </div>
+    <p class="day-parked" data-slot="day-parked" hidden></p>
+    <p class="day-weather" data-slot="weather"></p>
+    <div class="day-map" data-slot="day-map"></div>
+    <div class="day-body" data-slot="day-body"></div>
+    <dialog class="sheet" data-slot="catalogue" aria-labelledby="cat-h"></dialog>
+  </section>
+
+  <section class="section section--send" id="send" aria-labelledby="free-label">
     <div class="send">
-      <label class="send-label" for="free-text" data-slot="free-label"></label>
+      <label class="send-label" id="free-label" for="free-text" data-slot="free-label"></label>
       <textarea id="free-text" class="send-text" rows="2" maxlength="1000" data-slot="free-text"></textarea>
       <button class="btn btn--primary send-btn" type="button" data-slot="send"></button>
       <div class="send-after" data-slot="send-after"></div>
     </div>
-  </section>
-
-  <section class="section section--day" id="day" aria-labelledby="day-h">
-    <h2 id="day-h" data-slot="day-title"></h2>
-    <div class="day-map" data-slot="day-map"></div>
-    <div class="day-body" data-slot="day-body"></div>
   </section>
 
   <section class="section" id="map" aria-labelledby="map-h">
@@ -109,6 +111,7 @@
 <script src="vendor/gsap.min.js"></script>
 <script src="vendor/ScrollTrigger.min.js"></script>
 <script src="vendor/DrawSVGPlugin.min.js"></script>
+<script src="vendor/web-haptics.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

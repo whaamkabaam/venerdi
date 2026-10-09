@@ -1,6 +1,7 @@
-/* Venerdì v4: a picker that builds a relaxed Friday, played back on a DEPARTURES board.
-   Renders from window.SITE (data.js) and plan.js (the day builder), then wires the boards,
-   the sky, HUD, map, persistence and sharing. Every visible string comes from content.json. */
+/* Venerdì v5: four photo questions compose a relaxed Friday, played back on a DEPARTURES board,
+   then shown as story cards she can swap, remove and add to. Renders from window.SITE (data.js)
+   and plan.js (the composer and the day builder), then wires the boards, the sky, HUD, map,
+   persistence and sharing. Every visible string comes from content.json. */
 (() => {
   'use strict';
 
@@ -16,11 +17,16 @@
   const slot = (name) => $(`[data-slot="${name}"]`);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const store = {
-    get(k, d) { try { const v = localStorage.getItem('venerdi:v3:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-    set(k, v) { try { localStorage.setItem('venerdi:v3:' + k, JSON.stringify(v)); } catch { /* private mode */ } },
+    get(k, d) { try { const v = localStorage.getItem('venerdi:v5:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem('venerdi:v5:' + k, JSON.stringify(v)); } catch { /* private mode */ } },
   };
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const OPT = Object.fromEntries(C.options.map((o) => [o.id, o]));
+  const WHY = C.pickReasons;
+  const reasonLabel = (r) => (WHY[r] || WHY.added).label;
+  // Haptics (web-haptics): a tick on a tile, a firmer one on Plan Friday. Called inside the tap.
+  const haptics = window.WebHaptics ? new window.WebHaptics() : null;
+  const buzz = (p) => { try { haptics?.trigger(p)?.catch?.(() => {}); } catch { /* no haptics here */ } };
 
   const ICON = {
     out: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6.5 5H11v4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -56,11 +62,12 @@
   const newTab = `<span class="sr-only"> (${esc(U.newTab)})</span>`;
   const linkBtn = (href, label, ctx, cls = 'btn btn--small') =>
     `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)}${ctx ? `<span class="sr-only">: ${esc(ctx)}</span>` : ''}${newTab}${ICON.out}</a>`;
-  // Decorative photos (the title next to them says what they are). Missing photos keep a quiet colour block.
-  function thumbHTML(key, cls, sizes, extra = '') {
+  // Photos are decorative unless `alt` is set (the title next to them says what they are).
+  // Missing photos keep a quiet colour block.
+  function thumbHTML(key, cls, sizes, extra = '', { alt = false, loading = 'lazy' } = {}) {
     const im = key && IMG[key];
     if (!im) return `<span class="${cls} is-empty">${extra}</span>`;
-    return `<span class="${cls}" style="--ph:${esc(im.color || '')}"><img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${sizes}" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">${extra}</span>`;
+    return `<span class="${cls}" style="--ph:${esc(im.color || '')}"><img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${sizes}" width="${+im.w}" height="${+im.h}" alt="${alt ? esc(im.alt || '') : ''}" loading="${loading}" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">${extra}</span>`;
   }
 
   /* ------------------------------------------------------------------ */
@@ -132,7 +139,7 @@
       <div class="board-grid" role="table" aria-label="${esc(label)}" style="--n1:${widths[0]};--n2:${widths[1]};--n3:${widths[2]}">
         <div class="board-colheads" role="row">${columns.map((c, i) => `<span class="ch c--${cls[i]} label" role="columnheader">${esc(c)}</span>`).join('')}</div>
         <div class="board-rows" role="rowgroup"></div>
-        ${sun ? `<div class="dep-gap" aria-hidden="true"></div><div class="board-sun" role="rowgroup">${rowHTML(widths)}</div>` : ''}
+        ${sun ? `<div class="dep-gap" aria-hidden="true"></div><div class="board-sun" role="rowgroup">${rowHTML(widths)}</div><div class="board-parked" role="rowgroup"></div>` : ''}
       </div>
     </div>`;
     const B = { host, widths, rows: [], rowsEl: $('.board-rows', host) };
@@ -140,7 +147,16 @@
       while (B.rows.length < n) { B.rowsEl.insertAdjacentHTML('beforeend', rowHTML(widths)); B.rows.push(rowModel(B.rowsEl.lastElementChild, widths)); }
       while (B.rows.length > n) { const r = B.rows.pop(); r.tls.forEach((t) => t.kill()); r.el.remove(); }
     };
-    if (sun) B.sun = rowModel($('.board-sun .board-row', host), widths);
+    if (sun) {
+      B.sun = rowModel($('.board-sun .board-row', host), widths);
+      // Under the Sunday row: one dim row per answer that did not fit (at most three).
+      B.parked = [];
+      const parkedEl = $('.board-parked', host);
+      B.ensureParked = (n) => {
+        while (B.parked.length < n) { parkedEl.insertAdjacentHTML('beforeend', rowHTML(widths)); B.parked.push(rowModel(parkedEl.lastElementChild, widths)); }
+        while (B.parked.length > n) { const r = B.parked.pop(); r.tls.forEach((t) => t.kill()); r.el.remove(); }
+      };
+    }
     B.ensure(rows);
     return B;
   }
@@ -159,7 +175,7 @@
     row.en.classList.toggle('is-on', !!(d && d.enOn));
     const hasTarget = !!(d && d.target);
     row.hit.hidden = !hasTarget;
-    if (hasTarget) row.hit.setAttribute('aria-label', d.hitLabel || fmt(U.boardHit, { time: d.time, to: d.label || d.to }));
+    if (hasTarget) row.hit.setAttribute('aria-label', d.hitLabel || fmt(U.boardHit, { time: d.time, to: String(d.label || d.to).replace(/\.$/, '') }));
     row.shownTexts = t;
   }
   function setRowNow(row, d) {
@@ -236,9 +252,7 @@
       title: H.boardTitle, sub: H.boardSubtitle, label: `${H.boardTitle}, ${H.boardSubtitle}`,
       columns: H.columns, widths: heroWidths(), rows: H.rows.length,
     });
-    slot('hero-title').textContent = H.title;
-    slot('hero-date').textContent = H.dateLine;
-    slot('hero-lead').textContent = H.lead;
+    slot('hero-title').textContent = U.pageTitle;
   }
   // First visit: the board flips in from blank. Later visits: it opens as it was and only changed cells flip.
   function heroIntro(tl, start) {
@@ -274,7 +288,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Static parts: note, picker, bring, footer                           */
+  /* Static parts: note, send, bring, footer                             */
   /* ------------------------------------------------------------------ */
 
   function renderStatic() {
@@ -282,42 +296,25 @@
     slot('note-title').textContent = U.noteTitle;
     slot('note').innerHTML = `<p class="note-greeting">${esc(N.greeting)}</p>${N.paras.map((p) => `<p>${esc(p)}</p>`).join('')}<p class="note-sign">${esc(N.sign)}</p>`;
 
-    const K = C.picker;
-    slot('pick-title').textContent = K.title;
-    const chip = `<span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span>`;
-    slot('pick-groups').innerHTML = K.groups
-      .map((g) => {
-        const opts = C.options.filter((o) => o.group === g.id);
-        if (!opts.length) return '';
-        return `<div class="pick-group"><h3 id="pg-${esc(g.id)}">${esc(g.label)}</h3><div class="pick-row" role="group" aria-labelledby="pg-${esc(g.id)}">${opts
-          .map((o) => {
-            const id = esc(o.id);
-            const described = [`pk-${id}-d`, o.tag ? `pk-${id}-g` : '', `pk-${id}-s`].filter(Boolean).join(' ');
-            return `<button type="button" class="pick" aria-pressed="false" data-id="${id}" aria-labelledby="pk-${id}-t" aria-describedby="${described}">
-              ${thumbHTML(o.image, 'pick-photo', '(min-width: 768px) 320px, 240px', chip)}
-              <span class="pick-text"><span class="pick-title" id="pk-${id}-t">${esc(o.title)}</span><span class="pick-line" id="pk-${id}-d">${esc(o.line)}</span>${o.tag ? `<span class="tag" id="pk-${id}-g">${esc(o.tag)}</span>` : ''}</span>
-              <span class="pick-mark" aria-hidden="true">${ICON.plus}${ICON.check}</span>
-              <span class="sr-only" id="pk-${id}-s"></span>
-            </button>`;
-          })
-          .join('')}</div></div>`;
-      })
-      .join('');
+    slot('ask-title').textContent = U.hud.ask;
     slot('dep-title').textContent = DEPC.srTitle;
-    slot('free-label').textContent = K.freeTextLabel;
-    slot('free-text').placeholder = K.freeTextPlaceholder;
-    slot('send').textContent = K.sendLabel;
+    slot('dep-title').tabIndex = -1;
+    const S = C.send;
+    slot('free-label').textContent = S.label;
+    slot('free-text').placeholder = S.placeholder;
+    slot('send').textContent = S.button;
 
     slot('day-title').textContent = C.day.title;
+    slot('change-answers').textContent = C.day.changeAnswers;
     slot('map-title').textContent = U.mapTitle;
     slot('bring-title').textContent = U.bringTitle;
     slot('bring').innerHTML = C.bring.map((b) => `<li>${esc(b)}</li>`).join('');
 
-    // Credits: every photo the page renders (option cards and dinner) plus hero-rome for og.jpg.
+    // Credits: every photo the page can show (question tiles and every option) plus hero-rome for og.jpg.
     const shown = [];
     const add = (k) => { if (k && IMG[k] && IMG[k].credit && !shown.includes(k)) shown.push(k); };
-    C.options.forEach((o) => add(o.image));
-    add(C.anchors.dinner?.image);
+    STEPS.forEach((s) => s.tiles.forEach((t) => add(tilePhoto(t))));
+    C.options.forEach((o) => (o.photos || []).forEach(add));
     add('hero-rome');
     slot('credits').innerHTML = shown.length
       ? `<details class="credits"><summary>${esc(U.credits)}${ICON.chev}</summary><ul>${shown
@@ -334,71 +331,351 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Picks: state (in tap order), persistence, the link                  */
+  /* The four questions: one stage, one step at a time                   */
   /* ------------------------------------------------------------------ */
 
-  let picks = new Set();   // insertion order is tap order; the replay and the link keep it
+  const ASK = C.ask;
+  const STEPS = ASK.steps;
+  const tileOption = (t) => (t.option ? OPT[t.option] : null);
+  const tileLabel = (t) => t.label || tileOption(t)?.title || '';
+  // A tile shows its own photo, else the first photo of the option it stands for.
+  const tilePhoto = (t) => t.photo || OPT[t.photoOf || t.option]?.photos?.[0];
+  // An option's own `tileSub` overrides the tile's sub.
+  const tileSub = (t) => tileOption(t)?.tileSub || t.sub || '';
+  // The wild card stores its option id (compose() takes it as is); the other steps store the tile id.
+  const tileValue = (s, t) => (s.id === 'wild' ? t.option : t.id);
+  const emptyAnswers = () => Object.fromEntries(STEPS.map((s) => [s.id, s.multi ? [] : null]));
+  const cloneAnswers = (a) => ({ ...emptyAnswers(), ...JSON.parse(JSON.stringify(a || {})) });
+  const chosen = (a, s) => { const v = a[s.id]; return Array.isArray(v) ? v : v ? [v] : []; };
+  const counterText = (i) => fmt(ASK.counter, { n: i + 1, total: STEPS.length });
+
+  // `draft` is what the open stage shows; `answers` (below) only changes on Plan Friday.
+  const stage = { step: 0, open: true, draft: emptyAnswers(), tl: null, count: [], busy: false };
+
+  function stepHTML(s, i) {
+    const lid = `ask-${esc(s.id)}-t`;
+    const tiles = s.tiles.map((t) => {
+      const state = s.multi ? 'aria-pressed="false"' : 'role="radio" aria-checked="false" tabindex="-1"';
+      return `<button type="button" class="tile" ${state} data-step="${i}" data-value="${esc(tileValue(s, t))}">
+          ${thumbHTML(tilePhoto(t), 'tile-photo', '(min-width: 900px) 160px, 46vw', '', { loading: i ? 'lazy' : 'eager' })}
+          <span class="tile-text"><span class="tile-label">${esc(tileLabel(t))}</span><span class="tile-sub">${esc(tileSub(t))}</span></span>
+          <span class="tile-check" aria-hidden="true">${ICON.check}</span>
+        </button>`;
+    }).join('');
+    // Desktop: four across, or three when the tiles come in threes.
+    const cols = s.tiles.length > 4 && s.tiles.length % 3 === 0 ? 3 : 4;
+    return `<fieldset class="step" data-step="${i}"${i ? ' hidden' : ''}>
+        <legend class="step-title" id="${lid}" tabindex="-1">${esc(s.title)}</legend>
+        <p class="step-hint">${esc(s.hint)}</p>
+        <div class="tiles${s.multi ? '' : ' tiles--square'}" style="--cols:${cols}" role="${s.multi ? 'group' : 'radiogroup'}" aria-labelledby="${lid}">${tiles}</div>
+        ${s.none ? `<button type="button" class="step-none" data-action="none">${esc(s.none)}</button>` : ''}
+      </fieldset>`;
+  }
+  function renderStage() {
+    const host = slot('stage');
+    host.innerHTML = `<div class="stage-open">
+        <div class="stage-count" aria-hidden="true">${FLAP.repeat(Array.from(counterText(STEPS.length - 1)).length)}</div>
+        <div class="stage-steps">${STEPS.map(stepHTML).join('')}</div>
+        <div class="stage-foot">
+          <button type="button" class="btn stage-back" data-action="back">${esc(ASK.back)}</button>
+          <button type="button" class="btn btn--primary stage-next" data-action="next"></button>
+        </div>
+      </div>
+      <div class="stage-closed"><p class="stage-answers"></p><button type="button" class="btn btn--small" data-action="change">${esc(ASK.change)}</button></div>`;
+    stage.count = $$('.stage-count .flap', host).map(flapOf);
+    setCount(0, false);
+    // The buttons appear once the first step's tiles are well in view, so the first screen offers
+    // photos to tap, not a lone "Skip".
+    const showFoot = () => host.classList.add('is-foot');
+    if (!('IntersectionObserver' in window)) { showFoot(); return; }
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { showFoot(); io.disconnect(); } }, { rootMargin: '0px 0px -120px 0px' });
+    io.observe($('.step .tiles', host));
+  }
+  // The counter's flaps flip only where a character changes (D 0.07, like the HUD clock).
+  function setCount(i, animate) {
+    const text = counterText(i);
+    stage.count.forEach((f, k) => {
+      const ch = cellChar(text, k);
+      if (f.tl) { f.tl.progress(1).kill(); f.tl = null; }
+      if (f.cur === ch) return;
+      if (!animate || reduced || !f.cur) { setFlap(f, ch); return; }
+      f.tl = gsap.timeline({ onComplete: () => { f.tl = null; } });
+      addFlip(f.tl, f, ch, k * 0.03, 0.07);
+    });
+  }
+  // "Your answers: Old Rome, The view, Pastries, Trastevere": the answer's own label on the pick-any
+  // steps (as on the cards), the tile's label on the pick-one steps.
+  const answersLine = (a) => {
+    const labels = [];
+    STEPS.forEach((s) => chosen(a, s).forEach((v) => { const t = s.tiles.find((x) => tileValue(s, x) === v); if (t) labels.push(s.multi && WHY[v] ? WHY[v].label : tileLabel(t)); }));
+    // Nothing answered (every step skipped): the day is Felix's pick.
+    return labels.length ? fmt(ASK.answers, { list: labels.join(U.listJoin) }) : WHY.felix.label;
+  };
+  // Tiles, the primary button, Back, the counter's screen-reader text and the closed line follow the state.
+  function syncStage() {
+    const host = slot('stage');
+    const s = STEPS[stage.step];
+    host.classList.toggle('is-closed', !stage.open);
+    $('.stage-open', host).hidden = !stage.open;
+    $('.stage-closed', host).hidden = stage.open;
+    $('.stage-answers', host).textContent = answersLine(answers || stage.draft);
+    $$('.tile', host).forEach((b) => {
+      const st = STEPS[+b.dataset.step];
+      const on = chosen(stage.draft, st).includes(b.dataset.value);
+      b.setAttribute(st.multi ? 'aria-pressed' : 'aria-checked', String(on));
+    });
+    // A radiogroup is one tab stop: the checked tile, or the first.
+    $$('.tiles[role="radiogroup"]', host).forEach((g) => {
+      const tiles = $$('.tile', g);
+      const cur = tiles.find((b) => b.getAttribute('aria-checked') === 'true') || tiles[0];
+      tiles.forEach((b) => { b.tabIndex = b === cur ? 0 : -1; });
+    });
+    const last = stage.step === STEPS.length - 1;
+    $('.stage-next', host).textContent = last ? ASK.plan : chosen(stage.draft, s).length ? ASK.next : ASK.skip;
+    $('.stage-back', host).hidden = stage.step === 0;
+    $('.stage-count', host).dataset.text = counterText(stage.step);
+  }
+  const hudBottom = () => (hud.hasAttribute('data-on') ? hud.getBoundingClientRect().bottom : 0);
+  // Programmatic scrolls run on a short tween, so the sky and the HUD follow them like a real scroll.
+  function scrollToY(y, duration, done) {
+    y = Math.max(0, Math.min(y, ScrollTrigger.maxScroll(window)));
+    if (reduced || Math.abs(y - scrollY) < 2) { scrollTo(0, y); if (done) done(); return; }
+    const st = { y: scrollY };
+    gsap.to(st, { y, duration, ease: 'power2.inOut', onUpdate: () => scrollTo(0, st.y), onComplete: done });
+  }
+  // Where a programmatic scroll lands a section: under the HUD, like an anchor jump. The HUD stays
+  // away from the questions, so the stage only keeps a small gap.
+  const scrollGap = () => parseFloat(getComputedStyle($('#ask')).scrollMarginTop) || 0;
+  const ASK_GAP = 16;
+  function goStep(to) {
+    const host = slot('stage');
+    const from = stage.step;
+    if (to === from || to < 0 || to >= STEPS.length) return;
+    if (stage.tl) { stage.tl.progress(1).kill(); stage.tl = null; }
+    const fs = $$('.step', host);
+    const out = fs[from], inn = fs[to];
+    stage.step = to;
+    stage.busy = true;
+    setCount(to, true);
+    syncStage();
+    const land = () => { inn.hidden = false; $('.step-title', inn).focus({ preventScroll: true }); refreshSoon(); };
+    if (reduced) { out.hidden = true; land(); stage.busy = false; return; }
+    const parts = (f) => [$('.step-title', f), $('.step-hint', f), $('.step-none', f)].filter(Boolean);
+    const run = () => {
+      const tl = gsap.timeline({ onComplete: () => { stage.tl = null; stage.busy = false; } });
+      stage.tl = tl;
+      // Out: tiles fade and rise 8 px, staggered; in: tiles rise from 12 px; the title cross-fades.
+      tl.to($$('.tile', out), { opacity: 0, y: -8, duration: 0.15, stagger: 0.02, ease: 'power1.in' }, 0);
+      tl.to(parts(out), { opacity: 0, duration: 0.15, ease: 'power1.in' }, 0);
+      tl.call(() => { out.hidden = true; gsap.set([...$$('.tile', out), ...parts(out)], { clearProps: 'opacity,transform' }); land(); });
+      tl.fromTo(parts(inn), { opacity: 0 }, { opacity: 1, duration: 0.24, ease: 'power2.out', clearProps: 'opacity' });
+      tl.fromTo($$('.tile', inn), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out', stagger: 0.04, clearProps: 'opacity,transform' }, '<');
+    };
+    // If the top of the stage has scrolled away, bring it back first.
+    const top = host.getBoundingClientRect().top;
+    if (top < hudBottom()) scrollToY(top + scrollY - ASK_GAP, 0.3, run); else run();
+  }
+  function onTile(b) {
+    buzz('selection');
+    const s = STEPS[+b.dataset.step];
+    const v = b.dataset.value, d = stage.draft;
+    if (s.multi) d[s.id] = d[s.id].includes(v) ? d[s.id].filter((x) => x !== v) : [...d[s.id], v];
+    else d[s.id] = d[s.id] === v ? null : v;
+    syncStage();
+  }
+  // Arrow keys move through a radiogroup and select as they go.
+  function onStageKey(e) {
+    const b = e.target.closest('.tiles[role="radiogroup"] .tile');
+    if (!b) return;
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const tiles = $$('.tile', b.parentElement);
+    const next = tiles[(tiles.indexOf(b) + step + tiles.length) % tiles.length];
+    const s = STEPS[+next.dataset.step];
+    stage.draft[s.id] = next.dataset.value;
+    syncStage();
+    next.focus();
+  }
+  function onStageClick(e) {
+    const tile = e.target.closest('.tile');
+    if (tile) { onTile(tile); return; }
+    const a = e.target.closest('[data-action]')?.dataset.action;
+    // Mid-transition the buttons already belong to the next step: a second quick tap waits.
+    if (stage.busy && (a === 'next' || a === 'back' || a === 'none')) return;
+    const last = stage.step === STEPS.length - 1;
+    if (a === 'next') { if (last) planFriday(); else goStep(stage.step + 1); }
+    else if (a === 'back') goStep(stage.step - 1);
+    else if (a === 'none') {
+      stage.draft[STEPS[stage.step].id] = null;
+      syncStage();
+      if (last) planFriday(); else goStep(stage.step + 1);
+    } else if (a === 'change') openStage();
+  }
+  // "Change" and "Change answers": the stage opens on step 1 with her answers selected.
+  function openStage() {
+    const host = slot('stage');
+    if (stage.tl) { stage.tl.progress(1).kill(); stage.tl = null; }
+    stage.busy = false;
+    stage.draft = cloneAnswers(answers);
+    stage.step = 0;
+    stage.open = true;
+    $$('.step', host).forEach((f, i) => { f.hidden = i !== 0; });
+    setCount(0, false);
+    syncStage();
+    refreshSoon();
+    const sec = $('#ask');
+    scrollToY(sec.getBoundingClientRect().top + scrollY - ASK_GAP, 0.5, () => $('.step-title', host).focus({ preventScroll: true }));
+  }
+  // Plan Friday: compose her answers, close the stage, glide to the board and let it play.
+  function planFriday() {
+    buzz('medium');
+    answers = cloneAnswers(stage.draft);
+    picks = P.compose(C, answers).picks;
+    fromLink = false;
+    hasBackup = false;
+    undoDrop();
+    saveState();
+    stage.open = false;
+    syncStage();
+    update();
+    // Focus follows her to the board (the button she pressed is hidden with the stage).
+    slot('dep-title').focus({ preventScroll: true });
+    const b = DEP.board.host;
+    scrollToY(b.getBoundingClientRect().top + scrollY - scrollGap(), 0.6, () => { if (DEP.pending && boardInView()) maybePlay(); });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Picks: state (in board order), persistence, the link                */
+  /* ------------------------------------------------------------------ */
+
+  let answers = null;      // her answers as of the last Plan Friday (null until then)
+  let picks = [];          // [{ id, reason }]: the order the board fills in; the replay and the link keep it
   let freeText = '';
   let fromLink = false;
   let plan = null;
   let hasBackup = false;
+  const pickIds = () => picks.map((p) => p.id);
+  const cleanPicks = (list) => (Array.isArray(list) ? list : []).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
+  // What the answers compose to (kept while the answers stay the same): the build a full replay
+  // shows, and the answers that went to extras.
+  let composedMemo = { key: null, res: null };
+  const composed = () => {
+    const key = JSON.stringify(answers);
+    if (composedMemo.key !== key) composedMemo = { key, res: answers ? P.compose(C, answers) : { picks: [], extras: [] } };
+    return composedMemo.res;
+  };
+  const composedIds = () => composed().picks.map((p) => p.id);
+  // "Room for one more?" as it stands (worked out once per update).
+  let roomNow = [];
+  // Answers that went to extras and still have no stop of their own, in the order she answered.
+  function parkedNow() {
+    if (!answers) return [];
+    const at = (e) => { for (const [i, s] of STEPS.entries()) { const k = s.multi ? chosen(answers, s).indexOf(e.reason) : s.id === e.reason ? 0 : -1; if (k >= 0) return i * 10 + k; } return 99; };
+    return composed().extras.filter((e) => !picks.some((p) => p.id === e.id || p.reason === e.reason)).sort((a, b) => at(a) - at(b));
+  }
+  const parkedLabels = () => parkedNow().map((e) => reasonLabel(e.reason)).join(U.listJoin);
+
+  // Her answers in the link: one group per step, joined by "-": the pick-any steps as their
+  // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped.
+  const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (s.multi ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-');
+  function decodeAnswers(code) {
+    const a = emptyAnswers();
+    String(code).split('-').forEach((part, i) => {
+      const s = STEPS[i];
+      if (!s || !part) return;
+      if (s.multi) Array.from(part).forEach((c) => { const t = s.tiles.find((x) => WHY[x.id]?.code === c); if (t && !a[s.id].includes(t.id)) a[s.id].push(t.id); });
+      else { const t = s.tiles[parseInt(part, 36)]; if (t) a[s.id] = tileValue(s, t); }
+    });
+    return a;
+  }
+
+  // A link from before answers travelled with it (no `a`): rebuild the answers from the picks. Felix's
+  // picks only ever come from the default day, which is what skipping every step gives.
+  function answersFrom(list) {
+    const a = emptyAnswers();
+    if (list.some((p) => p.reason === 'felix')) return a;
+    for (const p of list) {
+      for (const s of STEPS) {
+        if (s.multi && s.tiles.some((t) => t.id === p.reason) && !a[s.id].includes(p.reason)) a[s.id].push(p.reason);
+        if (!s.multi && s.id === p.reason) { const t = s.tiles.find((x) => x.option === p.id); if (t) a[s.id] = tileValue(s, t); }
+      }
+    }
+    return a;
+  }
 
   function loadState() {
     const q = new URLSearchParams(location.search);
     if (q.has('p')) {
-      const linkPicks = q.get('p').split(',').map((s) => s.trim()).filter((id) => OPT[id]);
+      const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
+      const codes = Array.from(q.get('r') || '');
+      const linkPicks = cleanPicks(q.get('p').split(',').map((s, i) => ({ id: s.trim(), reason: byCode[codes[i]] || 'added' })));
       const linkNote = q.get('n') || '';
-      // Keep her own picks before adopting the link's, so "Back to my picks" can restore them.
+      // Keep her own day before adopting the link's, so "Back to my picks" can restore it.
       const saved = store.get('picks', null), savedNote = store.get('note', '');
-      hasBackup = Array.isArray(saved) && ([...saved].sort().join() !== [...linkPicks].sort().join() || savedNote !== linkNote);
-      if (hasBackup) store.set('before-link', { picks: saved, note: savedNote });
-      picks = new Set(linkPicks);
+      const ids = (list) => list.map((p) => p.id).sort().join();
+      hasBackup = Array.isArray(saved) && (ids(saved) !== ids(linkPicks) || savedNote !== linkNote);
+      store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null) } : null);
+      picks = linkPicks;
+      answers = q.has('a') ? decodeAnswers(q.get('a')) : answersFrom(linkPicks);
       freeText = linkNote;
       fromLink = true;
       saveState();
-      // A link always replays its build in tap order, whatever this phone has seen before.
+      // A link always replays its build in order, whatever this phone has seen before.
       store.set('depSeen', null);
       DEP.seen = null;
       // Drop the query at once, so a reload or a restored tab keeps her later edits.
       history.replaceState(null, '', location.pathname + location.hash);
       return;
     }
-    const saved = store.get('picks', null);
-    picks = new Set(Array.isArray(saved) ? saved.filter((id) => OPT[id]) : C.options.filter((o) => o.default).map((o) => o.id));
+    picks = cleanPicks(store.get('picks', null));
+    answers = store.get('answers', null);
+    if (answers) answers = cloneAnswers(answers);
     freeText = store.get('note', '');
+    // Someone's link, opened earlier: the note and "Back to my picks" stay until the day changes.
+    fromLink = !!store.get('fromLink', false);
+    hasBackup = fromLink && !!store.get('before-link', null);
   }
-  function saveState() { store.set('picks', [...picks]); store.set('note', freeText); }
+  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('fromLink', fromLink); }
 
   function backToMine() {
     const b = store.get('before-link', null);
     if (!b) return;
-    picks = new Set((b.picks || []).filter((id) => OPT[id]));
+    picks = cleanPicks(b.picks);
+    answers = b.answers ? cloneAnswers(b.answers) : null;
     freeText = b.note || '';
     slot('free-text').value = freeText;
     fromLink = false;
     hasBackup = false;
     saveState();
-    syncCards();
+    stage.draft = cloneAnswers(answers);
+    undoDrop();
+    syncStage();
     update();
   }
 
-  // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids, in tap
-  // order) last, and ! ' ( ) * . are encoded too. The link carries a capped copy of the note.
+  // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids, in board
+  // order) last, and ! ' ( ) * . are encoded too. `r` has one letter per pick: the answer it came from.
+  // The link carries a capped copy of the note.
   const NOTE_LINK_MAX = 1000;
   const encodeNote = (s) => encodeURIComponent(s).replace(/[!'()*.]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
   function linkURL() {
     const base = location.href.split(/[?#]/)[0];
     const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
-    return `${base}?${n ? `n=${encodeNote(n)}&` : ''}p=${[...picks].join(',')}`;
+    const a = answers ? encodeAnswers(answers) : null;
+    const r = picks.map((p) => (WHY[p.reason] || WHY.added).code).join('');
+    return `${base}?${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}p=${pickIds().join(',')}`;
   }
-  // A mini timetable: "10:00 Maritozzo" per stop, then her line, then the link.
+  // A mini timetable: "10:00 Maritozzo" per stop, what did not fit, then her line, then the link.
   function shareText() {
     const stops = plan.items.filter((it) => it.kind === 'option').map((it) => `${it.rough} ${it.option.title}`);
     const note = freeText.trim();
     // Only a note: send the note and the link, without the timetable frame.
     if (!stops.length) return [note, linkURL()].filter(Boolean).join('\n');
-    const lines = [C.picker.shareIntro, ...stops];
-    if (note) lines.push(`${C.picker.shareExtra} ${note}`);
+    const lines = [C.send.shareIntro, ...stops];
+    const parked = parkedLabels();
+    if (parked) lines.push(fmt(C.send.shareParked, { list: parked }));
+    if (note) lines.push(`${C.send.shareExtra} ${note}`);
     lines.push(linkURL());
     return lines.join('\n');
   }
@@ -414,14 +691,13 @@
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 
-  function syncCards() {
-    $$('.pick').forEach((b) => b.setAttribute('aria-pressed', String(picks.has(b.dataset.id))));
-  }
-  function toggle(id) {
-    if (picks.has(id)) picks.delete(id); else picks.add(id);
+  // Every change to her day goes through here: swap, remove, undo, add. Any change but a removal
+  // (which offers its own Undo) ends a pending Undo, so Undo can never push a newer stop out.
+  function setPicks(next, { keepUndo = false } = {}) {
+    if (!keepUndo) undoDrop();
+    picks = next;
     fromLink = false;
     saveState();
-    syncCards();
     update();
   }
 
@@ -447,13 +723,17 @@
     const text = freeText.trim();
     if (!text) return null;
     const lower = text.toLowerCase();
-    let word = null;
-    const hit = DEPC.tbc.keywords.find((k) => (word = k.words.find((w) => wordRe(w).test(lower))));
     // Emoji and other glyphs a flap lacks drop out and the spaces around them collapse. A long line
     // breaks at the last space that fits (a single long word is cut hard).
     const all = boardText(text, text.length).replace(/ +/g, ' ').trim();
     let to = all;
     if (all.length > DW[1]) { const cut = all.lastIndexOf(' ', DW[1]); to = cut > 0 ? all.slice(0, cut) : all.slice(0, DW[1]); }
+    // Every keyword in her line, by where it stands: one the board shows wins, else the earliest.
+    const found = [];
+    DEPC.tbc.keywords.forEach((k) => k.words.forEach((w) => { const m = wordRe(w).exec(lower); if (m) found.push({ k, w, at: m.index }); }));
+    found.sort((a, b) => a.at - b.at);
+    const best = found.find((f) => wordRe(f.w).test(to.toLowerCase())) || found[0];
+    const hit = best ? best.k : null, word = best ? best.w : null;
     // The reply answers a word: if that word is past what the board shows, the word itself goes up.
     if (hit && !wordRe(word).test(to.toLowerCase())) to = boardText(word, DW[1]);
     return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.blank, remark: hit ? hit.remark : DEPC.tbc.remark, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
@@ -489,8 +769,15 @@
     return rows;
   }
 
+  // Her parked answers on the board, in the drop-row grammar: STANDBY when "Room for one more?"
+  // offers it back now, NO ROOM TODAY when nothing serving it fits the day as it stands.
+  const parkedRows = () => parkedNow().slice(0, 3).map((e) => {
+    const o = OPT[e.id];
+    const remark = roomNow.some((s) => s.id === e.id) ? DEPC.drop.reasons.standby : DEPC.drop.reasons.parked;
+    return { key: 'p-' + e.id, time: DEPC.drop.time, to: o.board.to, remark, kind: 'drop', label: o.title, srTime: '' };
+  });
   const DEP = { board: null, replay: null, seen: store.get('depSeen', null), sunEgg: false, shown: [], pending: false, sunPending: false, stats: null };
-  const depSig = () => `${[...picks].join(',')}|${freeText.trim()}`;
+  const depSig = () => `${pickIds().join(',')}|${freeText.trim()}`;
   const plainRows = (rows) => rows.map((r) => (r ? { time: r.time, to: r.to, remark: r.remark, kind: r.kind } : null));
   const sameRows = (a, b) => JSON.stringify(plainRows(a)) === JSON.stringify(plainRows(b));
   const gapEl = () => $('.dep-gap', DEP.board.host);
@@ -503,7 +790,7 @@
   }
   // The first 3D transform on a leaf is the expensive one (style read, layer setup), so give every
   // leaf on the board its resting transform before the replay instead of in the middle of it.
-  const boardLeaves = () => [...DEP.board.rows, DEP.board.sun].flatMap((row) => row.cols.flat()).flatMap((f) => [f.ltEl, f.lbEl]);
+  const boardLeaves = () => [...DEP.board.rows, DEP.board.sun, ...DEP.board.parked].flatMap((row) => row.cols.flat()).flatMap((f) => [f.ltEl, f.lbEl]);
   function warmBoard() {
     const leaves = boardLeaves().filter((el) => !el._warm);
     leaves.forEach((el) => { el._warm = true; });
@@ -513,26 +800,30 @@
     DEP.board.rows.forEach((row, i) => setRowNow(row, rows[i] || null));
     DEP.shown = rows;
   }
+  // The Sunday row and the parked rows under it land together (blank, at their final count, before).
   function setSunNow(on = true) {
     setRowNow(DEP.board.sun, on ? sundayRow(DEP.sunEgg) : null);
     gsap.set(gapEl(), { scaleX: on ? 1 : 0 });
+    const pk = parkedRows();
+    DEP.board.ensureParked(pk.length);
+    DEP.board.parked.forEach((row, k) => setRowNow(row, on ? pk[k] : null));
   }
   // A spare row while her note is empty, so her TBC line takes it and the page never moves.
   const spare = () => (freeText.trim() ? 0 : 1);
   const slotsFor = (states) => Math.max(...states.map((s) => s.length)) + spare();
-  // What the board last showed, and the pick order last replayed in full (only a replay with at
-  // least two picks counts, so a look at the default card does not spend it).
+  // What the board last showed, and the composition last replayed in full (only a replay with at
+  // least two picks counts, so a look at the empty board does not spend it).
   function markSeen(fullPicks = null) {
-    DEP.seen = { sig: depSig(), rows: plainRows(DEP.shown), picks: [...picks], fullPicks: fullPicks || DEP.seen?.fullPicks || null };
+    DEP.seen = { sig: depSig(), rows: plainRows(DEP.shown), picks: pickIds(), fullPicks: fullPicks || DEP.seen?.fullPicks || null };
     store.set('depSeen', DEP.seen);
   }
-  // Her build replays in full unless she has watched one: then only if two or more picks are new
-  // since. Without a full replay on record, any change of picks earns one; typing alone does not.
+  // A new composition (Plan Friday, or a link) replays in full; a swap, a removal, an addition or
+  // her note plays one diff wave. Before she plans, the board only ever diffs.
   function needsFull() {
     const s = DEP.seen;
     if (!s) return true;
-    if (!s.fullPicks) return (s.picks || []).join() !== [...picks].join();
-    return [...picks].filter((id) => !s.fullPicks.includes(id)).length >= 2;
+    const want = composedIds();
+    return want.length > 0 && (s.fullPicks || []).join() !== want.join();
   }
   function primeFull() {
     const states = replayStates();
@@ -542,9 +833,9 @@
     DEP.sunPending = false;
     return states;
   }
-  // The replay: one state per tap, each wave re-sorting the board as the day re-plans itself.
+  // The replay: one state per pick, in board order, each wave re-sorting the board as the day re-plans itself.
   function replayStates() {
-    const order = [...picks];
+    const order = pickIds();
     const finalRows = depRows(plan);
     if (!order.length) return [skeletonRows(), finalRows];
     return [skeletonRows(), ...order.map((_, i) => (i === order.length - 1 ? finalRows : depRows(P.build(C, order.slice(0, i + 1)), { tbc: null })))];
@@ -602,6 +893,10 @@
     r.tls.push(tl);
     tl.fromTo(gapEl(), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: 'power2.out', immediateRender: false }, pause);
     flipRow(tl, DEP.board.sun, sundayRow(DEP.sunEgg), pause + 0.3, { scramble: 4, D: 0.06, stagger: 0.012 });
+    // Then what did not fit, one dim row after another.
+    const pk = parkedRows();
+    DEP.board.ensureParked(pk.length);
+    DEP.board.parked.forEach((row, k) => flipRow(tl, row, pk[k], pause + 1.4 + k * 0.18, { scramble: 1 }));
     tl.call(() => { r.done(); DEP.replay = null; markSeen(r.fullPicks); });
   }
   // Waves `from`.. of the replay on one timeline, built before it plays. Row models track the
@@ -614,6 +909,12 @@
     for (let s = from; s <= waves; s++) {
       const at = startAt + (s - from) * wave;
       DEP.board.rows.forEach((row, j) => flipRow(tl, row, states[s][j] || null, at + j * 0.05, { scramble }));
+    }
+    // A diff wave also brings the parked rows up to date (a full replay lands them after Sunday).
+    if (!full && !DEP.sunPending) {
+      const pk = parkedRows();
+      DEP.board.ensureParked(pk.length);
+      DEP.board.parked.forEach((row, k) => flipRow(tl, row, pk[k], startAt + (DEP.board.rows.length + k) * 0.05, { scramble }));
     }
     tl.call(() => {
       markSeen(r.stopping ? null : r.fullPicks);
@@ -630,7 +931,7 @@
     stopReplay();
     warmBoard();
     const r = newReplay();
-    if (full && states.length > 2) r.fullPicks = [...picks];
+    if (full) r.fullPicks = composedIds();
     DEP.pending = false;
     const { tl, wave } = buildWaves(r, states, 1, 1, 0.3, full);
     DEP.shown = states[states.length - 1];
@@ -700,7 +1001,13 @@
     if (reduced) { finishBoard(); return; }
     // A full replay waiting: the board goes back to its skeleton now, while she is in the picker.
     if (needsFull()) primeFull();
-    else if (sameRows(DEP.shown, finalRows)) { DEP.shown = finalRows; DEP.board.rows.forEach((row, i) => applyRowMeta(row, finalRows[i] || null)); markSeen(); return; }
+    else if (sameRows(DEP.shown, finalRows)) {
+      DEP.shown = finalRows;
+      DEP.board.rows.forEach((row, i) => applyRowMeta(row, finalRows[i] || null));
+      if (!DEP.sunPending) setSunNow(true);
+      markSeen();
+      return;
+    }
     DEP.pending = true;
     clearTimeout(depTimer);
     depTimer = setTimeout(() => { if (boardInView()) maybePlay(); }, 250);
@@ -748,34 +1055,33 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Card chips: her departure time on each picked card                  */
+  /* Card chips: her departure time on each story card                   */
   /* ------------------------------------------------------------------ */
 
+  // The day re-renders on every change, so the last time each chip showed is kept here: when a
+  // change moves a stop, its chip re-flips from the old time (single flip, D 0.07).
+  const chipSeen = {};
   function syncChips() {
-    $$('.pick').forEach((card) => {
-      const id = card.dataset.id;
-      const sr = $(`#pk-${CSS.escape(id)}-s`, card);
-      if (!picks.has(id)) { sr.textContent = ''; return; }
+    $$('.stop').forEach((li) => {
+      const id = li.dataset.key;
       const it = plan.items.find((x) => x.kind === 'option' && x.id === id);
       const text = it ? it.rough : DEPC.drop.time;
-      sr.textContent = it ? fmt(U.pickedAt, { time: it.rough }) : U.pickedDrop;
-      const chip = $('.chip', card);
-      chip.classList.toggle('is-drop', !it);
-      const fl = [...chip.children].map(flapOf);
-      const fresh = fl.every((f) => !f.cur);
-      if (chip.tl) { chip.tl.progress(1).kill(); chip.tl = null; }
-      if (fresh || reduced) { fl.forEach((f, k) => setFlap(f, cellChar(text, k))); return; }
-      const tl = gsap.timeline({ onComplete: () => { chip.tl = null; } });
-      fl.forEach((f, k) => { const b = cellChar(text, k); if (f.cur !== b) addFlip(tl, f, b, k * 0.03, 0.07); });
-      chip.tl = tl;
+      const fl = $$('.chip .flap', li).map(flapOf);
+      const prev = chipSeen[id];
+      chipSeen[id] = text;
+      if (!prev || prev === text || reduced) { fl.forEach((f, k) => setFlap(f, cellChar(text, k))); return; }
+      fl.forEach((f, k) => setFlap(f, cellChar(prev, k)));
+      const tl = gsap.timeline();
+      fl.forEach((f, k) => { const b = cellChar(text, k); if (f.cur !== b) addFlip(tl, f, b, 0.15 + k * 0.03, 0.07); });
     });
   }
 
   /* ------------------------------------------------------------------ */
-  /* Details: the plan list                                              */
+  /* Your Friday: story cards, Swap, Remove, Room for one more           */
   /* ------------------------------------------------------------------ */
 
   const placeOf = (it) => (it.kind === 'option' ? it.option : it.kind === 'anchor' && typeof it.anchor.lat === 'number' ? it.anchor : null);
+  let undo = null;         // { pick, index, after, title, timer } while "Undo" is on screen
 
   function renderDepNote() {
     const D = C.day;
@@ -783,43 +1089,304 @@
     slot('dep-note').innerHTML = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
     const books = plan.options.filter((o) => o.book).map((o) => o.book).concat(U.bookDinner);
     const list = books.length > 1 ? books.slice(0, -1).join(U.listJoin) + U.listJoinLast + books[books.length - 1] : books.join('');
-    const after = [`<p>${esc(fmt(D.willBook, { list }))}</p>`];
-    if (C.options.some((o) => o.default && !plan.options.includes(o))) after.push(`<p>${esc(D.bibsSaturday)}</p>`);
-    slot('send-after').innerHTML = after.join('');
+    slot('send-after').innerHTML = `<p>${esc(fmt(D.willBook, { list }))}</p>`;
   }
+
+  // "About 55 min · €12 · I'll book it · Outdoors, rain cancels": duration, price, booking, instruction.
+  function factsOf(o) {
+    const F = C.day.facts;
+    const h = Math.floor(o.minutes / 60), m = o.minutes % 60;
+    const d = h ? (m ? fmt(F.hm, { h, m: String(m).padStart(2, '0') }) : fmt(F.h, { h })) : fmt(F.m, { m });
+    const price = typeof o.price === 'number' ? (o.price ? fmt(F.price, { n: o.price }) : F.free) : o.price || '';
+    return [fmt(F.about, { d }), price, o.book ? F.book : '', o.tag || ''].filter(Boolean).join(F.join);
+  }
+  const groupLabel = (o) => (C.catalogue.groups.find((g) => g.id === o.group) || {}).label || '';
+  const nowTag = `<span class="tag tag--now">${esc(U.nowTag)}</span>`;
+  const mapLink = (o) => (o.links?.[0] ? `<a class="stop-map" href="${esc(o.links[0].url)}" target="_blank" rel="noopener">${esc(o.links[0].label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>` : '');
+
+  function swapHTML(id, alts) {
+    const D = C.day;
+    return `<div class="swap" id="sw-${esc(id)}" hidden><div class="swap-in">
+        <p class="swap-title label">${esc(D.instead)}</p>
+        <ul class="swap-list">${alts.map((a) => { const o = OPT[a]; return `<li class="swap-alt">
+          ${thumbHTML(o.photos?.[0], 'swap-photo', '112px')}
+          <span class="swap-text"><span class="swap-name">${esc(o.title)}</span><span class="swap-line">${esc(o.line)}</span></span>
+          <button type="button" class="btn btn--small swap-use" data-action="use" data-id="${esc(a)}">${esc(D.useThis)}<span class="sr-only">: ${esc(o.title)}</span></button>
+        </li>`; }).join('')}</ul>
+      </div></div>`;
+  }
+  // One story card: time chip and the answer it came from, two photos, title, line, facts, actions.
+  function stopHTML(it, time, attrs) {
+    const o = it.option, D = C.day;
+    const i = picks.findIndex((p) => p.id === o.id);
+    const reason = i >= 0 ? picks[i].reason : 'added';
+    const alts = i >= 0 ? P.alternatives(C, picks, i) : [];
+    const photos = (o.photos || []).filter((k) => IMG[k]);
+    const strip = photos.map((k, n) => thumbHTML(k, 'stop-photo', '(min-width: 768px) 640px, 92vw', '', { alt: true, loading: 'lazy' }).replace('<span', `<span data-n="${n}"`)).join('');
+    const dots = photos.length > 1
+      ? `<div class="stop-dots">${photos.map((k, n) => `<button type="button" class="stop-dot" data-n="${n}" aria-label="${esc(IMG[k].alt || o.title)}"${n ? '' : ' aria-current="true"'}></button>`).join('')}</div>`
+      : '';
+    const id = esc(o.id);
+    return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
+        <article class="stop-card" aria-labelledby="st-${id}">
+          <p class="stop-top"><span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span><span class="stop-why label">${esc(reasonLabel(reason))}</span>${nowTag}</p>
+          <div class="stop-photos"><div class="stop-strip">${strip}</div>${dots}</div>
+          <div class="stop-text">
+            <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>
+            <p class="stop-line">${esc(o.line)}</p>
+            <p class="stop-facts">${esc(factsOf(o))}</p>
+            <div class="stop-actions">${alts.length ? `<button type="button" class="btn btn--small" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>` : ''}<button type="button" class="btn btn--small" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>${mapLink(o)}</div>
+          </div>
+        </article>
+        ${alts.length ? swapHTML(o.id, alts) : ''}
+      </li>`;
+  }
+  // "Room for one more?" (hidden when nothing fits) and "See everything": after the last stop and its
+  // walk to dinner, so the walk stays attached to the card it leaves from.
+  function roomHTML() {
+    const D = C.day;
+    const sugg = roomNow;
+    const tiles = sugg.map((x) => {
+      const o = OPT[x.id];
+      const label = x.reason === 'added' ? groupLabel(o) : reasonLabel(x.reason);
+      // Where build() would put it: "around 16:30".
+      const lands = P.build(C, [...pickIds(), x.id]).items.find((it) => it.kind === 'option' && it.id === x.id);
+      return `<li class="room-tile">
+          ${thumbHTML(o.photos?.[0], 'room-photo', '(min-width: 768px) 200px, 30vw')}
+          <span class="room-why label">${esc(label)}</span>
+          <span class="room-name">${esc(o.title)}</span>
+          ${lands ? `<span class="room-at">${esc(lands.exact ? lands.rough : fmt(U.around, { time: lands.rough }))}</span>` : ''}
+          <button type="button" class="btn btn--small room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>
+        </li>`;
+    }).join('');
+    return `<li class="plan-room">
+        ${sugg.length ? `<h3 class="room-title">${esc(D.roomTitle)}</h3><ul class="room-list">${tiles}</ul>` : ''}
+        <button type="button" class="btn room-all" data-action="catalogue" aria-haspopup="dialog">${esc(D.seeEverything)}</button>
+      </li>`;
+  }
+  const undoHTML = () => `<li class="plan-undo"><button type="button" class="undo-btn" data-action="undo">${esc(C.day.undo)}<span class="sr-only">: ${esc(undo.title)}</span></button></li>`;
 
   function renderDay() {
     const D = C.day;
     const body = slot('day-body');
-    if (!picks.size) { body.innerHTML = `<p class="day-empty">${esc(D.empty)}</p>`; return; }
-    let html = '', group = '', walked = 0;
-    for (const it of plan.items) {
-      if (it.kind === 'transfer') { walked += it.transfer.m; html += `<li class="plan-transfer"><p>${esc(it.transfer.text)}</p></li>`; continue; }
-      if (it.kind === 'free') { html += `<li class="plan-free"><p>${esc(D.freeTime)}</p></li>`; continue; }
+    slot('change-answers').hidden = !answers;
+    const parked = parkedLabels();
+    slot('day-parked').textContent = parked ? fmt(D.parked, { list: parked }) : '';
+    slot('day-parked').hidden = !parked;
+    if (!picks.length && !answers) { body.innerHTML = `<p class="day-empty">${esc(D.empty)}</p>`; return; }
+    let html = '', group = '', walked = 0, undoShown = false;
+    plan.items.forEach((it) => {
+      if (it.kind === 'anchor' && it.id === 'dinner') html += roomHTML();
+      if (it.kind === 'transfer') { walked += it.transfer.m; html += `<li class="plan-transfer"><p>${esc(it.transfer.text)}</p></li>`; return; }
+      if (it.kind === 'free') { html += `<li class="plan-free"><p>${esc(D.freeTime)}</p></li>`; return; }
       if (it.slot !== group) { group = it.slot; html += `<li class="plan-group"><h3 class="label">${esc(D.slots[group])}</h3></li>`; }
       const time = it.exact ? it.rough : fmt(U.around, { time: it.rough });
-      const timeRow = `<p class="plan-time"><span aria-hidden="true">${esc(time)}</span> <span class="tag tag--now">${esc(U.nowTag)}</span></p>`;
       const key = it.kind === 'lunch-filler' ? 'lunch' : it.id;
       const attrs = `data-min="${toMin(it.rough)}" data-km="${walked}" data-key="${esc(key)}"`;
-      if (it.kind === 'lunch-filler') {
-        html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
-        continue;
+      const timeRow = `<p class="plan-time"><span aria-hidden="true">${esc(time)}</span> ${nowTag}</p>`;
+      if (it.kind === 'option') html += stopHTML(it, time, attrs);
+      else if (it.kind === 'lunch-filler') html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
+      else {
+        const a = it.anchor;
+        html += `<li class="plan-item plan-item--text" ${attrs} data-dot="${placeOf(it) ? esc(it.id) : ''}" data-hud-title="${esc(a.hud || a.title)}">
+          <div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(a.title)}</h4>${a.body ? `<p class="plan-line">${esc(a.body)}</p>` : ''}${a.links?.[0] ? `<div class="plan-meta">${linkBtn(a.links[0].url, a.links[0].label, a.title)}</div>` : ''}</div>
+        </li>`;
       }
-      const o = it.kind === 'option' ? it.option : it.anchor;
-      const title = o.title;
-      const line = it.kind === 'option' ? o.line : o.body;
-      const link = o.links?.[0] ? linkBtn(o.links[0].url, o.links[0].label, title) : '';
-      const tag = it.kind === 'option' && o.tag ? `<span class="tag">${esc(o.tag)}</span>` : '';
-      const photo = o.image ? thumbHTML(o.image, 'plan-photo', '64px') : '';
-      html += `<li class="plan-item${photo ? '' : ' plan-item--text'}" ${attrs} data-dot="${placeOf(it) ? esc(it.id) : ''}" data-hud-title="${esc(o.hud || title)}">
-        ${photo}<div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(title)}</h4>${line ? `<p class="plan-line">${esc(line)}</p>` : ''}${tag || link ? `<div class="plan-meta">${tag}${link}</div>` : ''}</div>
-      </li>`;
-    }
+      if (undo && !undoShown && key === undo.after) { html += undoHTML(); undoShown = true; }
+    });
+    if (undo && !undoShown) html = undoHTML() + html;
     // What didn't fit is on the board as dim rows; screen readers get the reasons here.
     const didnt = plan.didntFit.length
       ? `<div class="sr-only"><h3>${esc(D.didntFitTitle)}</h3><ul>${plan.didntFit.map((d) => `<li>${esc(d.option.title)}: ${esc(d.reason)}</li>`).join('')}</ul></div>`
       : '';
     body.innerHTML = `<ol class="plan">${html}</ol>${didnt}`;
+  }
+
+  const stopEl = (id) => $(`.stop[data-key="${CSS.escape(id)}"]`, slot('day-body'));
+  const inView = (el) => { const r = el.getBoundingClientRect(); return r.bottom > hudBottom() && r.top < innerHeight; };
+  // The strip opens from 0 height with a fixed 8 px drop (220 ms); it closes softer, opacity first.
+  function toggleSwap(btn) {
+    const li = btn.closest('.stop');
+    const el = $('.swap', li);
+    if (!el) return;
+    const open = el.hidden;
+    btn.setAttribute('aria-expanded', String(open));
+    gsap.killTweensOf(el);
+    if (open) {
+      el.hidden = false;
+      if (!reduced) gsap.fromTo(el, { height: 0, opacity: 0, y: -8 }, { height: 'auto', opacity: 1, y: 0, duration: 0.22, ease: 'power2.out', clearProps: 'height,opacity,transform', onComplete: refreshSoon });
+      else refreshSoon();
+      return;
+    }
+    if (reduced) { el.hidden = true; refreshSoon(); return; }
+    gsap.timeline({ onComplete: () => { el.hidden = true; gsap.set(el, { clearProps: 'height,opacity,transform' }); refreshSoon(); } })
+      .to(el, { opacity: 0, duration: 0.1, ease: 'power1.in' })
+      .to(el, { height: 0, y: -8, duration: 0.18, ease: 'power2.inOut' }, 0.04);
+  }
+  // Use this: the stop is replaced in place (same answer), the card fades over to the new one.
+  function useAlternative(btn) {
+    const li = btn.closest('.stop');
+    const i = picks.findIndex((p) => p.id === li.dataset.key);
+    const id = btn.dataset.id;
+    if (i < 0 || !OPT[id]) return;
+    const next = picks.map((p, j) => (j === i ? { id, reason: p.reason } : p));
+    const land = () => {
+      setPicks(next);
+      const nl = stopEl(id);
+      if (!nl) return;
+      if (!inView(nl)) nl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      if (!reduced) gsap.from($('.stop-card', nl), { opacity: 0, duration: 0.2, ease: 'power1.out', clearProps: 'opacity' });
+      $('[data-action="swap"], [data-action="remove"]', nl).focus({ preventScroll: true });
+    };
+    if (reduced) { land(); return; }
+    gsap.to([$('.stop-card', li), $('.swap', li)], { opacity: 0, duration: 0.14, ease: 'power1.in', onComplete: land });
+  }
+  // Remove: the card collapses (opacity first, then height over 220 ms); "Undo" holds its place for 6 s.
+  function removeStop(btn) {
+    const li = btn.closest('.stop');
+    const i = picks.findIndex((p) => p.id === li.dataset.key);
+    if (i < 0) return;
+    let prev = li.previousElementSibling;
+    while (prev && !prev.matches('.plan-item')) prev = prev.previousElementSibling;
+    const go = () => {
+      undoDrop();
+      undo = { pick: picks[i], index: i, after: prev ? prev.dataset.key : null, title: OPT[picks[i].id].title, timer: setTimeout(() => undoDrop(true), 6000) };
+      setPicks(picks.filter((_, j) => j !== i), { keepUndo: true });
+      $('.undo-btn', slot('day-body'))?.focus({ preventScroll: true });
+    };
+    if (reduced) { go(); return; }
+    gsap.set(li, { overflow: 'hidden' });
+    gsap.timeline({ onComplete: go })
+      .to(li, { opacity: 0, duration: 0.12, ease: 'power1.in' })
+      .to(li, { height: 0, paddingTop: 0, paddingBottom: 0, duration: 0.22, ease: 'power2.inOut' }, 0.06);
+  }
+  // Drop the Undo button (fading it when its time runs out).
+  function undoDrop(fade = false) {
+    if (!undo) return;
+    clearTimeout(undo.timer);
+    undo = null;
+    const el = $('.plan-undo', slot('day-body'));
+    if (!el) return;
+    if (!fade || reduced) { el.remove(); refreshSoon(); return; }
+    gsap.to(el, { opacity: 0, duration: 0.2, onComplete: () => { el.remove(); refreshSoon(); } });
+  }
+  function undoRemove() {
+    if (!undo) return;
+    const { pick, index } = undo;
+    undoDrop();
+    const next = [...picks];
+    next.splice(Math.min(index, next.length), 0, pick);
+    setPicks(next);
+    const nl = stopEl(pick.id);
+    if (!nl) return;
+    if (!reduced) gsap.from(nl, { opacity: 0, duration: 0.22, ease: 'power1.out', clearProps: 'opacity' });
+    $('[data-action="remove"]', nl).focus({ preventScroll: true });
+  }
+  // Add (Room for one more?, the catalogue): the new card lights up briefly where it lands.
+  function addPick(id, reason) {
+    if (!OPT[id] || picks.some((p) => p.id === id)) return;
+    setPicks([...picks, { id, reason }]);
+    flash(stopEl(id));
+    // Keyboard: the button she pressed is gone with the re-render; carry on from the room.
+    if (!slot('catalogue').open) ($('.room-add', slot('day-body')) || $('[data-action="catalogue"]', slot('day-body')))?.focus({ preventScroll: true });
+  }
+  function flash(el) {
+    if (!el) return;
+    el.classList.remove('is-flash');
+    void el.offsetWidth;
+    el.classList.add('is-flash');
+    setTimeout(() => el.classList.remove('is-flash'), 1200);
+  }
+  // Dots under a two-photo strip: a tap scrolls to that photo, a swipe moves the dot.
+  function onStripDot(dot) {
+    const strip = $('.stop-strip', dot.closest('.stop'));
+    strip.scrollTo({ left: +dot.dataset.n * strip.clientWidth, behavior: reduced ? 'auto' : 'smooth' });
+  }
+  function onStripScroll(e) {
+    const strip = e.target;
+    if (!strip.classList || !strip.classList.contains('stop-strip')) return;
+    const n = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+    $$('.stop-dot', strip.closest('.stop')).forEach((d) => { if (+d.dataset.n === n) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+  }
+  function onDayClick(e) {
+    const dot = e.target.closest('.stop-dot');
+    if (dot) { onStripDot(dot); return; }
+    const b = e.target.closest('[data-action]');
+    if (!b) return;
+    const a = b.dataset.action;
+    if (a === 'swap') toggleSwap(b);
+    else if (a === 'use') useAlternative(b);
+    else if (a === 'remove') removeStop(b);
+    else if (a === 'undo') undoRemove();
+    else if (a === 'add') addPick(b.dataset.id, b.dataset.reason);
+    else if (a === 'catalogue') openCatalogue();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* See everything: every option, grouped like the questions            */
+  /* ------------------------------------------------------------------ */
+
+  function renderCatalogue() {
+    const D = C.day;
+    // The heading takes focus when the sheet opens (it names the dialog), not the Close button.
+    slot('catalogue').innerHTML = `<div class="sheet-head"><h2 id="cat-h" tabindex="-1" autofocus>${esc(D.seeEverything)}</h2><button type="button" class="btn btn--small" data-action="close">${esc(D.close)}</button></div>
+      <div class="sheet-body">${C.catalogue.groups.map((g) => {
+        const opts = C.options.filter((o) => o.group === g.id);
+        if (!opts.length) return '';
+        return `<section class="cat-group" aria-labelledby="cg-${esc(g.id)}"><h3 class="label" id="cg-${esc(g.id)}">${esc(g.label)}</h3><ul>${opts.map((o) => `<li class="cat-row">
+            ${thumbHTML(o.photos?.[0], 'cat-photo', '64px')}
+            <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span><span class="cat-why" id="cw-${esc(o.id)}" hidden></span></span>
+            <button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button>
+          </li>`).join('')}</ul></section>`;
+      }).join('')}</div>`;
+  }
+  // Each row: the check if it is on her day, else Add, or a disabled "Doesn't fit" with the short
+  // reason when build() says adding it would drop it (or knock something else off).
+  function syncCatalogue() {
+    const K = C.catalogue;
+    const ids = pickIds();
+    const before = plan.didntFit.map((d) => d.option.id);
+    $$('.cat-add', slot('catalogue')).forEach((b) => {
+      const id = b.dataset.id;
+      const on = ids.includes(id);
+      let why = '';
+      if (!on) {
+        const fresh = P.build(C, [...ids, id]).didntFit.filter((d) => !before.includes(d.option.id));
+        const own = fresh.find((d) => d.option.id === id);
+        if (fresh.length) why = own ? fmt(K.reasons[own.code] || K.reasons.noTime, own.vars || {}) : K.reasons.noTime;
+      }
+      b.setAttribute('aria-pressed', String(on));
+      b.disabled = !!why;
+      $('.cat-add-label', b).textContent = why ? K.noFit : C.day.add;
+      const line = $(`#cw-${CSS.escape(id)}`, slot('catalogue'));
+      line.textContent = why;
+      line.hidden = !why;
+      if (why) b.setAttribute('aria-describedby', line.id); else b.removeAttribute('aria-describedby');
+    });
+  }
+  function openCatalogue() {
+    const dlg = slot('catalogue');
+    if (dlg.open) return;
+    syncCatalogue();
+    dlg.showModal();
+    $('.sheet-body', dlg).scrollTop = 0;
+    if (!reduced) gsap.fromTo(dlg, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out', clearProps: 'opacity,transform' });
+  }
+  function closeCatalogue() {
+    const dlg = slot('catalogue');
+    if (!dlg.open) return;
+    if (reduced) { dlg.close(); return; }
+    gsap.to(dlg, { opacity: 0, y: 8, duration: 0.15, ease: 'power1.in', onComplete: () => { dlg.close(); gsap.set(dlg, { clearProps: 'opacity,transform' }); } });
+  }
+  // Adding from here carries ADDED; tapping the check takes it off the day again.
+  function onCatalogueClick(e) {
+    if (e.target === slot('catalogue')) { closeCatalogue(); return; } // the backdrop
+    if (e.target.closest('[data-action="close"]')) { closeCatalogue(); return; }
+    const b = e.target.closest('.cat-add');
+    if (!b) return;
+    const id = b.dataset.id;
+    if (picks.some((p) => p.id === id)) setPicks(picks.filter((p) => p.id !== id));
+    else addPick(id, 'added');
   }
 
   /* ------------------------------------------------------------------ */
@@ -854,7 +1421,7 @@
   function renderMapPlan() {
     const svg = $('svg', mapFig);
     const [vx, vy, vw, vh] = MAP.viewBox;
-    mapPts = (picks.size ? plan.items : []).filter(placeOf).map((it) => {
+    mapPts = (picks.length ? plan.items : []).filter(placeOf).map((it) => {
       const p = placeOf(it);
       const [x, y] = project(p.lat, p.lon);
       return { id: it.id, x: Math.round(x), y: Math.round(y), label: it.rough };
@@ -1036,7 +1603,7 @@
     skyHex = hex;
     skyRgb = rgb;
     root.style.backgroundColor = hex;
-    hud.style.backgroundColor = `rgb(${rgb[0]} ${rgb[1]} ${rgb[2]} / 0.85)`;
+    hud.style.backgroundColor = hex; // opaque: nothing reads through the bar
     const Y = relLum(rgb);
     const dark = contrast(Y, Y_LAMP) > contrast(Y, Y_INK); // flip at the luminance crossover
     if (dark !== isDark) { isDark = dark; root.toggleAttribute('data-dark', dark); syncSkyVar(); return; }
@@ -1223,13 +1790,15 @@
   let booted = false;
   let refreshTimer = 0;
   // Send needs something to send: a pick or a line of text.
-  function syncSend() { slot('send').disabled = !picks.size && !freeText.trim(); }
+  function syncSend() { slot('send').disabled = !picks.length && !freeText.trim(); }
 
   function update() {
-    plan = P.build(C, [...picks]);
+    plan = P.build(C, pickIds());
+    roomNow = picks.length || answers ? P.suggestions(C, picks, answers || {}) : [];
     syncSend();
     renderDepNote();
     renderDay();
+    syncCatalogue();
     renderMapPlan();
     syncChips();
     if (booted) {
@@ -1270,11 +1839,12 @@
       });
       render(scrollY);
 
-      // Hero: the ARRIVALS board flips in (or only its changed cells on a return visit), then the word and the lead.
+      // Hero: the ARRIVALS board flips in (or only its changed cells on a return visit), then
+      // Felix's note and the first question.
       const intro = gsap.timeline();
       HERO.intro = intro;
       heroIntro(intro, 0.2);
-      intro.from(['.hero-title', '.hero-date', '.hero-lead', '.hero-meta'], {
+      intro.from(['#note .note', '#ask .stage'], {
         autoAlpha: 0, y: 18, duration: 0.8, ease: 'power3.out', stagger: 0.1, clearProps: 'transform,visibility,opacity',
       }, 0.75);
 
@@ -1302,10 +1872,10 @@
       ScrollTrigger.create({ trigger: mapFig, start: 'top 75%', once: true, onEnter: () => revealMap() });
     });
 
-    // HUD appears once the hero has scrolled away.
+    // The HUD stays off the hero and the questions: it appears from DEPARTURES onward.
     ScrollTrigger.create({
-      trigger: '.hero',
-      start: 'bottom top+=64',
+      trigger: '#dep',
+      start: 'top top+=64',
       onEnter: () => hud.setAttribute('data-on', ''),
       onLeaveBack: () => hud.removeAttribute('data-on'),
       onRefresh: (self) => hud.toggleAttribute('data-on', self.progress > 0 || scrollY > self.start),
@@ -1322,19 +1892,28 @@
   gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
   renderHero();
   renderStatic();
+  renderStage();
+  renderCatalogue();
   renderDepBoard();
   renderMapFrame();
   placeMap();
   loadState();
-  syncCards();
+  // A visitor who has planned (or opened a link) lands on her Friday; the stage waits closed.
+  stage.open = !answers;
+  stage.draft = cloneAnswers(answers);
+  syncStage();
   slot('free-text').value = freeText;
   update();
   syncDepBoard({ initial: true });
 
-  slot('pick-groups').addEventListener('click', (e) => {
-    const b = e.target.closest('.pick');
-    if (b) toggle(b.dataset.id);
-  });
+  slot('stage').addEventListener('click', onStageClick);
+  slot('stage').addEventListener('keydown', onStageKey);
+  slot('change-answers').addEventListener('click', openStage);
+  slot('day-body').addEventListener('click', onDayClick);
+  slot('day-body').addEventListener('scroll', onStripScroll, true);
+  slot('catalogue').addEventListener('click', onCatalogueClick);
+  // Closing the sheet (Close, Escape, the backdrop) returns focus to "See everything".
+  slot('catalogue').addEventListener('close', () => $('[data-action="catalogue"]', slot('day-body'))?.focus({ preventScroll: true }));
   let textTimer = 0;
   slot('free-text').addEventListener('input', (e) => {
     freeText = e.target.value;
@@ -1358,7 +1937,12 @@
   setTimeout(() => { tick(); setInterval(tick, 60000); }, 60000 - (nowMs() % 60000) + 50);
   loadWeather();
   (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => warmBoard(), { timeout: 3000 });
-  window.__venerdi = { finishBoard, depRows: () => depRows(plan), boardRows: () => DEP.board.rows.map((r) => r.shown), replayStats: () => DEP.stats, plan: () => plan, state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board.sun.shown }) };
+  window.__venerdi = {
+    finishBoard, depRows: () => depRows(plan), boardRows: () => DEP.board.rows.map((r) => r.shown), replayStats: () => DEP.stats, plan: () => plan,
+    state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board.sun.shown, stageBusy: stage.busy }),
+    compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
+    parked: () => parkedNow().map((e) => ({ ...e })), parkedRows: () => parkedRows().map((r) => [r.time, r.to, r.remark]),
+  };
 
   $$('details').forEach((d) => d.addEventListener('toggle', () => ScrollTrigger.refresh()));
   if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());

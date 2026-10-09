@@ -574,5 +574,1013 @@
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:How_to_cut_the_fresh_egg_pasta_with_a_knife_The_art_of_pasta_making_in_Italy.JPG"
   }
+ },
+ "colosseum-1": {
+  "src800": "img/colosseum-1-800.webp",
+  "src1600": "img/colosseum-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Inside the Colosseum: a group of visitors stands on the pale rebuilt arena floor, ruined tiers rising all around them",
+  "focal": "50% 62%",
+  "color": "#92857f",
+  "credit": {
+   "title": "Coliseu (8555197697)",
+   "author": "Lelê Breveglieri from Suzano",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Coliseu_(8555197697).jpg"
+  }
+ },
+ "colosseum-2": {
+  "src800": "img/colosseum-2-800.webp",
+  "src1600": "img/colosseum-2-1600.webp",
+  "w": 1600,
+  "h": 1068,
+  "alt": "Wide view across the Colosseum: the exposed underground passages beside the arena floor, with small figures walking on it",
+  "focal": "50% 65%",
+  "color": "#8c7d74",
+  "credit": {
+   "title": "Inside Colosseo (51800785703)",
+   "author": "Radek Kucharski from Warsaw, Poland",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Inside_Colosseo_(51800785703).jpg"
+  }
+ },
+ "domus-1": {
+  "src800": "img/domus-1-800.webp",
+  "src1600": "img/domus-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A vaulted ceiling in Nero's Golden House, covered in faded painted panels, framed borders and small figures",
+  "focal": "50% 50%",
+  "color": "#8a8070",
+  "credit": {
+   "title": "Painted Ceiling, Domus Aurea (43004371302)",
+   "author": "Tyler Bell",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Painted_Ceiling,_Domus_Aurea_(43004371302).jpg"
+  }
+ },
+ "domus-2": {
+  "src800": "img/domus-2-800.webp",
+  "src1600": "img/domus-2-1600.webp",
+  "w": 1600,
+  "h": 1068,
+  "alt": "Visitors in hard hats stand in the Domus Aurea's domed octagonal room, its arched openings lit from below",
+  "focal": "45% 60%",
+  "color": "#6e5f5f",
+  "credit": {
+   "title": "Domus Aurea, Nero's Golden House (36453906275) (cropped)",
+   "author": "Andy Montgomery from Birmingham, AL",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Domus_Aurea,_Nero%27s_Golden_House_(36453906275).jpg"
+  }
+ },
+ "clemente-2": {
+  "src800": "img/clemente-2-800.webp",
+  "src1600": "img/clemente-2-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Faded medieval frescoes on brick walls in the lit lower basilica beneath San Clemente",
+  "focal": "55% 50%",
+  "color": "#97612a",
+  "credit": {
+   "title": "Basilica San Clemente Rom 6",
+   "author": "Edelmauswaldgeist",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Basilica_San_Clemente_Rom_6.jpg"
+  }
+ },
+ "pantheon-1": {
+  "src800": "img/pantheon-1-800.webp",
+  "src1600": "img/pantheon-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Inside the Pantheon: a beam of sunlight from the open oculus falls across the coffered dome, crowds small below",
+  "focal": "45% 45%",
+  "color": "#5e5a56",
+  "credit": {
+   "title": "Internal Pantheon Light",
+   "author": "Richjheath",
+   "license": "Public domain",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Internal_Pantheon_Light.JPG"
+  }
+ },
+ "pantheon-2": {
+  "src800": "img/pantheon-2-800.webp",
+  "src1600": "img/pantheon-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The Pantheon's portico from the side: rows of huge granite columns under the pediment, people tiny at their base",
+  "focal": "50% 55%",
+  "color": "#959396",
+  "credit": {
+   "title": "Pantheon, portico 01",
+   "author": "sailko",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pantheon,_portico_01.JPG"
+  }
+ },
+ "castel-1": {
+  "src800": "img/castel-1-800.webp",
+  "src1600": "img/castel-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Looking down Via della Conciliazione from Castel Sant'Angelo to St Peter's Basilica and its dome, over terracotta roofs",
+  "focal": "53% 45%",
+  "color": "#9c9387",
+  "credit": {
+   "title": "Vaticano 34",
+   "author": "Jorge Valenzuela A",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vaticano_34.jpg"
+  }
+ },
+ "castel-2": {
+  "src800": "img/castel-2-800.webp",
+  "src1600": "img/castel-2-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Castel Sant'Angelo's round brick drum seen down the length of Ponte Sant'Angelo, with Bernini's marble angels on the bridge and the bronze angel on top",
+  "focal": "50% 55%",
+  "color": "#827c79",
+  "credit": {
+   "title": "0 Castel et pont Sant'Angelo (1)",
+   "author": "Jean-Pol GRANDMONT",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:0_Castel_et_pont_Sant%27Angelo_(1).JPG"
+  }
+ },
+ "vittoriano-1": {
+  "src800": "img/vittoriano-1-800.webp",
+  "src1600": "img/vittoriano-1-1600.webp",
+  "w": 1600,
+  "h": 946,
+  "alt": "View from the top terrace of the Vittoriano over Via dei Fori Imperiali and the Forum ruins to the Colosseum, hills on the horizon",
+  "focal": "60% 55%",
+  "color": "#939797",
+  "credit": {
+   "title": "Victor Emanuel II Rome 2011 10",
+   "author": "Karelj",
+   "license": "Public domain",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Victor_Emanuel_II_Rome_2011_10.jpg"
+  }
+ },
+ "vittoriano-2": {
+  "src800": "img/vittoriano-2-800.webp",
+  "src1600": "img/vittoriano-2-1600.webp",
+  "w": 1600,
+  "h": 1199,
+  "alt": "The bronze winged Victory driving a four-horse chariot on top of the Vittoriano, against clouds",
+  "focal": "45% 55%",
+  "color": "#94a1ab",
+  "credit": {
+   "title": "Vittoriano Quadriga della Vittoria Roma 2 (cropped)",
+   "author": "Wolfgang Moroder",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vittoriano_Quadriga_della_Vittoria_Roma_2.jpg"
+  }
+ },
+ "pincio-2": {
+  "src800": "img/pincio-2-800.webp",
+  "src1600": "img/pincio-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "People lined along the stone balustrade of the Pincio terrace on a sunny day, St Peter's dome on the skyline beyond",
+  "focal": "45% 45%",
+  "color": "#7c7c76",
+  "credit": {
+   "title": "Rome Pincio Terrace (52594247196) (cropped to 4:3)",
+   "author": "Jorge Franganillo",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rome_Pincio_Terrace_(52594247196).jpg"
+  }
+ },
+ "vicus-1": {
+  "src800": "img/vicus-1-800.webp",
+  "src1600": "img/vicus-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Underground Roman brick walls and an arch with clear, lit water flowing over the ancient floor",
+  "focal": "50% 50%",
+  "color": "#47331b",
+  "credit": {
+   "title": "Ancient brick cistern with arched passageway and water (Vicus Caprarius; cropped to 4:3)",
+   "author": "José Luis Lobera",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/ancient-brick-cistern-with-arched-passageway-and-water-LEcT8DAPe0g"
+  }
+ },
+ "vicus-2": {
+  "src800": "img/vicus-2-800.webp",
+  "src1600": "img/vicus-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Looking down from a metal walkway into the excavated Roman water tank, lit blue, with visitors on the stairs above",
+  "focal": "45% 50%",
+  "color": "#856345",
+  "credit": {
+   "title": "Rome - Vicus Caprarius, City of Water (5)",
+   "author": "ukdamian",
+   "license": "CC BY-NC 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/14878709@N00/53630117747"
+  }
+ },
+ "largo-1": {
+  "src800": "img/largo-1-800.webp",
+  "src1600": "img/largo-1-1600.webp",
+  "w": 1600,
+  "h": 1052,
+  "alt": "A tabby cat washes itself on an ancient rubble wall at Largo di Torre Argentina, Roman brickwork and marble fragments behind",
+  "focal": "45% 55%",
+  "color": "#878073",
+  "credit": {
+   "title": "Licking Cat in Largo di Torre Argentina, Rome",
+   "author": "Andou",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Licking_Cat_in_Largo_di_Torre_Argentina,_Rome.JPG"
+  }
+ },
+ "largo-2": {
+  "src800": "img/largo-2-800.webp",
+  "src1600": "img/largo-2-1600.webp",
+  "w": 1600,
+  "h": 1069,
+  "alt": "The sunken ruins of Largo di Torre Argentina seen from street level: temple columns and foundations below city buildings",
+  "focal": "50% 60%",
+  "color": "#8b8279",
+  "credit": {
+   "title": "Largo di Torre Argentina (cropped)",
+   "author": "Bert Kaufmann",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/22746515@N02/8089892320"
+  }
+ },
+ "capuchin-2": {
+  "src800": "img/capuchin-2-800.webp",
+  "src1600": "img/capuchin-2-1600.webp",
+  "w": 1600,
+  "h": 1201,
+  "alt": "A child's skeleton holding a scythe on the crypt ceiling, framed by an oval of bones with bone garlands around it",
+  "focal": "50% 45%",
+  "color": "#9a8475",
+  "credit": {
+   "title": "Krypta kapucynów w Rzymie (1) (cropped to 4:3)",
+   "author": "Tomasz91",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Krypta_kapucyn%C3%B3w_w_Rzymie_(1).jpg"
+  }
+ },
+ "coronati-1": {
+  "src800": "img/coronati-1-800.webp",
+  "src1600": "img/coronati-1-1600.webp",
+  "w": 1600,
+  "h": 1084,
+  "alt": "The end wall of the San Silvestro chapel: Christ enthroned with apostles in the lunette, and below it a strip of bright framed scenes of the pope and Emperor Constantine",
+  "focal": "50% 50%",
+  "color": "#7e6248",
+  "credit": {
+   "title": "00 Stirnwand 1",
+   "author": "Peter1936F",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:00_Stirnwand_1.jpg"
+  }
+ },
+ "coronati-2": {
+  "src800": "img/coronati-2-800.webp",
+  "src1600": "img/coronati-2-1600.webp",
+  "w": 1600,
+  "h": 1231,
+  "alt": "The plain, weathered fortress-like front of Santi Quattro Coronati with its square bell tower and an arched gateway",
+  "focal": "45% 60%",
+  "color": "#868993",
+  "credit": {
+   "title": "Basilica dei Santi Quattro Coronati - esterno",
+   "author": "PubblicUsername",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Basilica_dei_Santi_Quattro_Coronati_-_esterno.jpg"
+  }
+ },
+ "spada-2": {
+  "src800": "img/spada-2-800.webp",
+  "src1600": "img/spada-2-1600.webp",
+  "w": 1600,
+  "h": 1070,
+  "alt": "A person stands at the far end of Borromini's corridor and looks gigantic against the shrunken columns",
+  "focal": "50% 55%",
+  "color": "#928f8a",
+  "credit": {
+   "title": "Forced perspective gallery by Francesco Borromini, Galleria Spada (46604317241)",
+   "author": "Sonse",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Forced_perspective_gallery_by_Francesco_Borromini,_Galleria_Spada_(46604317241).jpg"
+  }
+ },
+ "ignazio-1": {
+  "src800": "img/ignazio-1-800.webp",
+  "src1600": "img/ignazio-1-1600.webp",
+  "w": 1600,
+  "h": 1093,
+  "alt": "Sant'Ignazio's flat ceiling painted as a deep coffered dome, seen straight up between the arches",
+  "focal": "50% 50%",
+  "color": "#8a7b71",
+  "credit": {
+   "title": "Intérieur de l'église Saint-Ignace-de-Loyola de Rome",
+   "author": "Wilfredor",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Int%C3%A9rieur_de_l%27%C3%A9glise_Saint-Ignace-de-Loyola_de_Rome.jpg"
+  }
+ },
+ "gesu-1": {
+  "src800": "img/gesu-1-800.webp",
+  "src1600": "img/gesu-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The Altar of St Ignatius with the silver statue of the saint revealed in its gilded niche between lapis-lazuli columns",
+  "focal": "50% 45%",
+  "color": "#545249",
+  "credit": {
+   "title": "Chapel S. Ignazio Gesu Rome (cropped to 4:3)",
+   "author": "Marie-Lan Nguyen",
+   "license": "CC BY 2.5",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.5",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chapel_S._Ignazio_Gesu_Rome.jpg"
+  }
+ },
+ "gesu-2": {
+  "src800": "img/gesu-2-800.webp",
+  "src1600": "img/gesu-2-1600.webp",
+  "w": 1600,
+  "h": 1098,
+  "alt": "Baciccio's ceiling fresco: a burst of golden light and clouds of figures spilling out over the gilded frame onto the coffered vault",
+  "focal": "50% 45%",
+  "color": "#807153",
+  "credit": {
+   "title": "Chiesa del Gesù September 2015-8a",
+   "author": "Alvesgaspar",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chiesa_del_Ges%C3%B9_September_2015-8a.jpg"
+  }
+ },
+ "montemartini-2": {
+  "src800": "img/montemartini-2-800.webp",
+  "src1600": "img/montemartini-2-1600.webp",
+  "w": 1600,
+  "h": 1224,
+  "alt": "A long hall of the old power station: rows of headless marble statues on plinths between blue-lit pillars and black boilers",
+  "focal": "50% 55%",
+  "color": "#5b5e6d",
+  "credit": {
+   "title": "Centrale Montemartini 08",
+   "author": "Briner2306",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Centrale_Montemartini_08.jpg"
+  }
+ },
+ "cemetery-2": {
+  "src800": "img/cemetery-2-800.webp",
+  "src1600": "img/cemetery-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Keats's headstone with a carved lyre and 'Young English Poet' beside Joseph Severn's stone, in a green garden plot under trees",
+  "focal": "45% 55%",
+  "color": "#454e4a",
+  "credit": {
+   "title": "Keats And Severn Graves (cropped to 4:3)",
+   "author": "Gabriele Di Donfrancesco",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Keats_And_Severn_Graves.JPG"
+  }
+ },
+ "borghese-2": {
+  "src800": "img/borghese-2-800.webp",
+  "src1600": "img/borghese-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Head and shoulder of Bernini's marble David, frowning and biting his lower lip as he twists to throw",
+  "focal": "40% 40%",
+  "color": "#856a52",
+  "credit": {
+   "title": "Gianlorenzo bernini, david, 1623-24, 03 (cropped to 4:3)",
+   "author": "Sailko",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gianlorenzo_bernini,_david,_1623-24,_03.jpg"
+  }
+ },
+ "caravaggio-1": {
+  "src800": "img/caravaggio-1-800.webp",
+  "src1600": "img/caravaggio-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "The Contarelli Chapel in San Luigi dei Francesi: three Caravaggio paintings in place on the side walls and altar",
+  "focal": "50% 55%",
+  "color": "#493c29",
+  "credit": {
+   "title": "Roma - San Luigi dei Francesi 8289",
+   "author": "Phyrexian",
+   "license": "Public domain",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roma_-_San_Luigi_dei_Francesi_8289.jpg"
+  }
+ },
+ "trevi-1": {
+  "src800": "img/trevi-1-800.webp",
+  "src1600": "img/trevi-1-1600.webp",
+  "w": 1600,
+  "h": 1226,
+  "alt": "The Trevi Fountain by day from the edge of the basin: Neptune in the central arch, rock cascades and turquoise water",
+  "focal": "50% 60%",
+  "color": "#929284",
+  "credit": {
+   "title": "Trevi Fountain during daytime",
+   "author": "Chris Burgett",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/trevi-fountain-in-paris-during-daytime-gknCV19e6WM"
+  }
+ },
+ "trevi-2": {
+  "src800": "img/trevi-2-800.webp",
+  "src1600": "img/trevi-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Close-up of a marble triton taming a rearing sea horse on the rocks of the Trevi Fountain, water spilling below",
+  "focal": "40% 50%",
+  "color": "#8b847b",
+  "credit": {
+   "title": "A close up of a fountain with statues on it (Trevi Fountain)",
+   "author": "Casey Lovegrove",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/a-close-up-of-a-fountain-with-statues-on-it-FnCADPIrgbg"
+  }
+ },
+ "maritozzo-2": {
+  "src800": "img/maritozzo-2-800.webp",
+  "src1600": "img/maritozzo-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A bakery window behind glass, trays of biscuits, almond tarts, ring cookies and slabs of pizza bianca with handwritten price cards",
+  "focal": "50% 55%",
+  "color": "#747161",
+  "credit": {
+   "title": "Il Fornaio 1 (14841997875)",
+   "author": "daryl_mitchell from Saskatoon, Saskatchewan, Canada",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Il_Fornaio_1_(14841997875).jpg"
+  }
+ },
+ "boccione-1": {
+  "src800": "img/boccione-1-800.webp",
+  "src1600": "img/boccione-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "A slice of ricotta and sour cherry tart with a glossy golden-brown top crust, a dark cherry layer at the bottom, on a white plate",
+  "focal": "45% 55%",
+  "color": "#9a7d61",
+  "credit": {
+   "title": "Maialino Torta di Ricotta e Visciole",
+   "author": "Gary Wong (wonggawei)",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/25142357@N08/4878673129"
+  }
+ },
+ "boccione-2": {
+  "src800": "img/boccione-2-800.webp",
+  "src1600": "img/boccione-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The arched doorway of Boccione bakery in a peeling orange wall, a customer inside and burnt-top cakes on glass shelves in the window",
+  "focal": "50% 50%",
+  "color": "#887766",
+  "credit": {
+   "title": "Boccione Bakery (cropped to 4:3)",
+   "author": "JSFarman",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Boccione_Bakery.jpg"
+  }
+ },
+ "innocenti-1": {
+  "src800": "img/innocenti-1-800.webp",
+  "src1600": "img/innocenti-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Trays of almond-topped jam biscuits and brown hazelnut biscuits behind the glass counter",
+  "focal": "50% 50%",
+  "color": "#917f65",
+  "credit": {
+   "title": "Biscotti (15116728518) (cropped)",
+   "author": "daryl_mitchell from Saskatoon, Saskatchewan, Canada",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Biscotti_(15116728518).jpg"
+  }
+ },
+ "innocenti-2": {
+  "src800": "img/innocenti-2-800.webp",
+  "src1600": "img/innocenti-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The old bakery room: a long cream-coloured industrial oven with biscuits cooling on trays in front of it",
+  "focal": "40% 55%",
+  "color": "#877f7a",
+  "credit": {
+   "title": "1950s Oven",
+   "author": "daryl_mitchell",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/49169223@N00/15116760987"
+  }
+ },
+ "market-1": {
+  "src800": "img/market-1-800.webp",
+  "src1600": "img/market-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A packed vegetable stall inside Testaccio market: crates of tomatoes, green beans, peppers and aubergines with handwritten price cards, a stallholder behind",
+  "focal": "50% 55%",
+  "color": "#5e5335",
+  "credit": {
+   "title": "DSC_0069_ep (cropped to 4:3)",
+   "author": "Eric Parker (Eric.Parker)",
+   "license": "CC BY-NC 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/13484951@N00/48712728898"
+  }
+ },
+ "market-2": {
+  "src800": "img/market-2-800.webp",
+  "src1600": "img/market-2-1600.webp",
+  "w": 1080,
+  "h": 810,
+  "alt": "A hand holding a bitten beef-tongue sandwich with green salsa verde, the Mordi e Vai stall logo behind",
+  "focal": "55% 55%",
+  "color": "#a09175",
+  "credit": {
+   "title": "Evviva il panino con la lingua! Evviva Mordi & Vai! (cropped to 4:3)",
+   "author": "SecondoMe76",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/29788083@N06/25207431361"
+  }
+ },
+ "suppli-1": {
+  "src800": "img/suppli-1-800.webp",
+  "src1600": "img/suppli-1-1600.webp",
+  "w": 1080,
+  "h": 810,
+  "alt": "A fried supplì pulled apart on a paper plate, tomato rice inside, a strand of melted mozzarella stretching between the halves",
+  "focal": "50% 55%",
+  "color": "#907157",
+  "credit": {
+   "title": "Ebbravo mio fratello! ... supplì al telefono (cropped to 4:3)",
+   "author": "SecondoMe76",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/29788083@N06/26326135986"
+  }
+ },
+ "suppli-2": {
+  "src800": "img/suppli-2-800.webp",
+  "src1600": "img/suppli-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A pizza-by-the-slice counter with trays of pizza and a row of fried supplì under a red sign reading Supplì Romani",
+  "focal": "35% 60%",
+  "color": "#6f5e4c",
+  "credit": {
+   "title": "Alice Pizza Piola 3",
+   "author": "Saggittarius A",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Alice_Pizza_Piola_3.jpg"
+  }
+ },
+ "fortunata-1": {
+  "src800": "img/fortunata-1-800.webp",
+  "src1600": "img/fortunata-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Two pasta makers in white caps rolling a sheet of fresh pasta behind a restaurant window in Rome, nests of tagliatelle on trays, the street reflected in the glass",
+  "focal": "40% 60%",
+  "color": "#4a4a46",
+  "credit": {
+   "title": "A couple of people that are standing in front of a window",
+   "author": "Matej Buchla",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/a-couple-of-people-that-are-standing-in-front-of-a-window-HLveYv1f8no"
+  }
+ },
+ "fortunata-2": {
+  "src800": "img/fortunata-2-800.webp",
+  "src1600": "img/fortunata-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Fresh strozzapreti carbonara on a terracotta plate printed 'Osteria da Fortunata'",
+  "focal": "50% 50%",
+  "color": "#b57942",
+  "credit": {
+   "title": "Strozzapreti freschi fatti al momento alla carbonara - Osteria Da Fortunata - Campo Dè Fiori (cropped to 4:3, upscaled)",
+   "author": "juanfratic",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/51527441@N07/27203215642"
+  }
+ },
+ "flavio-1": {
+  "src800": "img/flavio-1-800.webp",
+  "src1600": "img/flavio-1-1600.webp",
+  "w": 1600,
+  "h": 1063,
+  "alt": "A slope of Monte Testaccio covered in thousands of broken terracotta amphora shards, a small cross on the top",
+  "focal": "50% 70%",
+  "color": "#5c544f",
+  "credit": {
+   "title": "Monte Testaccio: pendio di cocci (upscaled)",
+   "author": "Alex Jmax",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/51421255@N00/3958651222"
+  }
+ },
+ "flavio-2": {
+  "src800": "img/flavio-2-800.webp",
+  "src1600": "img/flavio-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A plate of cacio e pepe spaghetti with grated pecorino, a fork twirling a forkful, on a green checked trattoria tablecloth",
+  "focal": "50% 50%",
+  "color": "#ba9963",
+  "credit": {
+   "title": "Cacio e pepe at trattoria in Rome (cropped to 4:3)",
+   "author": "Schellack",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cacio_e_pepe_at_trattoria_in_Rome.jpg"
+  }
+ },
+ "pasta-2": {
+  "src800": "img/pasta-2-800.webp",
+  "src1600": "img/pasta-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A shallow bowl of creamy fresh fettuccine on a worn wooden table",
+  "focal": "50% 55%",
+  "color": "#928066",
+  "credit": {
+   "title": "A plate of food on a wooden table (cropped to 4:3)",
+   "author": "engin akyurt",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/a-plate-of-food-on-a-wooden-table-Jrvcg9My0B4"
+  }
+ },
+ "acquedotti-1": {
+  "src800": "img/acquedotti-1-800.webp",
+  "src1600": "img/acquedotti-1-1600.webp",
+  "w": 1600,
+  "h": 1201,
+  "alt": "Huge stone arches of the Aqua Claudia aqueduct towering over a path, a wedding party posing at the foot of one pillar and two walkers on the right",
+  "focal": "40% 55%",
+  "color": "#6a6a5d",
+  "credit": {
+   "title": "Roma - Gita al Parco degli Acquedotti - 01 (cropped to 4:3)",
+   "author": "Gabriele Costetti",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roma_-_Gita_al_Parco_degli_Acquedotti_-_01.jpg"
+  }
+ },
+ "acquedotti-2": {
+  "src800": "img/acquedotti-2-800.webp",
+  "src1600": "img/acquedotti-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A long line of aqueduct arches across a green field in late-afternoon light, sun glowing orange through the openings, a few tiny people walking",
+  "focal": "55% 60%",
+  "color": "#748887",
+  "credit": {
+   "title": "Parc dels Aqüeductes (Parco degli Acquedotti)",
+   "author": "Chixoy",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Parc_dels_Aq%C3%BCeductes_(Parco_degli_Acquedotti).jpg"
+  }
+ },
+ "coppede-1": {
+  "src800": "img/coppede-1-800.webp",
+  "src1600": "img/coppede-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A carved stone arch over Via Dora with a stone mask on top; a black iron chandelier hangs inside it against the bright street beyond",
+  "focal": "60% 55%",
+  "color": "#4f5152",
+  "credit": {
+   "title": "Q17 - q Coppedé 1050985 arco d'ingresso (cropped)",
+   "author": "Lalupa",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Q17_-_q_Copped%C3%A9_1050985_arco_d%27ingresso.JPG"
+  }
+ },
+ "coppede-2": {
+  "src800": "img/coppede-2-800.webp",
+  "src1600": "img/coppede-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A stone frog spitting water on the rim of the Fountain of the Frogs, with Coppedè's ornate yellow buildings behind",
+  "focal": "40% 55%",
+  "color": "#746b5d",
+  "credit": {
+   "title": "Fontana delle Rane",
+   "author": "Albarubescens",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fontana_delle_Rane.jpg"
+  }
+ },
+ "trastevere-1": {
+  "src800": "img/trastevere-1-800.webp",
+  "src1600": "img/trastevere-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A narrow cobbled street of yellow and ochre houses with green shutters, potted palms, scooters and a bougainvillea-covered house at the end",
+  "focal": "50% 60%",
+  "color": "#84775c",
+  "credit": {
+   "title": "Cobblestone street in Rome",
+   "author": "Maksym Harbar",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/cobblestone-street-in-rome-enx0PrNtmm8"
+  }
+ },
+ "trastevere-2": {
+  "src800": "img/trastevere-2-800.webp",
+  "src1600": "img/trastevere-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Piazza di Santa Maria in Trastevere: the fountain steps with people sitting on them, the church portico and the Romanesque bell tower",
+  "focal": "45% 55%",
+  "color": "#6b6d70",
+  "credit": {
+   "title": "People walking on sidewalk near brown concrete building during daytime",
+   "author": "KA T",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/people-walking-on-sidewalk-near-brown-concrete-building-during-daytime-VtAjPmXaMU8"
+  }
+ },
+ "centre-1": {
+  "src800": "img/centre-1-800.webp",
+  "src1600": "img/centre-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Via dei Cappellari: a narrow cobbled lane of ochre houses with shutters and a lantern, an arch and a few people at the far end",
+  "focal": "50% 60%",
+  "color": "#7a6457",
+  "credit": {
+   "title": "Roma (42794650431)",
+   "author": "Fred Romero from Paris, France",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roma_(42794650431).jpg"
+  }
+ },
+ "centre-2": {
+  "src800": "img/centre-2-800.webp",
+  "src1600": "img/centre-2-1600.webp",
+  "w": 1600,
+  "h": 1005,
+  "alt": "Flower stalls and white umbrellas in Campo de' Fiori, people browsing on the cobbles",
+  "focal": "60% 55%",
+  "color": "#888a81",
+  "credit": {
+   "title": "Campo de' Fiori (2)",
+   "author": "Krzysztof Golik",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Campo_de%27_Fiori_(2).jpg"
+  }
+ },
+ "monti-1": {
+  "src800": "img/monti-1-800.webp",
+  "src1600": "img/monti-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Gold mosaic vault of the San Zeno chapel: Christ in a medallion held up by four white-robed angels, saints on the walls",
+  "focal": "50% 50%",
+  "color": "#714f2d",
+  "credit": {
+   "title": "Santa Prassede - Mosaic, Chapel of San Zeno",
+   "author": "Till Niermann",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Santa_Prassede_-_Mosaic,_Chapel_of_San_Zeno.JPG"
+  }
+ },
+ "monti-2": {
+  "src800": "img/monti-2-800.webp",
+  "src1600": "img/monti-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Piazza della Madonna dei Monti on a sunny day: a two-tier stone fountain, people sitting on its steps, cafe tables under umbrellas",
+  "focal": "60% 60%",
+  "color": "#555e65",
+  "credit": {
+   "title": "Rome (Italy, October 2019) - 171 (50588856953) (cropped to 4:3)",
+   "author": "Bruno Rijsman",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Rome_(Italy,_October_2019)_-_171_(50588856953).jpg"
+  }
+ },
+ "appia-1": {
+  "src800": "img/appia-1-800.webp",
+  "src1600": "img/appia-1-1600.webp",
+  "w": 1600,
+  "h": 1201,
+  "alt": "A cyclist riding along the old stone-paved Appian Way between dry grass, umbrella pines and a crumbling brick ruin, walkers ahead",
+  "focal": "55% 60%",
+  "color": "#999179",
+  "credit": {
+   "title": "Via Appia Antica (cropped to 4:3)",
+   "author": "Shaun Merritt",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/8429931@N07/5918786905"
+  }
+ },
+ "appia-2": {
+  "src800": "img/appia-2-800.webp",
+  "src1600": "img/appia-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A flock of sheep and goats grazing beside the ancient paved Appian Way under tall umbrella pines and cypresses",
+  "focal": "45% 65%",
+  "color": "#827e69",
+  "credit": {
+   "title": "Appian Way",
+   "author": "Kent Wang",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/27454212@N00/52888695518"
+  }
+ },
+ "circovr-1": {
+  "src800": "img/circovr-1-800.webp",
+  "src1600": "img/circovr-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A large architectural scale model of ancient Rome showing the Circus Maximus as a long track ringed by tiered stands",
+  "focal": "50% 50%",
+  "color": "#95603b",
+  "credit": {
+   "title": "Circus Maximus, plan de Rome de Paul Bigot, université de Caen MRSH",
+   "author": "Pascal Radigue",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Circus_Maximus,_plan_de_Rome_de_Paul_Bigot,_universit%C3%A9_de_Caen_MRSH.JPG"
+  }
+ },
+ "circovr-2": {
+  "src800": "img/circovr-2-800.webp",
+  "src1600": "img/circovr-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The grassy Circus Maximus track today with the brick ruins of the imperial palaces on the Palatine above it",
+  "focal": "55% 50%",
+  "color": "#8b8a66",
+  "credit": {
+   "title": "Circus Maximus and Palatine ruins (Unsplash title: 'the ruins of the ancient city of pompei'; cropped)",
+   "author": "Kenny",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/the-ruins-of-the-ancient-city-of-pompei-2P2iJSeiKJM"
+  }
+ },
+ "cannon-2": {
+  "src800": "img/cannon-2-800.webp",
+  "src1600": "img/cannon-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A woman sits on the Gianicolo terrace balustrade photographing Rome's rooftops and domes, the white Vittoriano and hills beyond",
+  "focal": "55% 45%",
+  "color": "#757367",
+  "credit": {
+   "title": "View of Rome from Monte Gianicolo, Rome - 3436 (cropped to 4:3)",
+   "author": "Jorge Royan",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:View_of_Rome_from_Monte_Gianicolo,_Rome_-_3436.jpg"
+  }
+ },
+ "sidecar-2": {
+  "src800": "img/sidecar-2-800.webp",
+  "src1600": "img/sidecar-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Seen from behind: a red Vespa sidecar with a helmeted passenger in Rome traffic, a driver looking back, a green sidecar ahead",
+  "focal": "50% 55%",
+  "color": "#5e5158",
+  "credit": {
+   "title": "Vespa Sidecar Tour (cropped to 4:3)",
+   "author": "Me in ME",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/12357841@N02/53570484813"
+  }
+ },
+ "filmfest-1": {
+  "src800": "img/filmfest-1-800.webp",
+  "src1600": "img/filmfest-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Tom Hanks and Rita Wilson wave on the Rome Film Fest red carpet under bright lights, TV cameras and a crowd of photographers around them",
+  "focal": "50% 55%",
+  "color": "#8d6a6b",
+  "credit": {
+   "title": "Tom Hanks at the Festa del Cinema di Roma (cropped to 4:3, upscaled)",
+   "author": "nuoveofficinecinematografiche",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/114201996@N05/30229183601"
+  }
+ },
+ "filmfest-2": {
+  "src800": "img/filmfest-2-800.webp",
+  "src1600": "img/filmfest-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Renzo Piano's metal-clad concert hall dome above the open-air Cavea steps at dusk, the foyer glowing orange, two people on the steps",
+  "focal": "45% 50%",
+  "color": "#6a7772",
+  "credit": {
+   "title": "Parco della Musica (cropped to 4:3)",
+   "author": "miziodel",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/47748406@N00/24790283149"
+  }
+ },
+ "circusjog-1": {
+  "src800": "img/circusjog-1-800.webp",
+  "src1600": "img/circusjog-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The long sandy track of the Circus Maximus with small figures walking along it, pines and Roman rooftops beyond",
+  "focal": "55% 60%",
+  "color": "#8f8a65",
+  "credit": {
+   "title": "Circus Maximus track (Unsplash title: 'a view of a park with a river running through it'; cropped)",
+   "author": "Matteo del Piano",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/a-view-of-a-park-with-a-river-running-through-it-eUi1n62v2so"
+  }
+ },
+ "circusjog-2": {
+  "src800": "img/circusjog-2-800.webp",
+  "src1600": "img/circusjog-2-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Wide view along the Circus Maximus at golden hour, from the curved end with the medieval tower to the Palatine ruins",
+  "focal": "70% 60%",
+  "color": "#ab9c82",
+  "credit": {
+   "title": "Ancient roman circus maximus at sunset with historic ruins",
+   "author": "Rafael Peier",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/ancient-roman-circus-maximus-at-sunset-with-historic-ruins-u8sO0eE1_Gw"
+  }
  }
 }

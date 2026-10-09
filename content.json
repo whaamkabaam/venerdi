@@ -11,7 +11,8 @@
     "sunset": "18:29",
     "civilDusk": "18:56",
     "factsChecked": "8 October 2026",
-    "walkCapKm": 10
+    "walkCapKm": 10,
+    "maxTaxis": 3
   },
   "hero": {
     "boardTitle": "Arrivals",
@@ -101,57 +102,252 @@
   "note": {
     "greeting": "Hey Sasha,",
     "paras": [
-      "Tap whatever sounds good and the board below turns it into a Friday.",
-      "Send it to me and I'll book what needs booking."
+      "Four quick questions and the board plans Friday. Swap whatever you don't like, then send it to me :)"
     ],
     "sign": "Felix"
   },
-  "picker": {
-    "title": "What sounds good?",
-    "lead": "",
-    "groups": [
+  "ask": {
+    "counter": "{n}/{total}",
+    "next": "Next",
+    "skip": "Skip",
+    "back": "Back",
+    "plan": "Plan Friday",
+    "answers": "Your answers: {list}",
+    "change": "Change",
+    "steps": [
+      {
+        "id": "see",
+        "title": "What do you want to see?",
+        "hint": "Pick any",
+        "multi": true,
+        "tiles": [
+          {
+            "id": "ancient",
+            "label": "Old Rome",
+            "sub": "The Colosseum floor, the underground",
+            "photoOf": "colosseum"
+          },
+          {
+            "id": "view",
+            "label": "Rome from above",
+            "sub": "Rooftops, a keyhole, the sunset",
+            "photoOf": "vittoriano"
+          },
+          {
+            "id": "odd",
+            "label": "The weird stuff",
+            "sub": "Bones, optical tricks, Caesar's cats",
+            "photoOf": "capuchin"
+          },
+          {
+            "id": "art",
+            "label": "Art that's worth it",
+            "sub": "Bernini, Caravaggio, nothing boring",
+            "photoOf": "borghese"
+          }
+        ]
+      },
       {
         "id": "eat",
-        "label": "Eat"
+        "title": "What about food?",
+        "hint": "Pick any",
+        "multi": true,
+        "tiles": [
+          {
+            "id": "pastry",
+            "label": "Pastries",
+            "sub": "Maritozzo, the bakery with no sign",
+            "photoOf": "maritozzo"
+          },
+          {
+            "id": "street",
+            "label": "Street food",
+            "sub": "Supplì, a market, eat standing up",
+            "photoOf": "suppli"
+          },
+          {
+            "id": "lunch",
+            "label": "A proper lunch",
+            "sub": "Sit down, fresh pasta",
+            "photoOf": "fortunata"
+          },
+          {
+            "id": "class",
+            "label": "Make pasta",
+            "sub": "Roll it, cut it, eat it",
+            "photoOf": "pasta"
+          }
+        ]
       },
       {
-        "id": "big",
-        "label": "Big"
+        "id": "wander",
+        "title": "Wander somewhere?",
+        "hint": "Pick one",
+        "multi": false,
+        "none": "Not really",
+        "tiles": [
+          {
+            "id": "trastevere",
+            "label": "Trastevere",
+            "sub": "Ivy, cobbles, no plan",
+            "option": "trastevere"
+          },
+          {
+            "id": "centre",
+            "label": "The old centre",
+            "sub": "Navona, small streets, the Pantheon",
+            "option": "centre"
+          },
+          {
+            "id": "aventine",
+            "label": "The Aventine",
+            "sub": "The keyhole, an orange garden",
+            "option": "keyhole"
+          },
+          {
+            "id": "appia",
+            "label": "Appian Way",
+            "sub": "A Roman road, by e-bike",
+            "option": "appia"
+          },
+          {
+            "id": "acquedotti",
+            "label": "The aqueducts",
+            "sub": "Giant arches in a field",
+            "option": "acquedotti"
+          },
+          {
+            "id": "coppede",
+            "label": "Coppedè",
+            "sub": "A fairytale block nobody knows",
+            "option": "coppede"
+          },
+          {
+            "id": "monti",
+            "label": "Monti",
+            "sub": "Gold mosaics, vintage, near dinner",
+            "option": "monti"
+          }
+        ]
       },
       {
-        "id": "weird",
-        "label": "Weird"
-      },
-      {
-        "id": "slow",
-        "label": "Slow"
-      },
-      {
-        "id": "clock",
-        "label": "On the clock"
-      },
-      {
-        "id": "race",
-        "label": "Race"
+        "id": "wild",
+        "title": "Wild card?",
+        "hint": "Pick one",
+        "multi": false,
+        "none": "No thanks",
+        "tiles": [
+          {
+            "id": "circovr",
+            "sub": "Chariots pass by",
+            "option": "circovr"
+          },
+          {
+            "id": "filmfest",
+            "option": "filmfest"
+          },
+          {
+            "id": "domus",
+            "sub": "Nero in VR",
+            "option": "domus"
+          },
+          {
+            "id": "cannon",
+            "sub": "Exactly. Loud.",
+            "option": "cannon"
+          },
+          {
+            "id": "circusjog",
+            "sub": "Easy pace only",
+            "option": "circusjog"
+          },
+          {
+            "id": "coronati",
+            "sub": "Ring the bell",
+            "option": "coronati"
+          }
+        ]
       }
-    ],
-    "freeTextLabel": "Anything else?",
-    "freeTextPlaceholder": "Gelato, a nap, padel…",
-    "sendLabel": "Send to Felix",
-    "sendHint": "",
-    "shareIntro": "My Friday:",
-    "shareExtra": "Also:"
+    ]
   },
+  "pickReasons": {
+    "ancient": {
+      "label": "Old Rome",
+      "code": "a"
+    },
+    "view": {
+      "label": "The view",
+      "code": "v"
+    },
+    "odd": {
+      "label": "The weird stuff",
+      "code": "o"
+    },
+    "art": {
+      "label": "The art",
+      "code": "r"
+    },
+    "pastry": {
+      "label": "Pastries",
+      "code": "p"
+    },
+    "street": {
+      "label": "Street food",
+      "code": "s"
+    },
+    "lunch": {
+      "label": "Proper lunch",
+      "code": "l"
+    },
+    "class": {
+      "label": "Make pasta",
+      "code": "c"
+    },
+    "wander": {
+      "label": "Wander",
+      "code": "w"
+    },
+    "wild": {
+      "label": "Wild card",
+      "code": "x"
+    },
+    "added": {
+      "label": "Added",
+      "code": "d"
+    },
+    "felix": {
+      "label": "Felix's pick",
+      "code": "f"
+    }
+  },
+  "defaultDay": [
+    {
+      "id": "maritozzo",
+      "reason": "pastry"
+    },
+    {
+      "id": "pantheon",
+      "reason": "felix"
+    },
+    {
+      "id": "trastevere",
+      "reason": "felix"
+    },
+    {
+      "id": "keyhole",
+      "reason": "felix"
+    }
+  ],
   "day": {
-    "title": "Details",
-    "empty": "Pick a few things and the board fills up.",
-    "manyLine": "",
-    "didntFitTitle": "Didn't fit",
-    "summary": "",
+    "title": "Your Friday",
+    "changeAnswers": "Change answers",
+    "parked": "Didn't fit today: {list}.",
+    "empty": "Answer the questions above and your Friday shows up here.",
     "willBook": "I'll book {list}.",
     "noLunch": "Lunch wherever we are.",
-    "fromLink": "These are the picks from the link. Tap any card to change them.",
+    "fromLink": "These are the picks from the link.",
     "backToMine": "Back to my picks",
+    "didntFitTitle": "Didn't fit",
     "slots": {
       "morning": "Morning",
       "lunch": "Lunch",
@@ -159,8 +355,78 @@
       "sunset": "Sunset",
       "evening": "Evening"
     },
-    "bibsSaturday": "Bibs on Saturday then.",
-    "freeTime": "Nothing planned. Coffee, sit somewhere, whatever."
+    "freeTime": "Nothing planned. Coffee, a nap, whatever.",
+    "swap": "Swap",
+    "remove": "Remove",
+    "undo": "Undo",
+    "instead": "Instead:",
+    "useThis": "Use this",
+    "roomTitle": "Room for one more?",
+    "add": "Add",
+    "seeEverything": "See everything",
+    "close": "Close",
+    "facts": {
+      "about": "About {d}",
+      "hm": "{h}h {m}",
+      "h": "{h}h",
+      "m": "{m} min",
+      "price": "€{n}",
+      "free": "Free",
+      "book": "I'll book it",
+      "join": " · "
+    }
+  },
+  "catalogue": {
+    "groups": [
+      {
+        "id": "ancient",
+        "label": "Old Rome"
+      },
+      {
+        "id": "view",
+        "label": "Rome from above"
+      },
+      {
+        "id": "odd",
+        "label": "The weird stuff"
+      },
+      {
+        "id": "art",
+        "label": "Art that's worth it"
+      },
+      {
+        "id": "food",
+        "label": "Food"
+      },
+      {
+        "id": "wander",
+        "label": "Wander"
+      },
+      {
+        "id": "wild",
+        "label": "Wild card"
+      },
+      {
+        "id": "also",
+        "label": "And also"
+      }
+    ],
+    "noFit": "Doesn't fit",
+    "reasons": {
+      "closes": "Closes {time}",
+      "closedGap": "Shut {from} to {to}",
+      "sunsetTaken": "One sunset a day",
+      "lunchTaken": "Lunch is sorted",
+      "noTime": "No time left"
+    }
+  },
+  "send": {
+    "label": "Anything else?",
+    "placeholder": "Gelato, a nap, padel…",
+    "button": "Send to Felix",
+    "shareIntro": "My Friday:",
+    "shareExtra": "Also:",
+    "shareParked": "Didn't fit: {list}."
   },
   "anchors": {
     "arrival": {
@@ -195,254 +461,18 @@
   },
   "options": [
     {
-      "id": "maritozzo",
-      "group": "eat",
-      "title": "Maritozzo",
-      "line": "They cut the bun open and fill it with cream while you watch.",
-      "board": {
-        "to": "MARITOZZO",
-        "remark": "CREAM TO ORDER"
-      },
-      "image": "maritozzo",
-      "area": "centro",
-      "lat": 41.89415,
-      "lon": 12.47443,
-      "minutes": 25,
-      "open": "07:00",
-      "close": "18:00",
-      "slot": "morning",
-      "order": 1,
-      "hud": "Breakfast",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Roscioli+Caff%C3%A8+Pasticceria+Piazza+Benedetto+Cairoli+16+Roma"
-        }
-      ]
-    },
-    {
-      "id": "boccione",
-      "group": "eat",
-      "title": "Boccione",
-      "line": "You find the bakery by the queue, because there's no sign.",
-      "board": {
-        "to": "BOCCIONE",
-        "remark": "SOUR CHERRY TART"
-      },
-      "image": "ghetto",
-      "area": "centro",
-      "lat": 41.89323,
-      "lon": 12.47691,
-      "minutes": 15,
-      "open": "08:00",
-      "close": "12:00",
-      "slot": "morning",
-      "order": 2,
-      "hud": "Boccione",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Pasticceria+Boccione+Via+del+Portico+d%27Ottavia+1+Roma"
-        }
-      ]
-    },
-    {
-      "id": "eustachio",
-      "group": "eat",
-      "title": "Sant'Eustachio",
-      "line": "The coffee comes already sugared unless you say amaro.",
-      "board": {
-        "to": "SANT'EUSTACHIO",
-        "remark": "SAY AMARO"
-      },
-      "image": "sant-eustachio",
-      "area": "centro",
-      "lat": 41.89825,
-      "lon": 12.47543,
-      "minutes": 15,
-      "open": "07:30",
-      "close": "23:59",
-      "slot": "any",
-      "order": 5,
-      "hud": "Coffee",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Sant%27Eustachio+Il+Caff%C3%A8+Roma"
-        }
-      ]
-    },
-    {
-      "id": "innocenti",
-      "group": "eat",
-      "title": "Biscuit oven",
-      "line": "A 15-metre oven slides trays of biscuits straight to the counter.",
-      "board": {
-        "to": "INNOCENTI",
-        "remark": "15 M OVEN"
-      },
-      "image": "innocenti",
-      "area": "trastevere",
-      "lat": 41.88856,
-      "lon": 12.47532,
-      "minutes": 15,
-      "open": "08:00",
-      "close": "19:30",
-      "slot": "any",
-      "order": 16,
-      "hud": "Innocenti",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Biscottificio+Innocenti+Via+della+Luce+21+Roma"
-        }
-      ]
-    },
-    {
-      "id": "market",
-      "group": "eat",
-      "title": "Testaccio market",
-      "line": "The beef sandwich drips, so everyone eats it standing up.",
-      "board": {
-        "to": "TESTACCIO MARKET",
-        "remark": "CASH ONLY"
-      },
-      "image": "trapizzino",
-      "area": "testaccio",
-      "lat": 41.8776,
-      "lon": 12.47358,
-      "minutes": 50,
-      "open": "12:00",
-      "close": "14:30",
-      "slot": "lunch",
-      "order": 20,
-      "hud": "Testaccio",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Nuovo+Mercato+di+Testaccio+Roma"
-        }
-      ],
-      "tag": "Bring cash"
-    },
-    {
-      "id": "suppli",
-      "group": "eat",
-      "title": "Supplì",
-      "line": "Break one open and the mozzarella pulls into a long string.",
-      "board": {
-        "to": "SUPPLI",
-        "remark": "MOZZARELLA STRING"
-      },
-      "image": "suppli",
-      "area": "centro",
-      "lat": 41.89745,
-      "lon": 12.46789,
-      "minutes": 30,
-      "open": "12:00",
-      "close": "15:00",
-      "slot": "lunch",
-      "order": 10,
-      "hud": "Supplì",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Supplizio+Via+dei+Banchi+Vecchi+143+Roma"
-        }
-      ]
-    },
-    {
-      "id": "pasta",
-      "group": "eat",
-      "title": "Pasta class",
-      "line": "You roll fettuccine by hand and eat them an hour later.",
-      "board": {
-        "to": "PASTA CLASS",
-        "remark": "COUNTS AS CARBS"
-      },
-      "image": "pasta",
-      "area": "centro",
-      "lat": 41.90092,
-      "lon": 12.47239,
-      "minutes": 180,
-      "open": "10:30",
-      "close": "12:30",
-      "slot": "lunch",
-      "order": 11,
-      "hud": "Pasta class",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Via+Giuseppe+Zanardelli+14+Roma"
-        }
-      ],
-      "book": "the pasta class"
-    },
-    {
-      "id": "pantheon",
-      "group": "big",
-      "title": "Pantheon",
-      "line": "When it rains outside, it rains inside.",
-      "board": {
-        "to": "PANTHEON",
-        "remark": "RAINS INSIDE"
-      },
-      "image": "pantheon-oculus",
-      "area": "centro",
-      "lat": 41.89862,
-      "lon": 12.47683,
-      "minutes": 30,
-      "open": "09:00",
-      "close": "18:30",
-      "slot": "any",
-      "order": 6,
-      "hud": "Pantheon",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Pantheon+Roma"
-        }
-      ],
-      "book": "the Pantheon"
-    },
-    {
-      "id": "caravaggio",
-      "group": "big",
-      "title": "Three Caravaggios",
-      "line": "You walk in off the street and they're hanging in a side chapel.",
-      "board": {
-        "to": "SAN LUIGI",
-        "remark": "3 CARAVAGGIOS"
-      },
-      "image": "calling-st-matthew",
-      "area": "centro",
-      "lat": 41.89958,
-      "lon": 12.47467,
-      "minutes": 20,
-      "open": "09:30",
-      "close": "18:15",
-      "slot": "any",
-      "order": 7,
-      "hud": "San Luigi",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=San+Luigi+dei+Francesi+Roma"
-        }
-      ],
-      "closedFrom": "12:45",
-      "closedTo": "14:30"
-    },
-    {
       "id": "colosseum",
-      "group": "big",
-      "title": "Colosseum floor",
-      "line": "You stand on the arena floor and look up at the empty tiers.",
+      "group": "ancient",
+      "title": "Colosseum arena floor",
+      "line": "You walk out onto the arena itself, where the fighters stood, with every tier looking down at you.",
       "board": {
         "to": "COLOSSEUM",
         "remark": "ARENA FLOOR"
       },
-      "image": "colosseum-arena",
+      "photos": [
+        "colosseum-1",
+        "colosseum-2"
+      ],
       "area": "celio",
       "lat": 41.89028,
       "lon": 12.49222,
@@ -458,18 +488,26 @@
           "url": "https://maps.google.com/?q=Colosseo+Roma"
         }
       ],
-      "book": "the Colosseum floor"
+      "book": "the Colosseum floor",
+      "serves": {
+        "ancient": 1
+      },
+      "weight": 1,
+      "price": 24
     },
     {
       "id": "domus",
-      "group": "big",
-      "title": "Nero's palace in VR",
-      "line": "Headset on, and the bare underground walls repaint themselves gold.",
+      "group": "ancient",
+      "title": "Nero's Golden House",
+      "line": "Underground rooms of Nero's palace. A VR headset shows you the same rooms as they were, painted and full of light.",
       "board": {
         "to": "DOMUS AUREA",
         "remark": "NERO IN VR"
       },
-      "image": "domus-aurea",
+      "photos": [
+        "domus-1",
+        "domus-2"
+      ],
       "area": "celio",
       "lat": 41.89139,
       "lon": 12.49528,
@@ -485,231 +523,27 @@
           "url": "https://maps.google.com/?q=Domus+Aurea+Roma"
         }
       ],
-      "book": "the Domus Aurea"
-    },
-    {
-      "id": "borghese",
-      "group": "big",
-      "title": "Bernini's marble",
-      "line": "Walk around Daphne and her marble fingertips are turning into leaves.",
-      "board": {
-        "to": "BORGHESE",
-        "remark": "MARBLE TO LEAVES"
+      "book": "the Domus Aurea",
+      "serves": {
+        "ancient": 2,
+        "wild": 4
       },
-      "image": "borghese",
-      "area": "north",
-      "lat": 41.91421,
-      "lon": 12.49214,
-      "minutes": 120,
-      "open": "09:00",
-      "close": "17:00",
-      "slot": "afternoon",
-      "order": 41,
-      "hud": "Borghese",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Galleria+Borghese+Roma"
-        }
-      ],
-      "book": "the Borghese"
-    },
-    {
-      "id": "keyhole",
-      "group": "big",
-      "title": "Keyhole and orange garden",
-      "line": "You put your eye to a keyhole and St Peter's dome is in it.",
-      "board": {
-        "to": "KEYHOLE",
-        "remark": "ST PETER'S IN IT"
-      },
-      "image": "keyhole",
-      "area": "aventine",
-      "lat": 41.884,
-      "lon": 12.479,
-      "minutes": 60,
-      "open": "09:00",
-      "close": "17:45",
-      "slot": "afternoon",
-      "order": 30,
-      "hud": "Aventine",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Giardino+degli+Aranci+Roma"
-        }
-      ]
-    },
-    {
-      "id": "sidecar",
-      "group": "big",
-      "title": "Vespa sidecar",
-      "line": "A driver takes you round the old streets in a sidecar, no walking.",
-      "board": {
-        "to": "SIDECAR",
-        "remark": "NO WALKING"
-      },
-      "image": "sidecar",
-      "area": "centro",
-      "lat": 41.899,
-      "lon": 12.4731,
-      "minutes": 90,
-      "open": "09:00",
-      "close": "18:00",
-      "slot": "any",
-      "order": 12,
-      "hud": "Sidecar",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Piazza+Navona+Roma"
-        }
-      ],
-      "book": "the sidecar",
-      "tag": "€€€"
-    },
-    {
-      "id": "ignazio",
-      "group": "weird",
-      "title": "Fake dome",
-      "line": "You stand on a marble disc and the flat ceiling turns into a dome.",
-      "board": {
-        "to": "SANT'IGNAZIO",
-        "remark": "STAND ON THE DISC"
-      },
-      "image": "sant-ignazio-ceiling",
-      "area": "centro",
-      "lat": 41.899,
-      "lon": 12.47976,
-      "minutes": 20,
-      "open": "09:00",
-      "close": "23:00",
-      "slot": "any",
-      "order": 4,
-      "hud": "Sant'Ignazio",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Chiesa+di+Sant%27Ignazio+di+Loyola+Roma"
-        }
-      ]
-    },
-    {
-      "id": "spada",
-      "group": "weird",
-      "title": "Galleria Spada",
-      "line": "A corridor that looks 35 metres long is barely nine.",
-      "board": {
-        "to": "GALLERIA SPADA",
-        "remark": "9 M, LOOKS 35"
-      },
-      "image": "galleria-spada",
-      "area": "centro",
-      "lat": 41.89435,
-      "lon": 12.472,
-      "minutes": 30,
-      "open": "08:30",
-      "close": "18:30",
-      "slot": "any",
-      "order": 8,
-      "hud": "Spada",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Galleria+Spada+Roma"
-        }
-      ]
-    },
-    {
-      "id": "largo",
-      "group": "weird",
-      "title": "Caesar's cats",
-      "line": "Where Caesar was stabbed, cats now sleep on the stones.",
-      "board": {
-        "to": "CAESAR'S CATS",
-        "remark": "IDES OF MARCH"
-      },
-      "image": "largo-argentina",
-      "area": "centro",
-      "lat": 41.89532,
-      "lon": 12.47688,
-      "minutes": 10,
-      "open": "00:00",
-      "close": "23:59",
-      "slot": "any",
-      "order": 3,
-      "hud": "Caesar's cats",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Largo+di+Torre+Argentina+Roma"
-        }
-      ]
-    },
-    {
-      "id": "capuchin",
-      "group": "weird",
-      "title": "Bone crypt",
-      "line": "Six small chapels, decorated with the bones of 3,700 friars.",
-      "board": {
-        "to": "BONE CRYPT",
-        "remark": "3,700 FRIARS"
-      },
-      "image": "capuchin-crypt",
-      "area": "north",
-      "lat": 41.90464,
-      "lon": 12.48867,
-      "minutes": 40,
-      "open": "09:30",
-      "close": "17:30",
-      "slot": "morning",
-      "order": 0,
-      "hud": "Bone crypt",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Cripta+dei+Cappuccini+Via+Veneto+27+Roma"
-        }
-      ],
-      "closedFrom": "13:30",
-      "closedTo": "14:30"
-    },
-    {
-      "id": "montemartini",
-      "group": "weird",
-      "title": "Statues in a power station",
-      "line": "Marble gods stand between diesel engines, and nobody else is there.",
-      "board": {
-        "to": "MONTEMARTINI",
-        "remark": "USUALLY EMPTY"
-      },
-      "image": "montemartini",
-      "area": "ostiense",
-      "lat": 41.86703,
-      "lon": 12.47899,
-      "minutes": 60,
-      "open": "09:00",
-      "close": "18:00",
-      "slot": "afternoon",
-      "order": 22,
-      "hud": "Montemartini",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Centrale+Montemartini+Roma"
-        }
-      ]
+      "weight": 1,
+      "price": 26
     },
     {
       "id": "clemente",
-      "group": "weird",
-      "title": "Three churches down",
-      "line": "Two staircases down, 2,000 years back, and you hear water running.",
+      "group": "ancient",
+      "title": "San Clemente",
+      "line": "Two staircases down under a church: a Roman house, a temple of a secret cult, and water running somewhere below.",
       "board": {
         "to": "SAN CLEMENTE",
-        "remark": "WATER UNDERNEATH"
+        "remark": "2 FLOORS DOWN"
       },
-      "image": "san-clemente",
+      "photos": [
+        "san-clemente",
+        "clemente-2"
+      ],
       "area": "celio",
       "lat": 41.8892,
       "lon": 12.49754,
@@ -727,96 +561,486 @@
       ],
       "closedFrom": "12:00",
       "closedTo": "14:00",
-      "book": "San Clemente"
+      "book": "San Clemente",
+      "serves": {
+        "ancient": 3,
+        "odd": 4
+      },
+      "weight": 1,
+      "price": 10
     },
     {
-      "id": "coppede",
-      "group": "weird",
-      "title": "Coppedè",
-      "line": "An iron chandelier hangs from an arch, and the fountain is all frogs.",
+      "id": "pantheon",
+      "group": "ancient",
+      "title": "Pantheon",
+      "line": "A 1,900-year-old dome with an open hole at the top. Stand in the middle and look up.",
       "board": {
-        "to": "COPPEDE",
-        "remark": "FROG FOUNTAIN"
+        "to": "PANTHEON",
+        "remark": "HOLE IN THE ROOF"
       },
-      "image": "coppede",
-      "area": "trieste",
-      "lat": 41.91872,
-      "lon": 12.50239,
+      "photos": [
+        "pantheon-1",
+        "pantheon-2"
+      ],
+      "area": "centro",
+      "lat": 41.89862,
+      "lon": 12.47683,
+      "minutes": 30,
+      "open": "09:00",
+      "close": "18:30",
+      "slot": "any",
+      "order": 6,
+      "hud": "Pantheon",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Pantheon+Roma"
+        }
+      ],
+      "book": "the Pantheon",
+      "serves": {
+        "ancient": 5,
+        "art": 3
+      },
+      "weight": 0.5,
+      "price": 7
+    },
+    {
+      "id": "castel",
+      "group": "view",
+      "title": "Castel Sant'Angelo",
+      "line": "An emperor's tomb turned fortress. A long ramp and some stairs take you up to the terrace, St Peter's dead ahead.",
+      "board": {
+        "to": "CASTEL SANT'ANGELO",
+        "remark": "ANGEL ON THE ROOF"
+      },
+      "photos": [
+        "castel-1",
+        "castel-2"
+      ],
+      "area": "borgo",
+      "lat": 41.90312,
+      "lon": 12.46634,
+      "minutes": 90,
+      "open": "09:00",
+      "close": "18:30",
+      "slot": "any",
+      "order": 13,
+      "hud": "Castel Sant'Angelo",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Castel+Sant%27Angelo+Roma"
+        }
+      ],
+      "book": "Castel Sant'Angelo",
+      "price": "€18, or €2 if you're 18 to 25",
+      "serves": {
+        "view": 2,
+        "ancient": 7
+      },
+      "weight": 1
+    },
+    {
+      "id": "vittoriano",
+      "group": "view",
+      "title": "Vittoriano roof",
+      "line": "A glass lift to the top of the big white monument. All of Rome around you, the Forum right below.",
+      "board": {
+        "to": "VITTORIANO ROOF",
+        "remark": "SUNSET 18:29"
+      },
+      "photos": [
+        "vittoriano-1",
+        "vittoriano-2"
+      ],
+      "area": "venezia",
+      "lat": 41.89424,
+      "lon": 12.48311,
+      "minutes": 60,
+      "open": "09:30",
+      "close": "18:45",
+      "slot": "sunset",
+      "order": 50,
+      "hud": "Vittoriano",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Vittoriano+Roma"
+        }
+      ],
+      "book": "the Vittoriano roof",
+      "serves": {
+        "view": 1
+      },
+      "weight": 1,
+      "price": 18
+    },
+    {
+      "id": "keyhole",
+      "group": "view",
+      "title": "Aventine keyhole",
+      "line": "Look through a keyhole and St Peter's dome is framed in it. Next door, a terrace of orange trees over the river.",
+      "board": {
+        "to": "KEYHOLE",
+        "remark": "ST PETER'S IN IT"
+      },
+      "photos": [
+        "keyhole",
+        "orange-garden"
+      ],
+      "area": "aventine",
+      "lat": 41.884,
+      "lon": 12.479,
+      "minutes": 60,
+      "open": "09:00",
+      "close": "17:45",
+      "slot": "any",
+      "order": 30,
+      "hud": "Aventine",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Giardino+degli+Aranci+Roma"
+        }
+      ],
+      "serves": {
+        "view": 3,
+        "wander:aventine": 1
+      },
+      "weight": 1,
+      "price": 0
+    },
+    {
+      "id": "pincio",
+      "group": "view",
+      "title": "Pincio at sunset",
+      "line": "A free terrace above Piazza del Popolo. The sun goes down just right of St Peter's dome.",
+      "board": {
+        "to": "PINCIO",
+        "remark": "SUNSET 18:29"
+      },
+      "photos": [
+        "pincio-sunset",
+        "pincio-2"
+      ],
+      "area": "north",
+      "lat": 41.91128,
+      "lon": 12.47855,
       "minutes": 45,
       "open": "00:00",
       "close": "23:59",
-      "slot": "afternoon",
-      "order": 40,
-      "hud": "Coppedè",
+      "slot": "sunset",
+      "order": 51,
+      "hud": "Pincio",
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Piazza+Mincio+Roma"
+          "url": "https://maps.google.com/?q=Terrazza+del+Pincio+Roma"
         }
-      ]
+      ],
+      "serves": {
+        "view": 4
+      },
+      "weight": 1,
+      "price": 0
     },
     {
-      "id": "trastevere",
-      "group": "slow",
-      "title": "Trastevere",
-      "line": "Small streets across the river, and you turn wherever looks better.",
+      "id": "vicus",
+      "group": "odd",
+      "title": "Under the Trevi",
+      "line": "Stairs down from an old cinema to a Roman house, where the water that feeds the Trevi still runs past.",
       "board": {
-        "to": "TRASTEVERE",
-        "remark": "NO PLAN"
+        "to": "VICUS CAPRARIUS",
+        "remark": "TREVI'S WATER"
       },
-      "image": "trastevere",
-      "area": "trastevere",
-      "lat": 41.88956,
-      "lon": 12.47051,
-      "minutes": 60,
+      "photos": [
+        "vicus-1",
+        "vicus-2"
+      ],
+      "area": "centro",
+      "lat": 41.9004,
+      "lon": 12.48415,
+      "minutes": 30,
+      "open": "11:00",
+      "close": "16:30",
+      "slot": "any",
+      "order": 5,
+      "hud": "Vicus Caprarius",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Vicus+Caprarius+Roma"
+        }
+      ],
+      "book": "Vicus Caprarius",
+      "price": 4,
+      "serves": {
+        "odd": 2,
+        "ancient": 6
+      },
+      "weight": 0.5
+    },
+    {
+      "id": "largo",
+      "group": "odd",
+      "title": "Caesar's cats",
+      "line": "The ruins where Caesar was stabbed are a cat sanctuary now. They sleep on the old stones.",
+      "board": {
+        "to": "CAESAR'S CATS",
+        "remark": "IDES OF MARCH"
+      },
+      "photos": [
+        "largo-1",
+        "largo-2"
+      ],
+      "area": "centro",
+      "lat": 41.89532,
+      "lon": 12.47688,
+      "minutes": 10,
       "open": "00:00",
       "close": "23:59",
       "slot": "any",
-      "order": 15,
-      "hud": "Trastevere",
+      "order": 3,
+      "hud": "Caesar's cats",
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Piazza+di+Santa+Maria+in+Trastevere+Roma"
+          "url": "https://maps.google.com/?q=Largo+di+Torre+Argentina+Roma"
         }
-      ]
+      ],
+      "serves": {
+        "odd": 7,
+        "ancient": 8
+      },
+      "weight": 0.5,
+      "price": 0
     },
     {
-      "id": "centre",
-      "group": "slow",
-      "title": "Old centre",
-      "line": "Navona to Campo de' Fiori, by the streets in between.",
+      "id": "capuchin",
+      "group": "odd",
+      "title": "Bone crypt",
+      "line": "Six small rooms decorated with the bones of 3,700 friars, down to the chandeliers.",
       "board": {
-        "to": "OLD CENTRE",
-        "remark": "NAVONA TO CAMPO"
+        "to": "BONE CRYPT",
+        "remark": "3,700 FRIARS"
       },
-      "image": "navona",
+      "photos": [
+        "capuchin-crypt",
+        "capuchin-2"
+      ],
+      "area": "north",
+      "lat": 41.90464,
+      "lon": 12.48867,
+      "minutes": 40,
+      "open": "09:30",
+      "close": "17:30",
+      "slot": "morning",
+      "order": 0,
+      "hud": "Bone crypt",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Cripta+dei+Cappuccini+Via+Veneto+27+Roma"
+        }
+      ],
+      "closedFrom": "13:30",
+      "closedTo": "14:30",
+      "serves": {
+        "odd": 1
+      },
+      "weight": 1,
+      "price": 10
+    },
+    {
+      "id": "coronati",
+      "group": "odd",
+      "title": "The nuns' bell",
+      "line": "Ring a bell at a convent window and a nun hands you the key to a chapel painted in 1246, like a comic strip.",
+      "board": {
+        "to": "SANTI QUATTRO",
+        "remark": "RING THE BELL"
+      },
+      "photos": [
+        "coronati-1",
+        "coronati-2"
+      ],
+      "area": "celio",
+      "lat": 41.88814,
+      "lon": 12.49904,
+      "minutes": 30,
+      "open": "09:30",
+      "close": "11:45",
+      "slot": "morning",
+      "order": 0.5,
+      "hud": "Santi Quattro",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Santi+Quattro+Coronati+Roma"
+        }
+      ],
+      "price": "around €2, an offering",
+      "serves": {
+        "odd": 3,
+        "wild": 6
+      },
+      "weight": 0.5
+    },
+    {
+      "id": "spada",
+      "group": "odd",
+      "title": "The trick corridor",
+      "line": "A corridor that looks 35 metres long is about nine. Walk to the end and the statue is tiny.",
+      "board": {
+        "to": "GALLERIA SPADA",
+        "remark": "9 M, LOOKS 35"
+      },
+      "photos": [
+        "galleria-spada",
+        "spada-2"
+      ],
+      "area": "centro",
+      "lat": 41.89435,
+      "lon": 12.472,
+      "minutes": 30,
+      "open": "08:30",
+      "close": "18:30",
+      "slot": "any",
+      "order": 8,
+      "hud": "Spada",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Galleria+Spada+Roma"
+        }
+      ],
+      "serves": {
+        "odd": 5,
+        "art": 5
+      },
+      "weight": 0.5,
+      "price": 6
+    },
+    {
+      "id": "ignazio",
+      "group": "odd",
+      "title": "The fake dome",
+      "line": "The church never got its dome, so a painter faked one on the flat ceiling. From the marble disc it looks real.",
+      "board": {
+        "to": "SANT'IGNAZIO",
+        "remark": "FAKE DOME"
+      },
+      "photos": [
+        "ignazio-1",
+        "sant-ignazio-ceiling"
+      ],
       "area": "centro",
       "lat": 41.899,
-      "lon": 12.4731,
-      "minutes": 45,
-      "open": "00:00",
-      "close": "23:59",
+      "lon": 12.47976,
+      "minutes": 20,
+      "open": "09:00",
+      "close": "23:00",
       "slot": "any",
-      "order": 9,
-      "hud": "Old centre",
+      "order": 4,
+      "hud": "Sant'Ignazio",
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Piazza+Navona+Roma"
+          "url": "https://maps.google.com/?q=Chiesa+di+Sant%27Ignazio+di+Loyola+Roma"
         }
-      ]
+      ],
+      "serves": {
+        "odd": 6,
+        "art": 4
+      },
+      "weight": 0.5,
+      "price": 0
+    },
+    {
+      "id": "gesu",
+      "group": "odd",
+      "title": "The 17:30 machine",
+      "line": "A 17th-century machine lowers a huge painting into the floor, with music, and a silver statue appears behind it.",
+      "board": {
+        "to": "GESU",
+        "remark": "PAINTING SINKS"
+      },
+      "photos": [
+        "gesu-1",
+        "gesu-2"
+      ],
+      "area": "centro",
+      "lat": 41.89588,
+      "lon": 12.47982,
+      "minutes": 15,
+      "open": "17:00",
+      "close": "17:30",
+      "slot": "fixed",
+      "at": "17:30",
+      "order": 49,
+      "hud": "Gesù",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Chiesa+del+Gesu+Roma"
+        }
+      ],
+      "tag": "17:30 sharp",
+      "price": 0,
+      "serves": {
+        "odd": 8
+      },
+      "weight": 0.5
+    },
+    {
+      "id": "montemartini",
+      "group": "odd",
+      "title": "Statues in a power plant",
+      "line": "Roman marble gods stand between giant black engines in an old power station, and it's usually empty.",
+      "board": {
+        "to": "MONTEMARTINI",
+        "remark": "USUALLY EMPTY"
+      },
+      "photos": [
+        "montemartini",
+        "montemartini-2"
+      ],
+      "area": "ostiense",
+      "lat": 41.86703,
+      "lon": 12.47899,
+      "minutes": 60,
+      "open": "09:00",
+      "close": "18:00",
+      "slot": "afternoon",
+      "order": 22,
+      "hud": "Montemartini",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Centrale+Montemartini+Roma"
+        }
+      ],
+      "serves": {
+        "odd": 9,
+        "art": 6
+      },
+      "weight": 1,
+      "price": 11
     },
     {
       "id": "cemetery",
-      "group": "slow",
+      "group": "odd",
       "title": "Pyramid and Keats",
-      "line": "Keats is buried in a quiet garden behind a real pyramid.",
+      "line": "A quiet garden cemetery behind a real Roman pyramid. Keats is buried here.",
       "board": {
         "to": "PYRAMID",
         "remark": "KEATS IS HERE"
       },
-      "image": "cemetery-pyramid",
+      "photos": [
+        "cemetery-pyramid",
+        "cemetery-2"
+      ],
       "area": "testaccio",
       "lat": 41.87636,
       "lon": 12.47944,
@@ -831,18 +1055,401 @@
           "label": "Map",
           "url": "https://maps.google.com/?q=Cimitero+Acattolico+Roma"
         }
-      ]
+      ],
+      "serves": {
+        "odd": 11
+      },
+      "weight": 1
+    },
+    {
+      "id": "borghese",
+      "group": "art",
+      "title": "Bernini at the Borghese",
+      "line": "Marble that looks soft: Daphne's fingers turning into leaves, David biting his lip mid-throw.",
+      "board": {
+        "to": "BORGHESE",
+        "remark": "MARBLE TO LEAVES"
+      },
+      "photos": [
+        "borghese",
+        "borghese-2"
+      ],
+      "area": "north",
+      "lat": 41.91421,
+      "lon": 12.49214,
+      "minutes": 120,
+      "open": "09:00",
+      "close": "17:00",
+      "slot": "any",
+      "order": 41,
+      "hud": "Borghese",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Galleria+Borghese+Roma"
+        }
+      ],
+      "book": "the Borghese",
+      "serves": {
+        "art": 1
+      },
+      "weight": 1,
+      "price": 18
+    },
+    {
+      "id": "caravaggio",
+      "group": "art",
+      "title": "Three Caravaggios",
+      "line": "Walk in off a street near the Pantheon and three Caravaggios hang in a side chapel.",
+      "board": {
+        "to": "SAN LUIGI",
+        "remark": "3 CARAVAGGIOS"
+      },
+      "photos": [
+        "caravaggio-1",
+        "calling-st-matthew"
+      ],
+      "area": "centro",
+      "lat": 41.89958,
+      "lon": 12.47467,
+      "minutes": 20,
+      "open": "09:30",
+      "close": "18:15",
+      "slot": "any",
+      "order": 7,
+      "hud": "San Luigi",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=San+Luigi+dei+Francesi+Roma"
+        }
+      ],
+      "closedFrom": "12:45",
+      "closedTo": "14:30",
+      "serves": {
+        "art": 2
+      },
+      "weight": 0.5,
+      "price": 0
+    },
+    {
+      "id": "trevi",
+      "group": "also",
+      "title": "Trevi Fountain",
+      "line": "The steps down to the basin are ticketed now, so it's calmer and you can get right up to the water.",
+      "board": {
+        "to": "TREVI FOUNTAIN",
+        "remark": "COIN OVER SHOULDER"
+      },
+      "photos": [
+        "trevi-1",
+        "trevi-2"
+      ],
+      "area": "centro",
+      "lat": 41.90098,
+      "lon": 12.48328,
+      "minutes": 15,
+      "open": "11:30",
+      "close": "21:30",
+      "slot": "any",
+      "order": 5,
+      "hud": "Trevi",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Fontana+di+Trevi+Roma"
+        }
+      ],
+      "price": 2,
+      "weight": 0.5,
+      "tag": "Card only"
+    },
+    {
+      "id": "maritozzo",
+      "group": "food",
+      "title": "Maritozzo",
+      "line": "Rome's breakfast pastry: a soft bun split open and filled with cream.",
+      "board": {
+        "to": "MARITOZZO",
+        "remark": "CREAM TO ORDER"
+      },
+      "photos": [
+        "maritozzo",
+        "maritozzo-2"
+      ],
+      "area": "centro",
+      "lat": 41.89415,
+      "lon": 12.47443,
+      "minutes": 25,
+      "open": "07:00",
+      "close": "18:00",
+      "slot": "morning",
+      "order": -1,
+      "hud": "Breakfast",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Roscioli+Caff%C3%A8+Pasticceria+Piazza+Benedetto+Cairoli+16+Roma"
+        }
+      ],
+      "serves": {
+        "pastry": 1
+      },
+      "weight": 0
+    },
+    {
+      "id": "boccione",
+      "group": "food",
+      "title": "Boccione",
+      "line": "A tiny bakery in the Ghetto with no sign. Get the burnt-top fruit cake and the sour cherry tart.",
+      "board": {
+        "to": "BOCCIONE",
+        "remark": "SOUR CHERRY TART"
+      },
+      "photos": [
+        "boccione-1",
+        "boccione-2"
+      ],
+      "area": "centro",
+      "lat": 41.89323,
+      "lon": 12.47691,
+      "minutes": 15,
+      "open": "08:00",
+      "close": "12:00",
+      "slot": "morning",
+      "order": -0.5,
+      "hud": "Boccione",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Pasticceria+Boccione+Via+del+Portico+d%27Ottavia+1+Roma"
+        }
+      ],
+      "serves": {
+        "pastry": 2
+      },
+      "weight": 0
+    },
+    {
+      "id": "innocenti",
+      "group": "food",
+      "title": "Biscuit bakery",
+      "line": "An old Trastevere bakery with a 15-metre oven. The trays come straight out to the counter.",
+      "board": {
+        "to": "INNOCENTI",
+        "remark": "15 M OVEN"
+      },
+      "photos": [
+        "innocenti-1",
+        "innocenti-2"
+      ],
+      "area": "trastevere",
+      "lat": 41.88856,
+      "lon": 12.47532,
+      "minutes": 15,
+      "open": "08:00",
+      "close": "19:30",
+      "slot": "any",
+      "order": 16,
+      "hud": "Innocenti",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Biscottificio+Innocenti+Via+della+Luce+21+Roma"
+        }
+      ],
+      "serves": {
+        "pastry": 3
+      },
+      "weight": 0
+    },
+    {
+      "id": "market",
+      "group": "food",
+      "title": "Testaccio market",
+      "line": "A neighbourhood market full of food stalls. The beef sandwich drips, so everyone eats standing up.",
+      "board": {
+        "to": "TESTACCIO MARKET",
+        "remark": "CASH ONLY"
+      },
+      "photos": [
+        "market-1",
+        "market-2"
+      ],
+      "area": "testaccio",
+      "lat": 41.8776,
+      "lon": 12.47358,
+      "minutes": 50,
+      "open": "12:00",
+      "close": "14:30",
+      "slot": "lunch",
+      "order": 20,
+      "hud": "Testaccio",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Nuovo+Mercato+di+Testaccio+Roma"
+        }
+      ],
+      "tag": "Bring cash",
+      "serves": {
+        "street": 1
+      },
+      "weight": 0
+    },
+    {
+      "id": "suppli",
+      "group": "food",
+      "title": "Supplì",
+      "line": "Fried rice balls with mozzarella inside. Break one open and the cheese stretches like a phone cord.",
+      "board": {
+        "to": "SUPPLI",
+        "remark": "MOZZARELLA STRING"
+      },
+      "photos": [
+        "suppli-1",
+        "suppli-2"
+      ],
+      "area": "centro",
+      "lat": 41.89745,
+      "lon": 12.46789,
+      "minutes": 30,
+      "open": "12:00",
+      "close": "21:00",
+      "closedFrom": "15:00",
+      "closedTo": "17:00",
+      "slot": "any",
+      "order": 10,
+      "hud": "Supplì",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Supplizio+Via+dei+Banchi+Vecchi+143+Roma"
+        }
+      ],
+      "serves": {
+        "street": 2
+      },
+      "weight": 0
+    },
+    {
+      "id": "fortunata",
+      "group": "food",
+      "title": "Lunch at Fortunata",
+      "line": "Women roll and cut pasta by hand in the front window. Ten minutes later it's on your plate.",
+      "board": {
+        "to": "DA FORTUNATA",
+        "remark": "ROLLED IN WINDOW"
+      },
+      "photos": [
+        "fortunata-1",
+        "fortunata-2"
+      ],
+      "area": "centro",
+      "lat": 41.89611,
+      "lon": 12.4717,
+      "minutes": 75,
+      "open": "12:00",
+      "close": "14:30",
+      "slot": "lunch",
+      "order": 10,
+      "hud": "Fortunata",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Da+Fortunata+Via+del+Pellegrino+11+Roma"
+        }
+      ],
+      "book": "lunch at Fortunata",
+      "price": "around €25",
+      "serves": {
+        "lunch": 1
+      },
+      "weight": 0
+    },
+    {
+      "id": "flavio",
+      "group": "food",
+      "title": "Lunch in a hill of pots",
+      "line": "A trattoria dug into a hill made of broken Roman jars. Ask for the inside room and they're behind glass by your table.",
+      "board": {
+        "to": "FLAVIO",
+        "remark": "ROMAN POTS"
+      },
+      "photos": [
+        "flavio-1",
+        "flavio-2"
+      ],
+      "area": "testaccio",
+      "lat": 41.87663,
+      "lon": 12.47609,
+      "minutes": 75,
+      "open": "12:30",
+      "close": "14:30",
+      "slot": "lunch",
+      "order": 20,
+      "hud": "Flavio",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Flavio+al+Velavevodetto+Roma"
+        }
+      ],
+      "book": "lunch at Flavio",
+      "price": "around €30",
+      "serves": {
+        "lunch": 2
+      },
+      "weight": 0
+    },
+    {
+      "id": "pasta",
+      "group": "food",
+      "title": "Pasta class",
+      "line": "Roll and cut fettuccine by hand with a chef, then sit down and eat what you made. In English.",
+      "board": {
+        "to": "PASTA CLASS",
+        "remark": "COUNTS AS CARBS"
+      },
+      "photos": [
+        "pasta",
+        "pasta-2"
+      ],
+      "area": "centro",
+      "lat": 41.90092,
+      "lon": 12.47239,
+      "minutes": 180,
+      "open": "10:30",
+      "close": "12:30",
+      "slot": "lunch",
+      "order": 11,
+      "hud": "Pasta class",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Via+Giuseppe+Zanardelli+14+Roma"
+        }
+      ],
+      "book": "the pasta class",
+      "serves": {
+        "class": 1
+      },
+      "weight": 1,
+      "price": 42
     },
     {
       "id": "acquedotti",
-      "group": "slow",
+      "group": "wander",
       "title": "Aqueduct park",
-      "line": "Roman arches 28 metres tall stand in a field where locals go running.",
+      "line": "Roman aqueduct arches nearly 28 metres tall, standing in a field where locals run and walk their dogs.",
       "board": {
         "to": "AQUEDUCTS",
         "remark": "LOCALS RUN HERE"
       },
-      "image": "acquedotti",
+      "photos": [
+        "acquedotti-1",
+        "acquedotti-2"
+      ],
       "area": "acquedotti",
       "lat": 41.8468,
       "lon": 12.5602,
@@ -857,18 +1464,164 @@
           "label": "Map",
           "url": "https://maps.google.com/?q=Parco+degli+Acquedotti+Via+Lemonia+Roma"
         }
-      ]
+      ],
+      "serves": {
+        "wander:acquedotti": 1,
+        "view": 6
+      },
+      "weight": 1,
+      "price": 0
+    },
+    {
+      "id": "coppede",
+      "group": "wander",
+      "title": "Coppedè",
+      "line": "A few streets most people never see. An iron chandelier hangs in a stone arch, and the fountain is all frogs.",
+      "board": {
+        "to": "COPPEDE",
+        "remark": "FROG FOUNTAIN"
+      },
+      "photos": [
+        "coppede-1",
+        "coppede-2"
+      ],
+      "area": "trieste",
+      "lat": 41.91872,
+      "lon": 12.50239,
+      "minutes": 45,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "any",
+      "order": 40,
+      "hud": "Coppedè",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Piazza+Mincio+Roma"
+        }
+      ],
+      "serves": {
+        "wander:coppede": 1,
+        "odd": 10
+      },
+      "weight": 1,
+      "price": 0
+    },
+    {
+      "id": "trastevere",
+      "group": "wander",
+      "title": "Trastevere",
+      "line": "Small ivy-covered streets across the river. No plan, you turn wherever looks better.",
+      "board": {
+        "to": "TRASTEVERE",
+        "remark": "NO PLAN"
+      },
+      "photos": [
+        "trastevere-1",
+        "trastevere-2"
+      ],
+      "area": "trastevere",
+      "lat": 41.88956,
+      "lon": 12.47051,
+      "minutes": 60,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "any",
+      "order": 15,
+      "hud": "Trastevere",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Piazza+di+Santa+Maria+in+Trastevere+Roma"
+        }
+      ],
+      "serves": {
+        "wander:trastevere": 1
+      },
+      "weight": 1,
+      "price": 0
+    },
+    {
+      "id": "centre",
+      "group": "wander",
+      "title": "The old centre",
+      "line": "Piazza Navona to Campo de' Fiori through the small streets in between, past the Pantheon.",
+      "board": {
+        "to": "OLD CENTRE",
+        "remark": "NAVONA TO CAMPO"
+      },
+      "photos": [
+        "centre-1",
+        "centre-2"
+      ],
+      "area": "centro",
+      "lat": 41.899,
+      "lon": 12.4731,
+      "minutes": 45,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "any",
+      "order": 9,
+      "hud": "Old centre",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Piazza+Navona+Roma"
+        }
+      ],
+      "serves": {
+        "wander:centre": 1
+      },
+      "weight": 1,
+      "price": 0
+    },
+    {
+      "id": "monti",
+      "group": "wander",
+      "title": "Monti",
+      "line": "The neighbourhood above the Colosseum: a tiny chapel covered in gold mosaic, a fountain square, vintage shops.",
+      "board": {
+        "to": "MONTI",
+        "remark": "GOLD CHAPEL"
+      },
+      "photos": [
+        "monti-1",
+        "monti-2"
+      ],
+      "area": "monti",
+      "lat": 41.8949,
+      "lon": 12.49088,
+      "minutes": 75,
+      "open": "16:00",
+      "close": "17:15",
+      "slot": "afternoon",
+      "order": 38,
+      "hud": "Monti",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Basilica+di+Santa+Prassede+Roma"
+        }
+      ],
+      "price": 0,
+      "serves": {
+        "wander:monti": 1
+      },
+      "weight": 1
     },
     {
       "id": "appia",
-      "group": "slow",
+      "group": "wander",
       "title": "Appian Way by e-bike",
-      "line": "E-bikes down a 2,300-year-old road with pine trees on both sides.",
+      "line": "E-bikes down a 2,300-year-old Roman road, past tombs and pine trees. Flat, and the bike does the work.",
       "board": {
         "to": "APPIA ANTICA",
         "remark": "E-BIKES"
       },
-      "image": "appia",
+      "photos": [
+        "appia-1",
+        "appia-2"
+      ],
       "area": "appia",
       "lat": 41.86683,
       "lon": 12.50295,
@@ -883,18 +1636,63 @@
           "label": "Map",
           "url": "https://maps.google.com/?q=EcoBike+Via+Appia+Antica+58+Roma"
         }
-      ]
+      ],
+      "serves": {
+        "wander:appia": 1
+      },
+      "weight": 1,
+      "price": 16
+    },
+    {
+      "id": "circovr",
+      "group": "wild",
+      "title": "Chariot race in VR",
+      "line": "On the real Circus Maximus track, a headset rebuilds the stands and a chariot race goes past you.",
+      "board": {
+        "to": "CIRCO MAXIMO VR",
+        "remark": "CHARIOTS PASS BY"
+      },
+      "photos": [
+        "circovr-2",
+        "circovr-1"
+      ],
+      "area": "circo",
+      "lat": 41.88466,
+      "lon": 12.4883,
+      "minutes": 55,
+      "open": "10:00",
+      "close": "14:50",
+      "slot": "any",
+      "order": 31,
+      "hud": "Circus VR",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Circo+Maximo+Experience+Viale+Aventino+Roma"
+        }
+      ],
+      "book": "the Circus Maximus VR",
+      "tag": "Outdoors, rain cancels",
+      "price": 12,
+      "serves": {
+        "wild": 2,
+        "ancient": 4
+      },
+      "weight": 1
     },
     {
       "id": "cannon",
-      "group": "clock",
+      "group": "wild",
       "title": "Noon cannon",
-      "line": "A cannon fires over the city at noon, and it's loud.",
+      "line": "A cannon fires below the Gianicolo terrace at noon. Loud, and the view of Rome is free.",
       "board": {
         "to": "NOON CANNON",
         "remark": "EXACTLY. LOUD."
       },
-      "image": "cannon",
+      "photos": [
+        "cannon",
+        "cannon-2"
+      ],
       "area": "gianicolo",
       "lat": 41.89142,
       "lon": 12.46078,
@@ -911,71 +1709,59 @@
         }
       ],
       "at": "12:00",
-      "tag": "12:00 sharp"
+      "tag": "12:00 sharp",
+      "serves": {
+        "wild": 5,
+        "view": 5
+      },
+      "weight": 0.5,
+      "price": 0
     },
     {
-      "id": "vittoriano",
-      "group": "clock",
-      "title": "Vittoriano roof",
-      "line": "A glass lift to the roof, and the sun goes down at 18:29.",
+      "id": "sidecar",
+      "group": "also",
+      "title": "Vespa sidecar",
+      "line": "A driver takes you through the old streets in a vintage Vespa sidecar. You just sit and look.",
       "board": {
-        "to": "VITTORIANO ROOF",
-        "remark": "SUNSET 18:29"
+        "to": "SIDECAR",
+        "remark": "NO WALKING"
       },
-      "image": "hero-rome",
-      "area": "venezia",
-      "lat": 41.89424,
-      "lon": 12.48311,
-      "minutes": 60,
-      "open": "09:30",
-      "close": "18:45",
-      "slot": "sunset",
-      "order": 50,
-      "hud": "Vittoriano",
+      "photos": [
+        "sidecar",
+        "sidecar-2"
+      ],
+      "area": "centro",
+      "lat": 41.899,
+      "lon": 12.4731,
+      "minutes": 90,
+      "open": "09:00",
+      "close": "18:00",
+      "slot": "any",
+      "order": 12,
+      "hud": "Sidecar",
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Vittoriano+Roma"
+          "url": "https://maps.google.com/?q=Piazza+Navona+Roma"
         }
       ],
-      "book": "the Vittoriano roof"
-    },
-    {
-      "id": "pincio",
-      "group": "clock",
-      "title": "Pincio sunset",
-      "line": "From the terrace, the sun goes down just right of St Peter's.",
-      "board": {
-        "to": "PINCIO",
-        "remark": "SUNSET 18:29"
-      },
-      "image": "pincio-sunset",
-      "area": "north",
-      "lat": 41.91128,
-      "lon": 12.47855,
-      "minutes": 45,
-      "open": "00:00",
-      "close": "23:59",
-      "slot": "sunset",
-      "order": 51,
-      "hud": "Pincio",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Terrazza+del+Pincio+Roma"
-        }
-      ]
+      "book": "the sidecar",
+      "weight": 1,
+      "price": "€106 each"
     },
     {
       "id": "filmfest",
-      "group": "clock",
+      "group": "wild",
       "title": "Film Fest red carpet",
-      "line": "Free seats on the steps while the evening premiere walks in.",
+      "line": "The Rome Film Fest is on. Free seats in the open-air Cavea while the evening premiere walks the red carpet below.",
       "board": {
         "to": "FILM FEST",
         "remark": "RED CARPET"
       },
-      "image": "film-fest",
+      "photos": [
+        "filmfest-1",
+        "filmfest-2"
+      ],
       "area": "flaminio",
       "lat": 41.92919,
       "lon": 12.47513,
@@ -991,60 +1777,48 @@
           "url": "https://maps.google.com/?q=Auditorium+Parco+della+Musica+Roma"
         }
       ],
-      "slotTakenRemark": "RED CARPET OR SUN"
+      "slotTakenRemark": "RED CARPET OR SUN",
+      "serves": {
+        "wild": 3
+      },
+      "weight": 1,
+      "price": 0,
+      "tileSub": "Free seats, evening premiere"
     },
     {
-      "id": "bibs",
-      "group": "race",
-      "title": "Our bibs",
-      "line": "The expo is next to Eataly, or we go on Saturday.",
+      "id": "circusjog",
+      "group": "wild",
+      "title": "A lap of the Circus Maximus",
+      "line": "One easy shakeout lap of the old chariot track, about 1.5 km, with the Palatine ruins above you.",
       "board": {
-        "to": "BIBS",
-        "remark": "EXPO, OR SATURDAY"
+        "to": "CIRCUS MAXIMUS",
+        "remark": "EASY PACE ONLY"
       },
-      "image": "expo-run",
-      "area": "ostiense",
-      "lat": 41.87124,
-      "lon": 12.48664,
-      "minutes": 40,
-      "open": "09:00",
-      "close": "18:30",
-      "slot": "afternoon",
-      "order": 23,
-      "hud": "Bibs",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Piazzale+XII+Ottobre+1492+Roma"
-        }
+      "photos": [
+        "circusjog-1",
+        "circusjog-2"
       ],
-      "default": true
-    },
-    {
-      "id": "finish",
-      "group": "race",
-      "title": "Sunday's finish line",
-      "line": "You stand where Sunday ends, with the Colosseum filling the street.",
-      "board": {
-        "to": "FINISH LINE",
-        "remark": "SUNDAY, KM 21.1"
-      },
-      "image": "finish-line",
-      "area": "monti",
-      "lat": 41.89343,
-      "lon": 12.49128,
-      "minutes": 15,
+      "area": "circo",
+      "lat": 41.88616,
+      "lon": 12.48531,
+      "minutes": 30,
       "open": "00:00",
       "close": "23:59",
-      "slot": "predinner",
-      "order": 60,
-      "hud": "Finish line",
+      "slot": "afternoon",
+      "order": 32,
+      "hud": "Circus Maximus",
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Via+degli+Annibaldi+Roma"
+          "url": "https://maps.google.com/?q=Circo+Massimo+Roma"
         }
-      ]
+      ],
+      "tag": "Running shoes",
+      "price": 0,
+      "serves": {
+        "wild": 6
+      },
+      "weight": 0.5
     }
   ],
   "areas": [
@@ -1061,7 +1835,9 @@
     "trieste",
     "flaminio",
     "venezia",
-    "monti"
+    "monti",
+    "borgo",
+    "circo"
   ],
   "transfers": [
     {
@@ -1228,7 +2004,6 @@
   ],
   "bring": [
     "ID",
-    "Your race letter, printed",
     "A light layer",
     "A water bottle"
   ],
@@ -1239,7 +2014,7 @@
     "pageTitle": "Friday in Rome",
     "ogTitle": "Friday in Rome",
     "ogImageAlt": "An arrivals split-flap board above the word Friday",
-    "noscript": "This page needs JavaScript to show the picker.",
+    "noscript": "This page needs JavaScript.",
     "nav": {
       "label": "Jump to a section",
       "pick": "Pick",
@@ -1248,11 +2023,12 @@
     "hud": {
       "label": "Day progress",
       "note": "Hi",
-      "pick": "Pick",
-      "day": "Details",
+      "ask": "Questions",
+      "dep": "Departures",
+      "day": "Your Friday",
+      "send": "Send",
       "map": "Map",
-      "bring": "Bring",
-      "dep": "Departures"
+      "bring": "Bring"
     },
     "noteTitle": "A note from Felix",
     "mapTitle": "On the map",
@@ -1331,8 +2107,6 @@
       }
     },
     "boardHit": "{time}, {to}. Show details",
-    "pickedAt": "Picked, {time}",
-    "pickedDrop": "Picked, doesn't fit",
     "listJoinLast": " and "
   },
   "departures": {
@@ -1442,7 +2216,9 @@
         "closedGap": "SHUT {from}-{to}",
         "sunsetTaken": "ONE SUNSET A DAY",
         "lunchTaken": "LUNCH IS SORTED",
-        "noTime": "NO TIME LEFT"
+        "noTime": "NO TIME LEFT",
+        "standby": "STANDBY",
+        "parked": "NO ROOM TODAY"
       }
     },
     "secondBreakfast": "SECOND BREAKFAST",
