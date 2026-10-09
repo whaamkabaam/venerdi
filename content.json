@@ -8,7 +8,7 @@
     "lon": 12.4829,
     "sunrise": "07:22",
     "goldenStart": "17:50",
-    "sunset": "18:29",
+    "sunset": "18:28",
     "civilDusk": "18:56",
     "factsChecked": "8 October 2026",
     "walkCapKm": 10,
@@ -85,7 +85,7 @@
             "text": "TONIGHT"
           },
           {
-            "from": "2026-10-16T21:15:00+02:00",
+            "from": "2026-10-16T21:00:00+02:00",
             "text": "LANDED"
           }
         ]
@@ -93,7 +93,7 @@
     ],
     "title": "Friday",
     "dateLine": "16 October · Rome",
-    "lead": "The bit in between is up to you.",
+    "lead": "You land at 08:10. The rest is up to you :)",
     "countdownStatus": {
       "days": "IN {n} DAYS",
       "tomorrow": "TOMORROW"
@@ -102,79 +102,82 @@
   "note": {
     "greeting": "Hey Sasha,",
     "paras": [
-      "Four quick questions and the board plans Friday. Swap whatever you don't like, then send it to me :)"
+      "Friday's free until Laurin and Olivia land at 9, so it's your call. Pick what looks good and I'll do the Planung (planning). Nothing that wrecks our legs before Sunday :)"
     ],
     "sign": "Felix"
   },
   "ask": {
-    "counter": "{n}/{total}",
     "next": "Next",
     "skip": "Skip",
     "back": "Back",
-    "plan": "Plan Friday",
+    "plan": "Show me Friday",
     "answers": "Your answers: {list}",
+    "answersNone": "You left it to me :)",
     "change": "Change",
+    "counter": "{n}/{total}",
+    "progress": "Question {n} of {total}",
+    "answerWants": "{label} ({list})",
     "steps": [
       {
         "id": "see",
         "title": "What do you want to see?",
-        "hint": "Pick any",
+        "hint": "Pick as many as you like.",
         "multi": true,
         "tiles": [
           {
             "id": "ancient",
             "label": "Old Rome",
-            "sub": "The Colosseum floor, the underground",
+            "sub": "The Colosseum floor, the Pantheon, a house under a church",
             "photoOf": "colosseum"
           },
           {
             "id": "view",
             "label": "Rome from above",
-            "sub": "Rooftops, a keyhole, the sunset",
+            "sub": "The Vittoriano roof, sunset from the Pincio, a keyhole",
             "photoOf": "vittoriano"
           },
           {
             "id": "odd",
             "label": "The weird stuff",
-            "sub": "Bones, optical tricks, Caesar's cats",
+            "sub": "A bone crypt, a fake dome, a nun with a key",
             "photoOf": "capuchin"
           },
           {
             "id": "art",
             "label": "Art that's worth it",
-            "sub": "Bernini, Caravaggio, nothing boring",
+            "sub": "Bernini's marble, three Caravaggios, Keith Haring",
             "photoOf": "borghese"
           }
         ]
       },
       {
         "id": "eat",
-        "title": "What about food?",
-        "hint": "Pick any",
+        "title": "And food?",
+        "hint": "Pick as many as you like.",
         "multi": true,
         "tiles": [
           {
             "id": "pastry",
             "label": "Pastries",
-            "sub": "Maritozzo, the bakery with no sign",
+            "sub": "A maritozzo at Regoli, and the Ghetto bakery with no sign",
             "photoOf": "maritozzo"
           },
           {
             "id": "street",
             "label": "Street food",
-            "sub": "Supplì, a market, eat standing up",
+            "sub": "Supplì, a food market, eating standing up",
             "photoOf": "suppli"
           },
           {
             "id": "lunch",
             "label": "A proper lunch",
-            "sub": "Sit down, fresh pasta",
+            "sub": "Fresh pasta, rolled by hand in the window",
             "photoOf": "fortunata"
           },
           {
             "id": "class",
             "label": "Make pasta",
-            "sub": "Roll it, cut it, eat it",
+            "sub": "A three-hour class, then we eat it",
             "photoOf": "pasta"
           }
         ]
@@ -182,64 +185,70 @@
       {
         "id": "wander",
         "title": "Wander somewhere?",
-        "hint": "Pick one",
+        "hint": "Pick one.",
         "multi": false,
         "none": "Not really",
         "tiles": [
           {
             "id": "trastevere",
             "label": "Trastevere",
-            "sub": "Ivy, cobbles, no plan",
+            "sub": "Ivy, cobbles, laundry lines, no plan",
             "option": "trastevere"
           },
           {
             "id": "centre",
             "label": "The old centre",
-            "sub": "Navona, small streets, the Pantheon",
+            "sub": "Navona, Campo de' Fiori and the small streets between",
             "option": "centre"
           },
           {
             "id": "aventine",
             "label": "The Aventine",
-            "sub": "The keyhole, an orange garden",
+            "sub": "The keyhole and the orange garden",
             "option": "keyhole"
           },
           {
             "id": "appia",
             "label": "Appian Way",
-            "sub": "A Roman road, by e-bike",
+            "sub": "A 2,300-year-old road, by e-bike",
             "option": "appia"
           },
           {
             "id": "acquedotti",
             "label": "The aqueducts",
-            "sub": "Giant arches in a field",
+            "sub": "Roman arches in a field",
             "option": "acquedotti"
           },
           {
             "id": "coppede",
             "label": "Coppedè",
-            "sub": "A fairytale block nobody knows",
+            "sub": "A few fairytale streets, almost nobody there",
             "option": "coppede"
           },
           {
             "id": "monti",
             "label": "Monti",
-            "sub": "Gold mosaics, vintage, near dinner",
+            "sub": "Vintage shops, a gold chapel, close to dinner",
             "option": "monti"
+          },
+          {
+            "id": "ghetto",
+            "label": "The Jewish Ghetto",
+            "sub": "Bakeries, a turtle fountain, a palace on a Roman theatre",
+            "option": "ghetto"
           }
         ]
       },
       {
         "id": "wild",
         "title": "Wild card?",
-        "hint": "Pick one",
+        "hint": "Pick one.",
         "multi": false,
         "none": "No thanks",
         "tiles": [
           {
             "id": "circovr",
-            "sub": "Chariots pass by",
+            "sub": "A headset on the real Circus Maximus, chariots race past",
             "option": "circovr"
           },
           {
@@ -248,27 +257,40 @@
           },
           {
             "id": "domus",
-            "sub": "Nero in VR",
+            "sub": "Nero's buried palace, and a VR look at how it was",
             "option": "domus"
           },
           {
             "id": "cannon",
-            "sub": "Exactly. Loud.",
+            "sub": "A cannon fires at noon under the Gianicolo terrace",
             "option": "cannon"
           },
           {
             "id": "circusjog",
-            "sub": "Easy pace only",
+            "sub": "One easy lap of the old chariot track",
             "option": "circusjog"
           },
           {
             "id": "coronati",
-            "sub": "Ring the bell",
+            "sub": "Ring a convent bell and a nun hands you a key",
             "option": "coronati"
           }
         ]
       }
     ]
+  },
+  "peek": {
+    "open": "See all {n}",
+    "openTwo": "See both",
+    "openPhotos": "Photos",
+    "vibeHint": "Pick the ones you like, or leave it to me.",
+    "want": "This one",
+    "pick": "This one",
+    "done": "Done",
+    "close": "Close",
+    "tip": "A friend from Rome says go",
+    "wanted": "You picked: {list}",
+    "fits": "Friday has room for about five things. I'll fit in what I can."
   },
   "pickReasons": {
     "ancient": {
@@ -276,7 +298,7 @@
       "code": "a"
     },
     "view": {
-      "label": "The view",
+      "label": "Rome from above",
       "code": "v"
     },
     "odd": {
@@ -284,7 +306,7 @@
       "code": "o"
     },
     "art": {
-      "label": "The art",
+      "label": "Art",
       "code": "r"
     },
     "pastry": {
@@ -296,7 +318,7 @@
       "code": "s"
     },
     "lunch": {
-      "label": "Proper lunch",
+      "label": "Lunch",
       "code": "l"
     },
     "class": {
@@ -341,7 +363,7 @@
   "day": {
     "title": "Your Friday",
     "changeAnswers": "Change answers",
-    "parked": "Didn't fit today: {list}.",
+    "parked": "Didn't fit: {list}. Swap something out if you want it.",
     "empty": "Answer the questions above and your Friday shows up here.",
     "willBook": "I'll book {list}.",
     "noLunch": "Lunch wherever we are.",
@@ -373,6 +395,7 @@
       "price": "€{n}",
       "free": "Free",
       "book": "I'll book it",
+      "bookNamed": "I'll book it in your name",
       "join": " · "
     }
   },
@@ -454,9 +477,9 @@
     },
     "end": {
       "time": "21:00",
-      "title": "That's Friday",
-      "body": "Laurin and Olivia land around 9.",
-      "hud": "Done"
+      "title": "Laurin and Olivia land",
+      "body": "Then an early night.",
+      "hud": "Night"
     }
   },
   "options": [
@@ -493,7 +516,8 @@
         "ancient": 1
       },
       "weight": 1,
-      "price": 24
+      "price": 24,
+      "named": true
     },
     {
       "id": "domus",
@@ -639,7 +663,8 @@
         "view": 2,
         "ancient": 7
       },
-      "weight": 1
+      "weight": 1,
+      "named": true
     },
     {
       "id": "vittoriano",
@@ -648,7 +673,7 @@
       "line": "A glass lift to the top of the big white monument. All of Rome around you, the Forum right below.",
       "board": {
         "to": "VITTORIANO ROOF",
-        "remark": "SUNSET 18:29"
+        "remark": "SUNSET 18:28"
       },
       "photos": [
         "vittoriano-1",
@@ -693,7 +718,7 @@
       "lat": 41.884,
       "lon": 12.479,
       "minutes": 60,
-      "open": "09:00",
+      "open": "07:00",
       "close": "17:45",
       "slot": "any",
       "order": 30,
@@ -709,16 +734,17 @@
         "wander:aventine": 1
       },
       "weight": 1,
-      "price": 0
+      "price": 0,
+      "friendTip": true
     },
     {
       "id": "pincio",
       "group": "view",
       "title": "Pincio at sunset",
-      "line": "A free terrace above Piazza del Popolo. The sun goes down just right of St Peter's dome.",
+      "line": "We cut through Villa Borghese to a free terrace over Piazza del Popolo, watch the sun drop just right of St Peter's dome, then walk down Via Margutta.",
       "board": {
         "to": "PINCIO",
-        "remark": "SUNSET 18:29"
+        "remark": "SUNSET 18:28"
       },
       "photos": [
         "pincio-sunset",
@@ -743,7 +769,8 @@
         "view": 4
       },
       "weight": 1,
-      "price": 0
+      "price": 0,
+      "friendTip": true
     },
     {
       "id": "vicus",
@@ -1033,6 +1060,7 @@
       "group": "odd",
       "title": "Pyramid and Keats",
       "line": "A quiet garden cemetery behind a real Roman pyramid. Keats is buried here.",
+      "price": "€5 donation at the gate",
       "board": {
         "to": "PYRAMID",
         "remark": "KEATS IS HERE"
@@ -1133,6 +1161,78 @@
       "price": 0
     },
     {
+      "id": "doria",
+      "group": "art",
+      "title": "The Doria Pamphilj palace",
+      "line": "A family still lives upstairs, and you walk through their gilded Hall of Mirrors to Velázquez's red-faced pope, with Bernini's bust of the same man beside it.",
+      "board": {
+        "to": "DORIA PAMPHILJ",
+        "remark": "HALL OF MIRRORS"
+      },
+      "photos": [
+        "doria-1",
+        "doria-2"
+      ],
+      "area": "centro",
+      "lat": 41.89767,
+      "lon": 12.48114,
+      "minutes": 75,
+      "open": "10:00",
+      "close": "18:45",
+      "slot": "any",
+      "order": 6.5,
+      "hud": "Doria",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Galleria+Doria+Pamphilj+Via+del+Corso+305+Roma"
+        }
+      ],
+      "book": "the Doria Pamphilj",
+      "serves": {
+        "art": 7
+      },
+      "weight": 1,
+      "price": 17,
+      "friendTip": true
+    },
+    {
+      "id": "haring",
+      "group": "art",
+      "title": "Keith Haring",
+      "line": "A new show of his in a palace off Piazza Navona: the chalk subway drawings, a motorbike he painted in Rome, and a room under blacklight.",
+      "board": {
+        "to": "KEITH HARING",
+        "remark": "BLACKLIGHT ROOM"
+      },
+      "photos": [
+        "haring-1",
+        "haring-2"
+      ],
+      "area": "centro",
+      "lat": 41.89747,
+      "lon": 12.47263,
+      "minutes": 75,
+      "open": "10:00",
+      "close": "17:45",
+      "slot": "any",
+      "order": 8.5,
+      "hud": "Haring",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Palazzo+Braschi+Piazza+San+Pantaleo+10+Roma"
+        }
+      ],
+      "book": "the Keith Haring show",
+      "serves": {
+        "art": 8
+      },
+      "weight": 1,
+      "price": "€17, or €15 if you're 18 to 25",
+      "friendTip": true
+    },
+    {
       "id": "trevi",
       "group": "also",
       "title": "Trevi Fountain",
@@ -1168,20 +1268,20 @@
       "id": "maritozzo",
       "group": "food",
       "title": "Maritozzo",
-      "line": "Rome's breakfast pastry: a soft bun split open and filled with cream.",
+      "line": "A soft bun split open and packed with cream, at Regoli near Termini, which has been making them since 1916.",
       "board": {
         "to": "MARITOZZO",
-        "remark": "CREAM TO ORDER"
+        "remark": "REGOLI SINCE 1916"
       },
       "photos": [
         "maritozzo",
-        "maritozzo-2"
+        "maritozzo-3"
       ],
-      "area": "centro",
-      "lat": 41.89415,
-      "lon": 12.47443,
+      "area": "esquilino",
+      "lat": 41.89486,
+      "lon": 12.5009,
       "minutes": 25,
-      "open": "07:00",
+      "open": "06:45",
       "close": "18:00",
       "slot": "morning",
       "order": -1,
@@ -1189,13 +1289,14 @@
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Roscioli+Caff%C3%A8+Pasticceria+Piazza+Benedetto+Cairoli+16+Roma"
+          "url": "https://maps.google.com/?q=Pasticceria+Regoli+Via+dello+Statuto+60+Roma"
         }
       ],
       "serves": {
         "pastry": 1
       },
-      "weight": 0
+      "weight": 0,
+      "friendTip": true
     },
     {
       "id": "boccione",
@@ -1291,7 +1392,7 @@
           "url": "https://maps.google.com/?q=Nuovo+Mercato+di+Testaccio+Roma"
         }
       ],
-      "tag": "Bring cash",
+      "tag": "Cash only",
       "serves": {
         "street": 1
       },
@@ -1400,7 +1501,8 @@
       "serves": {
         "lunch": 2
       },
-      "weight": 0
+      "weight": 0,
+      "friendTip": true
     },
     {
       "id": "pasta",
@@ -1505,13 +1607,14 @@
         "odd": 10
       },
       "weight": 1,
-      "price": 0
+      "price": 0,
+      "friendTip": true
     },
     {
       "id": "trastevere",
       "group": "wander",
       "title": "Trastevere",
-      "line": "Small ivy-covered streets across the river. No plan, you turn wherever looks better.",
+      "line": "Small ivy-covered streets across the river, two vintage shops on one street, and no plan: we turn wherever looks better.",
       "board": {
         "to": "TRASTEVERE",
         "remark": "NO PLAN"
@@ -1539,7 +1642,8 @@
         "wander:trastevere": 1
       },
       "weight": 1,
-      "price": 0
+      "price": 0,
+      "friendTip": true
     },
     {
       "id": "centre",
@@ -1579,7 +1683,7 @@
       "id": "monti",
       "group": "wander",
       "title": "Monti",
-      "line": "The neighbourhood above the Colosseum: a tiny chapel covered in gold mosaic, a fountain square, vintage shops.",
+      "line": "The neighbourhood above the Colosseum: a tiny chapel covered in gold mosaic, a fountain square, and vintage shops like Pifebo and Humana.",
       "board": {
         "to": "MONTI",
         "remark": "GOLD CHAPEL"
@@ -1607,7 +1711,43 @@
       "serves": {
         "wander:monti": 1
       },
-      "weight": 1
+      "weight": 1,
+      "friendTip": true
+    },
+    {
+      "id": "ghetto",
+      "group": "wander",
+      "title": "The Jewish Ghetto",
+      "line": "A flat loop past a Roman colonnade with a church built into it, a palace sitting on a Roman theatre, and four bronze boys pushing turtles into a fountain. One thing: 16 October is the day in 1943 the Nazis rounded up the Ghetto, so expect wreaths and a quiet ceremony by the colonnade that day.",
+      "board": {
+        "to": "GHETTO",
+        "remark": "TURTLE FOUNTAIN"
+      },
+      "photos": [
+        "ghetto-1",
+        "ghetto"
+      ],
+      "area": "centro",
+      "lat": 41.89255,
+      "lon": 12.47785,
+      "minutes": 45,
+      "open": "00:00",
+      "close": "23:59",
+      "slot": "any",
+      "order": 2.5,
+      "hud": "Ghetto",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Via+del+Portico+d%27Ottavia+Roma"
+        }
+      ],
+      "serves": {
+        "wander:ghetto": 1
+      },
+      "weight": 1,
+      "price": 0,
+      "friendTip": true
     },
     {
       "id": "appia",
@@ -1783,7 +1923,7 @@
       },
       "weight": 1,
       "price": 0,
-      "tileSub": "Free seats, evening premiere"
+      "tileSub": "Free seats while the evening premiere arrives"
     },
     {
       "id": "circusjog",
@@ -1837,7 +1977,8 @@
     "venezia",
     "monti",
     "borgo",
-    "circo"
+    "circo",
+    "esquilino"
   ],
   "transfers": [
     {
@@ -2000,19 +2141,88 @@
       "text": "10 min walk past the Colosseum",
       "m": 800,
       "min": 10
+    },
+    {
+      "from": "esquilino",
+      "to": "monti",
+      "text": "15 min walk",
+      "m": 1000,
+      "min": 15
+    },
+    {
+      "from": "esquilino",
+      "to": "celio",
+      "text": "20 min walk down to the Colosseum",
+      "m": 1300,
+      "min": 20
+    },
+    {
+      "from": "esquilino",
+      "to": "venezia",
+      "text": "25 min walk through Monti",
+      "m": 1800,
+      "min": 25
+    },
+    {
+      "from": "esquilino",
+      "to": "centro",
+      "text": "Metro A to Barberini, then 15 min on foot",
+      "m": 1300,
+      "min": 25
+    },
+    {
+      "from": "esquilino",
+      "to": "north",
+      "text": "Metro A to Barberini, 10 min",
+      "m": 400,
+      "min": 15
+    },
+    {
+      "from": "esquilino",
+      "to": "borgo",
+      "text": "Metro A to Lepanto, then 15 min on foot",
+      "m": 1300,
+      "min": 30
+    },
+    {
+      "from": "esquilino",
+      "to": "testaccio",
+      "text": "Metro to Piramide, change at Termini, 25 min",
+      "m": 900,
+      "min": 30
+    },
+    {
+      "from": "esquilino",
+      "to": "circo",
+      "text": "Metro to Circo Massimo, change at Termini, 20 min",
+      "m": 500,
+      "min": 20
+    },
+    {
+      "from": "esquilino",
+      "to": "acquedotti",
+      "text": "Metro A to Giulio Agricola, 30 min",
+      "m": 900,
+      "min": 30
+    },
+    {
+      "from": "north",
+      "to": "esquilino",
+      "text": "Metro A from Barberini, 10 min",
+      "m": 400,
+      "min": 15
+    },
+    {
+      "from": "centro",
+      "to": "esquilino",
+      "text": "15 min on foot to Barberini, then Metro A",
+      "m": 1300,
+      "min": 25
     }
   ],
-  "bring": [
-    "ID",
-    "A light layer",
-    "A water bottle"
-  ],
-  "footer": {
-    "line": "Hours and prices checked on 8 October."
-  },
   "ui": {
-    "pageTitle": "Friday in Rome",
-    "ogTitle": "Friday in Rome",
+    "pageTitle": "Sasha's Friday in Rome",
+    "ogTitle": "Sasha's Friday in Rome",
     "ogImageAlt": "An arrivals split-flap board above the word Friday",
     "noscript": "This page needs JavaScript.",
     "nav": {
@@ -2027,15 +2237,13 @@
       "dep": "Departures",
       "day": "Your Friday",
       "send": "Send",
-      "map": "Map",
-      "bring": "Bring"
+      "map": "Map"
     },
     "noteTitle": "A note from Felix",
     "mapTitle": "On the map",
     "mapLabel": "Map of central Rome with your picks and their rough times",
     "mapCredit": "Map data © OpenStreetMap contributors",
-    "bringTitle": "Bring",
-    "credits": "Photo credits",
+    "credits": "Photos",
     "creditBy": "by",
     "newTab": "opens in a new tab",
     "jumpNow": "Jump to now",
@@ -2072,7 +2280,6 @@
       "minutes": "minutes"
     },
     "weather": {
-      "climate": "Mid-October is usually 22° / 12°, with rain about one day in four.",
       "temps": "Friday: {hi}° / {lo}°",
       "then": "{a} then {b}",
       "chance": "{pct}% chance of {what}{when}",
@@ -2107,7 +2314,12 @@
       }
     },
     "boardHit": "{time}, {to}. Show details",
-    "listJoinLast": " and "
+    "listJoinLast": " and ",
+    "creditsPage": {
+      "title": "Photos",
+      "back": "Back",
+      "preview": "Link preview"
+    }
   },
   "departures": {
     "title": "Departures",
@@ -2129,9 +2341,8 @@
       },
       "end": {
         "time": "21:00",
-        "to": "THAT'S FRIDAY",
-        "remark": "EARLY NIGHT",
-        "heavyRemark": "SAVE YOUR LEGS"
+        "to": "LAURIN+OLIVIA",
+        "remark": "LANDING"
       }
     },
     "sunday": {
@@ -2218,7 +2429,7 @@
         "lunchTaken": "LUNCH IS SORTED",
         "noTime": "NO TIME LEFT",
         "standby": "STANDBY",
-        "parked": "NO ROOM TODAY"
+        "parked": "NO ROOM"
       }
     },
     "secondBreakfast": "SECOND BREAKFAST",

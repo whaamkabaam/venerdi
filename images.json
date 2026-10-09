@@ -292,7 +292,7 @@
   "src1600": "img/ghetto-1600.webp",
   "w": 1600,
   "h": 1067,
-  "alt": "The Portico d'Ottavia ruins and old brick houses in Rome's Jewish Ghetto, a few steps from the bakery",
+  "alt": "The Portico d'Ottavia on a sunny day: a Roman pediment and marble columns patched with brick around an arch, the church door inside it, a small dome and old red-brick houses beside it on a cobbled square",
   "focal": "35% 60%",
   "color": "#5d6665",
   "credit": {
@@ -1581,6 +1581,102 @@
    "license": "Unsplash License",
    "licenseUrl": "https://unsplash.com/license",
    "sourceUrl": "https://unsplash.com/photos/ancient-roman-circus-maximus-at-sunset-with-historic-ruins-u8sO0eE1_Gw"
+  }
+ },
+ "doria-1": {
+  "src800": "img/doria-1-800.webp",
+  "src1600": "img/doria-1-1600.webp",
+  "w": 1600,
+  "h": 1141,
+  "alt": "The Hall of Mirrors in Palazzo Doria Pamphilj: a long gallery with a painted vaulted ceiling, gilded mirror frames, glass chandeliers and white marble statues along a brick herringbone floor striped with sunlight",
+  "focal": "50% 48%",
+  "color": "#876e5a",
+  "credit": {
+   "title": "Palazzo doria pamphili, galleria degli specchi 01",
+   "author": "Sailko",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palazzo_doria_pamphili,_galleria_degli_specchi_01.jpg"
+  }
+ },
+ "doria-2": {
+  "src800": "img/doria-2-800.webp",
+  "src1600": "img/doria-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Velazquez's portrait of Pope Innocent X, a red-faced man in a shiny red cape and white lace holding a folded letter, in a heavy gilded frame on a dark blue wall of the Doria Pamphilj gallery",
+  "focal": "52% 35%",
+  "color": "#876b55",
+  "credit": {
+   "title": "Innocent Velasques (cropped to 4:3)",
+   "author": "Parpan05",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Innocent_Velasques.jpeg"
+  }
+ },
+ "haring-1": {
+  "src800": "img/haring-1-800.webp",
+  "src1600": "img/haring-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Keith Haring's 1983 Untitled painting: three yellow dog-headed figures outlined in red, dancing over a dense black and red maze of tiny figures, hung on a white wall",
+  "focal": "50% 43%",
+  "color": "#c49639",
+  "credit": {
+   "title": "Keith Haring, Senza titolo, 1983, oil painting on canvans, Terrae Motus, Reggia di Caserta (cropped to 4:3)",
+   "author": "fabioomero",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/99377990@N03/28682599317"
+  }
+ },
+ "haring-2": {
+  "src800": "img/haring-2-800.webp",
+  "src1600": "img/haring-2-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Grand staircase landing inside Palazzo Braschi: dark red stone columns, white stucco vaults, a marble statue in a niche and the museum's red sign beside a doorway",
+  "focal": "50% 50%",
+  "color": "#706e68",
+  "credit": {
+   "title": "Braschi escalera 11",
+   "author": "Miguel Hermoso Cuesta",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Braschi_escalera_11.JPG"
+  }
+ },
+ "ghetto-1": {
+  "src800": "img/ghetto-1-800.webp",
+  "src1600": "img/ghetto-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The Fontana delle Tartarughe in Piazza Mattei: bronze boys (three visible from this side), each with a foot on a bronze dolphin, reach up to small bronze turtles on the rim of the top bowl, with cream and ochre house fronts and green shutters behind",
+  "focal": "50% 45%",
+  "color": "#8f8973",
+  "credit": {
+   "title": "Fontana delle tartarughe - piazza Mattei - Roma (cropped to 4:3)",
+   "author": "Silvio Pietrosanti",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fontana_delle_tartarughe_-_piazza_Mattei_-_Roma.jpg"
+  }
+ },
+ "maritozzo-3": {
+  "src800": "img/maritozzo-3-800.webp",
+  "src1600": "img/maritozzo-3-1600.webp",
+  "w": 1084,
+  "h": 813,
+  "alt": "A maritozzo heaped with whipped cream and dusted with sugar, on a saucer with a spoon, in a coffee bar in Rome, a hand with red nails at the edge",
+  "focal": "50% 50%",
+  "color": "#a79d8b",
+  "credit": {
+   "title": "Freshly baked Roman maritozzo (cropped to 4:3)",
+   "author": "Gerjantd",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Freshly_baked_Roman_maritozzo.jpg"
   }
  }
 }

@@ -32,6 +32,7 @@
   --ink: var(--inchiostro);
   --accent: var(--nasone);
   --on-accent: var(--lampione);
+  --on-ink: var(--lampione);
   --img-outline: oklch(0 0 0 / 0.1);
   --hairline: color-mix(in oklch, var(--ink) 22%, transparent);
   --surface: color-mix(in oklch, var(--sky) 68%, white);
@@ -43,7 +44,7 @@
 
   --pad: clamp(20px, 6vw, 24px);
   --col: 680px;
-  --wide: 1000px;
+  --wide: 1180px;
   --hud-h: 52px;
   --anchor-gap: calc(var(--hud-h) + env(safe-area-inset-top) + 20px);
 
@@ -57,6 +58,7 @@
   --ink: var(--lampione);
   --accent: var(--sodium);
   --on-accent: var(--inchiostro);
+  --on-ink: var(--inchiostro);
   --img-outline: oklch(1 0 0 / 0.1);
   --surface: color-mix(in oklch, var(--sky) 90%, white);
   --shadow-border: 0 0 0 1px oklch(1 0 0 / 0.1);
@@ -74,6 +76,16 @@ html {
   background-color: var(--sky);
   color: var(--ink);
 }
+/* The sky behind the page, its own composited layer: app.js recolours it every frame while scrolling,
+   which is a solid-colour layer update instead of a repaint of everything in view. */
+.sky-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -82,7 +94,9 @@ body {
   font-weight: 400;
   font-stretch: 100%;
   font-optical-sizing: auto;
-  transition: color 400ms ease-out;
+  /* No colour transition: when data-dark flips, a fade restyled and repainted every element for 0.4 s
+     mid-scroll (scroll p95 50 ms, qa/v6/perf-after.md). The flip lands where both inks have the same
+     contrast on the sky, so the swap is instant; the sky itself keeps changing smoothly. */
 }
 
 [id] { scroll-margin-top: var(--anchor-gap); }
@@ -103,6 +117,8 @@ svg { display: block; }
 }
 
 [hidden] { display: none !important; }
+/* While a peek is open the page underneath does not scroll. */
+:root.is-locked { overflow: hidden; }
 
 .sr-only {
   position: absolute !important;
@@ -263,8 +279,6 @@ svg { display: block; }
   height: 50%;
   overflow: hidden;
   background: var(--flap);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 .flap > .ft, .flap > .lt { top: 0; border-radius: 2px 2px 0 0; transform-origin: 50% 100%; background: #232326; }
 .flap > .fb, .flap > .lb { bottom: 0; border-radius: 0 0 2px 2px; transform-origin: 50% 0; }
@@ -297,6 +311,7 @@ svg { display: block; }
 }
 .board-wrap { max-width: 860px; margin: 0 auto; }
 .board {
+  contain: layout paint; /* a flip re-lays out and repaints the board only */
   background: #0B0B0C;
   color: var(--flap-ink);
   border-radius: 10px;
@@ -422,6 +437,10 @@ svg { display: block; }
   margin: 0 auto;
   overflow: hidden;
 }
+/* app.js writes --sky on the map every frame (on :root only once the sky is still), so the river
+   resolves against the map's own --sky. */
+.map { --river: color-mix(in oklch, var(--sky), oklch(0.35 0.08 250) 16%); }
+:root[data-dark] .map { --river: color-mix(in oklch, var(--sky), white 10%); }
 .map-river { fill: none; stroke: var(--river); stroke-linecap: round; stroke-linejoin: round; }
 .leg { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; }
 .map-dot { fill: var(--accent); stroke: var(--sky); }
@@ -443,24 +462,30 @@ svg { display: block; }
 /* ---------- Footer ---------- */
 
 .footer {
-  padding: 72px var(--pad) calc(48px + env(safe-area-inset-bottom));
+  padding: 56px var(--pad) calc(40px + env(safe-area-inset-bottom));
   padding-left: max(var(--pad), env(safe-area-inset-left));
   padding-right: max(var(--pad), env(safe-area-inset-right));
 }
 .footer > * { max-width: var(--col); margin-left: auto; margin-right: auto; }
-.credits { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); margin-bottom: 24px; }
-.credits summary {
-  display: flex; align-items: center; justify-content: space-between;
-  min-height: 52px; cursor: pointer; list-style: none; font-weight: 500;
+/* Before she plans, the footer follows the questions straight away (the stage spans the wide column). */
+main:has(#dep[hidden]) + .footer { padding-top: 40px; }
+main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
+/* One quiet link to the photo credits (credits.html). */
+.footer-credits {
+  position: relative;
+  font-size: 0.8125rem;
+  color: color-mix(in oklch, var(--ink) 62%, transparent);
+  text-underline-offset: 3px;
 }
-.credits summary::-webkit-details-marker { display: none; }
-.credits summary .i { width: 18px; height: 18px; transition: rotate 200ms var(--ease-out); }
-.credits[open] summary .i { rotate: 180deg; }
-.credits ul { display: grid; padding-bottom: 12px; font-size: 0.8125rem; }
-.credits li { padding-block: 15px; }
-.credits a { position: relative; text-underline-offset: 2px; }
-.credits a::after { content: ""; position: absolute; inset: -15px 0; }
-.footer-line { font-size: 0.875rem; }
+.footer-credits::after { content: ""; position: absolute; inset: -14px -10px; }
+
+/* credits.html: a plain list, grouped by the thing each photo shows. */
+.credits-main { padding-top: calc(env(safe-area-inset-top) + 16px); padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+.credits-back { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; text-underline-offset: 3px; }
+.credits-main h1 { margin: 16px auto 4px; font-family: var(--font-display); font-size: 2.25rem; line-height: 1.1; }
+.credits-group h2 { margin: 26px 0 6px; font-size: 1.0625rem; line-height: 1.3; }
+.credits-group li { padding: 5px 0; font-size: 0.875rem; line-height: 1.45; overflow-wrap: anywhere; }
+.credits-group a { text-underline-offset: 2px; }
 
 
 /* ---------- Primary button ---------- */
@@ -487,81 +512,127 @@ svg { display: block; }
 /* ---------- The four questions ---------- */
 
 .section--ask { padding-top: 22px; }
-.section--ask > .stage { max-width: 640px; }
-.stage-count { display: flex; gap: 2px; margin-bottom: 10px; --fw: 13px; }
+.section--ask > .stage { max-width: var(--wide); }
+.stage-count { display: flex; gap: 2px; margin-bottom: 12px; --fw: 13px; }
 .stage-count .flap { color: var(--solari); }
 .step { min-width: 0; margin: 0; padding: 0; border: 0; }
 .step-title {
   padding: 0;
   font-family: var(--font-display);
-  font-size: 1.875rem;
-  line-height: 1.1;
+  font-size: clamp(30px, 8vw, 36px);
+  line-height: 1.08;
   font-weight: 600;
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
 /* Focus lands on the question after a step change; it is not a control, so no ring. */
 .step-title:focus { outline: none; }
-.step-hint { margin: 6px 0 14px; font-size: 0.9375rem; color: color-mix(in oklch, currentColor 72%, transparent); }
-.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-/* A photo tile: the photo fills it, a bottom gradient carries the label. Selected: the photo
-   leans in to 1.03, a 3 px ink ring, a round check. */
+.step-hint { margin: 8px 0 18px; font-size: 0.9375rem; color: color-mix(in oklch, currentColor 72%, transparent); }
+
+/* A tile: the photo, then its label and sub under it; the whole tile selects. Under the sub a
+   sibling text button opens the peek. Selected: a 3 px ink ring round the photo (radius 18 + 3 = 21,
+   concentric) and a check that scales in. */
+.tiles {
+  --ar: 4 / 5;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 12px;
+}
+.tiles--one { --ar: 1; }
+.tile-cell { position: relative; display: grid; align-content: start; justify-items: start; min-width: 0; }
 .tile {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 5;
+  display: grid;
+  align-content: start;
+  justify-self: stretch;
   padding: 0;
   border: 0;
-  border-radius: 16px;
-  background-color: var(--ph, #6b665e);
-  color: #fff;
+  background: none;
+  color: inherit;
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition-property: scale, box-shadow, opacity;
-  transition-duration: 180ms;
-  transition-timing-function: var(--ease-out);
+  transition: scale 150ms var(--ease-out);
 }
-.tiles--square .tile { aspect-ratio: 1; }
-.tile:active { scale: 0.96; transition-duration: 120ms; }
-.tile:focus-visible { outline-offset: 5px; border-radius: 16px; }
-.tile-photo { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; background-color: var(--ph, #6b665e); }
-.tile-photo img { width: 100%; height: 100%; object-fit: cover; transition: scale 180ms var(--ease-out); }
-.tile-photo::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(to bottom, rgb(0 0 0 / 0) 38%, rgb(0 0 0 / 0.55));
-  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.1);
+.tile:active { scale: 0.96; }
+.tile:focus-visible { outline: none; }
+.tile:focus-visible .tile-photo { outline: 2px solid var(--ink); outline-offset: 6px; }
+.tile-photo {
+  position: relative;
+  display: block;
+  aspect-ratio: var(--ar);
+  border-radius: 18px;
+  overflow: hidden;
+  background-color: var(--ph, #6b665e);
+  transition: box-shadow 180ms var(--ease-out);
 }
-.tile-text { position: absolute; left: 12px; right: 12px; bottom: 11px; display: grid; gap: 2px; }
-.tile-label { font-size: 1.0625rem; line-height: 1.2; font-weight: 600; text-wrap: balance; }
-.tile-sub { font-size: 0.84375rem; line-height: 1.3; color: rgb(255 255 255 / 0.85); text-wrap: pretty; }
+.tile-photo::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.1); pointer-events: none; }
+.tile-photo img { width: 100%; height: 100%; object-fit: cover; transition: scale 300ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover .tile-photo img { scale: 1.03; }
+}
+.tile[aria-pressed="true"] .tile-photo, .tile[aria-checked="true"] .tile-photo { box-shadow: 0 0 0 3px var(--ink); }
 .tile-check {
   position: absolute;
   top: 10px;
   right: 10px;
+  z-index: 1;
   width: 28px;
   height: 28px;
   opacity: 0;
   scale: 0.25;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
-  transition-property: opacity, scale;
+  filter: blur(4px) drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+  transition-property: opacity, scale, filter;
   transition-duration: 180ms;
-  transition-timing-function: var(--ease-out);
+  transition-timing-function: ease-out;
 }
 .tile-check svg { width: 100%; height: 100%; color: #fff; }
 .tile-check .mark-on .tick { stroke: var(--inchiostro); } /* ink on the white badge, over any photo */
-.tile[aria-pressed="true"], .tile[aria-checked="true"] { box-shadow: 0 0 0 3px var(--ink); }
-.tile[aria-pressed="true"] .tile-photo img, .tile[aria-checked="true"] .tile-photo img { scale: 1.03; }
-.tile[aria-pressed="true"] .tile-check, .tile[aria-checked="true"] .tile-check { opacity: 1; scale: 1; }
+.tile[aria-pressed="true"] .tile-check, .tile[aria-checked="true"] .tile-check { opacity: 1; scale: 1; filter: blur(0) drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); }
+.tile-label { display: block; margin-top: 10px; font-size: 1rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+.tile-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 0.84375rem;
+  line-height: 1.4;
+  color: color-mix(in oklch, currentColor 72%, transparent);
+  text-wrap: pretty;
+}
+/* "See all 8" / "Photos": words under the sub. The hit area grows to 44 px, mostly downward into the
+   gap, so it does not eat the tile above it. */
+.tile-more {
+  position: relative;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 0.84375rem;
+  line-height: 1.4;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 30%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: text-decoration-color 150ms ease-out;
+}
+.tile-more::after { content: ""; position: absolute; inset: -7px -10px -20px; }
+@media (hover: hover) {
+  .tile-more:hover { text-decoration-color: currentColor; }
+}
+/* No need / No thanks: under the grid on a phone (full width); on a laptop the last cell. */
 .step-none {
+  grid-column: 1 / -1;
   display: block;
   width: 100%;
   min-height: 48px;
-  margin-top: 10px;
+  margin-top: 2px;
   border: 0;
   border-radius: 12px;
   background: transparent;
@@ -577,24 +648,38 @@ svg { display: block; }
 @media (hover: hover) {
   .step-none:hover { background-color: color-mix(in oklch, currentColor 8%, transparent); }
 }
-/* The buttons stay reachable on the long steps: sticky inside the stage, on a sky backdrop. */
+/* Phone: the buttons stick to the bottom on a solid sky backdrop. They sit in the stage's flow, so
+   at the end of a step nothing is left behind them. */
 .stage-foot {
   position: sticky;
   bottom: 0;
-  z-index: 2;
+  z-index: 5;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 4px;
-  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom, color-mix(in oklch, var(--sky) 0%, transparent), var(--sky) 16px);
+  margin-top: 20px;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  background-color: var(--sky);
 }
 /* Hidden (not removed, so nothing moves) until the first step's tiles are in view. */
 .stage-foot { visibility: hidden; opacity: 0; transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms; }
 .stage.is-foot .stage-foot { visibility: visible; opacity: 1; transition: opacity 200ms var(--ease-out), visibility 0s linear 0s; }
 .stage button { touch-action: manipulation; }
-.stage-back { box-shadow: none; padding: 0 14px; margin-left: -14px; }
-.stage-next { margin-left: auto; min-width: 136px; justify-content: center; }
+.stage-back { box-shadow: none; gap: 8px; padding: 0 14px; margin-left: -14px; }
+.stage-back .i { width: 16px; height: 16px; }
+/* Next and Show me Friday in the primary style; Skip quiet, with a hairline ring. */
+.stage-next {
+  margin-left: auto;
+  min-width: 136px;
+  min-height: 52px;
+  padding: 0 22px;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  font-size: 1rem;
+  font-weight: 600;
+  transition-property: scale, background-color, color, box-shadow;
+}
+.stage-next.btn--primary { box-shadow: none; }
 .stage-closed {
   display: flex;
   flex-wrap: wrap;
@@ -636,6 +721,9 @@ svg { display: block; }
 .section--dep .is-live .c--note .flap { color: var(--flap-ink); }
 .board-sun .board-row { border-top: 0; }
 .dep-gap { border-top: 1px dashed #3A3A3E; margin-top: 10px; transform-origin: 0 50%; }
+/* The spare last row (kept so her TBC line never moves the page) reads as board, not a dead row. */
+.section--dep .board-rows > .board-row.is-empty:last-child { border-top-color: transparent; }
+.section--dep .board-rows > .board-row.is-empty:last-child .cells { visibility: hidden; }
 @container (max-width: 559px) {
   .section--dep .board-colheads { display: none; }
   .section--dep .board-row { padding: 6px 0; }
@@ -748,6 +836,39 @@ svg { display: block; }
   scrollbar-width: none;
 }
 .stop-strip::-webkit-scrollbar { display: none; }
+.strip-frame { position: relative; }
+/* The Photos pill on a story card's photos: 32 px tall, a 44 px hit area, no backdrop blur. */
+.pill {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border: 0;
+  border-radius: 16px;
+  background-color: rgb(12 12 20 / 0.62);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition-property: scale, background-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+.pill::after { content: ""; position: absolute; inset: -6px -4px; }
+.pill:active { scale: 0.96; }
+.pill .i { width: 13px; height: 13px; flex: none; }
+.pill:focus-visible { outline-color: #fff; outline-offset: 2px; border-radius: 16px; }
+@media (hover: hover) {
+  .pill:hover { background-color: rgb(12 12 20 / 0.8); }
+}
 .stop-photo { display: block; aspect-ratio: 4 / 3; scroll-snap-align: start; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
 .stop-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
 .stop-dots { display: flex; justify-content: center; }
@@ -770,6 +891,7 @@ svg { display: block; }
 .stop-title { font-family: var(--font-display); font-size: 1.625rem; line-height: 1.1; font-weight: 600; letter-spacing: -0.01em; }
 .stop-line { max-width: 62ch; text-wrap: pretty; }
 .stop-facts { font-size: 0.875rem; color: color-mix(in oklch, var(--ink) 72%, transparent); font-variant-numeric: tabular-nums; }
+.stop-tip, .peek-tip { font-size: 0.78125rem; line-height: 1.35; font-weight: 600; color: var(--accent); }
 .stop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
 .stop-actions .btn--small { min-height: 40px; }
 .stop-map {
@@ -812,21 +934,14 @@ svg { display: block; }
 /* Room for one more?, then See everything. */
 .plan-room { padding: 18px 0 10px; }
 .room-title { font-size: 1.125rem; line-height: 1.3; margin-bottom: 10px; }
-.room-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.room-tile {
-  display: grid;
-  grid-template-rows: auto auto 1fr auto auto;
-  gap: 4px;
-  padding: 6px 6px 8px;
-  border-radius: 14px;
-  background-color: var(--surface);
-  box-shadow: var(--shadow-border);
-}
-.room-photo { display: block; aspect-ratio: 4 / 3; border-radius: 8px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
-.room-why { margin-top: 4px; padding-inline: 2px; font-size: 0.6875rem; color: color-mix(in oklch, var(--ink) 62%, transparent); }
-.room-name { padding-inline: 2px; font-size: 0.9375rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
-.room-at { padding-inline: 2px; font-size: 0.8125rem; color: color-mix(in oklch, var(--ink) 65%, transparent); font-variant-numeric: tabular-nums; }
-.room-add { justify-self: start; margin-top: 4px; }
+/* Room for one more?: tiles like the questions' (the photo, then the text under it). */
+.room-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.room-tile { display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 2px; }
+.room-photo { display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
+.room-why { margin-top: 8px; font-size: 0.6875rem; color: color-mix(in oklch, var(--ink) 62%, transparent); }
+.room-name { font-size: 0.9375rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+.room-at { font-size: 0.8125rem; color: color-mix(in oklch, var(--ink) 65%, transparent); font-variant-numeric: tabular-nums; }
+.room-add { justify-self: start; margin-top: 6px; }
 .room-all { margin-top: 14px; }
 
 .plan-undo { display: flex; justify-content: center; padding: 4px 0; }
@@ -870,12 +985,21 @@ svg { display: block; }
 /* The heading takes focus only so the sheet announces its name; it is not a control, so no ring. */
 .sheet-head h2:focus { outline: none; }
 .sheet-body { overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--pad) calc(24px + env(safe-area-inset-bottom)); }
-.cat-group h3 { padding: 20px 0 4px; color: color-mix(in oklch, var(--ink) 62%, transparent); }
-.cat-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; }
-.cat-photo { display: block; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
-.cat-text { display: grid; gap: 2px; }
-.cat-name { font-weight: 600; line-height: 1.25; }
-.cat-line { font-size: 0.8125rem; line-height: 1.35; color: color-mix(in oklch, var(--ink) 75%, transparent); text-wrap: pretty; }
+.cat-group h3 { padding: 22px 0 10px; color: color-mix(in oklch, var(--ink) 62%, transparent); }
+/* Every option as a tile: the photo, the text under it, then Add and Photos. */
+.cat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+.cat-row { display: grid; grid-template-rows: auto 1fr auto; align-content: start; min-width: 0; }
+.cat-photo { display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
+.cat-text { display: grid; align-content: start; gap: 2px; padding-top: 8px; }
+.cat-name { font-weight: 600; line-height: 1.25; text-wrap: balance; }
+.cat-line {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: color-mix(in oklch, var(--ink) 75%, transparent);
+  text-wrap: pretty;
+}
+.cat-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 10px; }
+.cat-acts .tile-more { margin-top: 0; }
 .cat-why { margin-top: 2px; font-size: 0.75rem; font-weight: 600; font-stretch: 87.5%; color: color-mix(in oklch, var(--ink) 60%, transparent); }
 /* Add cross-fades to a filled check when the option is on her day. */
 .cat-add {
@@ -912,21 +1036,234 @@ svg { display: block; }
 .cat-add[aria-pressed="true"] .cat-add-label { opacity: 0; scale: 0.25; filter: blur(4px); }
 .mark-on .tick { stroke: var(--on-accent); }
 
-/* ---------- Bring ---------- */
+/* ---------- The peek ---------- */
 
-.bring { display: grid; gap: 8px; }
-.bring li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; align-items: baseline; }
-.bring li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); translate: 0 -2px; }
+/* Phone: a full-height bottom sheet (12 px from the top, 20 px corners): the title and close button
+   on top, Done at the bottom, the things scrolling between them. */
+.peek {
+  width: 100%;
+  max-width: 100%;
+  height: calc(100% - 12px);
+  max-height: none;
+  margin: 12px 0 0;
+  border-radius: 20px 20px 0 0;
+}
+.peek::backdrop { background: rgb(10 12 40 / 0.45); }
+.peek-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px var(--pad) 14px;
+  box-shadow: 0 1px 0 var(--hairline);
+}
+.peek-titles { flex: 1 1 auto; min-width: 0; display: grid; gap: 4px; padding-top: 6px; }
+.peek-head h2 { font-family: var(--font-display); font-size: 1.75rem; line-height: 1.1; font-weight: 600; letter-spacing: -0.01em; }
+/* The title takes focus only so the dialog announces its name; no ring. */
+.peek-head h2:focus { outline: none; }
+.peek-hint { font-size: 0.9375rem; color: color-mix(in oklch, var(--ink) 72%, transparent); text-wrap: pretty; }
+.peek-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: color-mix(in oklch, var(--ink) 8%, transparent);
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition-property: scale, background-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+.peek-x .i { width: 20px; height: 20px; }
+.peek-x:active { scale: 0.96; }
+@media (hover: hover) {
+  .peek-x:hover { background-color: color-mix(in oklch, var(--ink) 14%, transparent); }
+}
+.peek-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 4px var(--pad) 24px; }
+.peek-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px var(--pad) calc(12px + env(safe-area-inset-bottom));
+  box-shadow: 0 -1px 0 var(--hairline);
+}
+.peek-fits { flex: 1 1 auto; font-size: 0.875rem; line-height: 1.4; text-wrap: pretty; }
+.peek-done { margin-left: auto; min-width: 128px; justify-content: center; }
+
+/* A sight or a food: one compact row per thing. Thumbnail (4:3, 112 px) and text side by side, the
+   photo strip opening under them, "This one" across the row. */
+.peek-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-areas: "thumb text" "strip strip" "toggle toggle";
+  column-gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.peek-row:last-child { border-bottom: 0; }
+.peek-row > .peek-thumb { grid-area: thumb; }
+.peek-row > .peek-text { grid-area: text; }
+.peek-row > .peek-strip { grid-area: strip; }
+.peek-row > .peek-toggle { grid-area: toggle; }
+.peek-thumb {
+  align-self: start;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition-property: scale, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+.peek-thumb:active { scale: 0.96; }
+.peek-thumb[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.peek-thumb-img { display: block; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
+.peek-thumb-img img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
+.peek-text { display: grid; align-content: start; gap: 3px; min-width: 0; }
+.peek-name { font-size: 1.0625rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+/* The whole line, never cut: it is the one sentence she chooses by (three to four lines at most). */
+.peek-line {
+  font-size: 0.90625rem;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+.peek-facts { font-size: 0.8125rem; line-height: 1.4; color: color-mix(in oklch, var(--ink) 72%, transparent); font-variant-numeric: tabular-nums; }
+.peek-strip { overflow: hidden; }
+.peek-strip .stop-photos { padding-top: 12px; }
+/* In the peek the photos sit at 88 % of the strip, so the next one shows; each has its own corners. */
+.peek .stop-strip { grid-auto-columns: 88%; gap: 8px; border-radius: 0; }
+.peek .stop-photo { border-radius: 14px; overflow: hidden; }
+/* "This one": a hairline ring; pressed, an ink fill and a check that scales in. */
+.peek-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 128px;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition-property: scale, background-color, color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: var(--ease-out);
+}
+.peek-toggle:active { scale: 0.96; }
+.peek-toggle-in { position: relative; display: inline-flex; align-items: center; transition: translate 180ms var(--ease-out); }
+.peek-toggle .tick-i {
+  position: absolute;
+  right: calc(100% + 6px);
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+  scale: 0.25;
+  filter: blur(4px);
+  transition-property: opacity, scale, filter;
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+}
+.peek-toggle[aria-pressed="true"] { background-color: var(--ink); color: var(--on-ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.peek-toggle[aria-pressed="true"] .peek-toggle-in { translate: 11px 0; }
+.peek-toggle[aria-pressed="true"] .tick-i { opacity: 1; scale: 1; filter: blur(0); }
+@media (hover: hover) {
+  .peek-toggle[aria-pressed="false"]:hover { background-color: color-mix(in oklch, var(--ink) 8%, transparent); }
+}
+
+/* An area, a wild card or a stop: one thing, bigger. */
+.peek-thing { display: grid; align-content: start; padding-top: 16px; }
+/* The laptop story-card rules name grid areas on .stop-photos / .stop-text; inside the single peek
+   those names would open implicit columns, so its parts stay in one column here. */
+.peek-thing > .stop-photos, .peek-thing > .peek-text, .peek-thing > .peek-toggle { grid-area: auto; }
+.peek-thing .peek-text { padding-top: 10px; gap: 6px; }
+.stop-photos:not(:has(.stop-dots)) + .peek-text { padding-top: 16px; }
+/* The header already carries the title; the body's copy stays only as the article's accessible name. */
+.peek-thing .peek-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.peek-thing .peek-line { display: block; font-size: 1rem; line-height: 1.5; }
+.peek-thing .peek-facts { font-size: 0.875rem; }
+.peek-thing .peek-toggle { justify-self: start; min-width: 168px; }
 
 /* ---------- Wider screens ---------- */
 
+@media (min-width: 640px) {
+  .tiles--many { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tile-label { font-size: 1.125rem; }
+  .tile-sub, .tile-more { font-size: 0.90625rem; }
+  .cat-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @media (min-width: 768px) {
   .sheet { max-width: 640px; max-height: 84vh; margin: auto; border-radius: 20px; }
 }
-@media (min-width: 900px) {
-  .tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); }
-}
+/* Laptop: the questions span the wide column, four across, the buttons inline under the grid. On
+   the pick-one steps the none button is the last cell of the grid, as tall as a tile. */
 @media (min-width: 1024px) {
+  /* The note shares the questions' column and left edge (the board stays centred above it), 40 px
+     under the board; the question follows closer (two classes: `.section` below sets 112 px), so
+     the first row of photos stays about where it was. */
+  #note { padding-top: 40px; }
+  #note > .note { max-width: var(--wide); }
+  .section.section--ask { padding-top: 64px; }
+  .step-title { font-size: clamp(44px, 4.2vw, 60px); line-height: 1.04; }
+  .step-hint { margin: 10px 0 22px; font-size: 1rem; }
+  .tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 22px 20px; }
+  .tiles--one { --ar: 4 / 3; }
+  .step-none { grid-column: span var(--span); min-height: 0; margin: 0; border-radius: 18px; font-size: 1.0625rem; }
+  .stage-foot { position: static; margin-top: 26px; padding: 0; background: none; }
+  .peek, .catalogue {
+    width: min(1040px, 100% - 48px);
+    max-width: none;
+    height: 88vh;
+    height: 88svh;
+    max-height: none;
+    margin: auto;
+    border-radius: 22px;
+  }
+  .peek-head, .peek-body, .peek-foot { padding-left: 32px; padding-right: 32px; }
+  .peek-head { padding-top: 22px; }
+  .peek-head h2 { font-size: 2rem; }
+  /* Two columns of rows; the thumbnail grows to 160 px and "This one" sits at the right edge. */
+  /* align-items: start, so a row with its photos open does not stretch its neighbour (and push that
+     row's "This one" to the bottom of an empty block). */
+  .peek-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; align-items: start; }
+  .peek-row { grid-template-columns: 160px minmax(0, 1fr); grid-template-areas: "thumb text" "thumb toggle" "strip strip"; column-gap: 16px; }
+  .peek-row:nth-last-child(2):nth-child(odd) { border-bottom: 0; }
+  .peek-row .peek-toggle { justify-self: end; align-self: end; }
+  .peek--one .stop-strip { grid-auto-columns: 92%; }
+  /* Capped at 46vh so the line and "This one" still show under the photo on a 900 px screen. */
+  /* 16:10 of the strip's 92 % column (dialog width less 64 px padding), capped at 46vh. Set as a
+     height, not max-height: WebKit keeps the ratio by narrowing the photo instead of cropping it. */
+  .peek--one .stop-photo { aspect-ratio: auto; height: min(46vh, (min(1040px, 100vw - 48px) - 64px) * 0.92 * 10 / 16); }
+  .peek--one .peek-text { max-width: 62ch; }
+  .catalogue .sheet-head, .catalogue .sheet-body { padding-left: 32px; padding-right: 32px; }
+  .cat-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 20px; }
+  /* A story card is a row: the photos on the left (44 %), the rest on the right. */
+  .stop-card {
+    display: grid;
+    grid-template-columns: 44% minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "photos top" "photos text";
+    column-gap: 20px;
+    align-items: start;
+  }
+  .stop-top { grid-area: top; padding: 6px 8px 6px 0; }
+  .stop-photos { grid-area: photos; }
+  .stop-text, .stop-photos:has(.stop-dots) + .stop-text { grid-area: text; padding: 4px 10px 4px 0; }
+  .stop-title { font-size: 1.625rem; }
   .hud-clock { --fw: 17px; }
   .hero { padding-top: calc(env(safe-area-inset-top) + 56px); }
   .board { padding: 22px 22px 18px; border-radius: 14px; }
@@ -935,6 +1272,12 @@ svg { display: block; }
   .section { padding-top: 112px; }
   .section > h2, .day-head h2 { font-size: 2rem; }
   .plan-title { font-size: 1.75rem; }
+}
+/* Short laptop screens (1280 x 800): the pick-one photos drop to 16:9 (3:2 still left Wild card 26 px
+   short) and the question sits a little smaller, so every step still fits with its buttons. */
+@media (min-width: 1024px) and (max-height: 860px) {
+  .step-title { font-size: 48px; }
+  .tiles--one { --ar: 16 / 9; }
 }
 
 /* From 1280 px the day is two columns: the map sticks on the left, the plan runs on the right,
@@ -964,9 +1307,9 @@ svg { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-halo, .plan-item, .stop-card, .tile, .tile-photo img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
+  .map-halo, .plan-item, .stop-card, .tile, .tile-photo, .tile-photo img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
+  .tile-more, .pill, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
   .note-en.is-on { animation: none; }
-  body { transition: none; }
   .hud, .hud[data-on] { transition: none; }
   .stage-foot, .stage.is-foot .stage-foot { transition: none; }
   .hud-fill { transition: none; }

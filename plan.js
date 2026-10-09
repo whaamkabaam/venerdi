@@ -1,4 +1,5 @@
-/* Venerdì day builder: turns picked option ids into a loose, relaxed plan, and her four answers into picks.
+/* Venerdì day builder: turns picked option ids into a loose, relaxed plan, and her four answers (plus
+   anything she asked for by name) into picks.
    Pure and deterministic; all copy comes from content.json. Loads in the page and in Node. */
 (function (root) {
   'use strict';
@@ -313,6 +314,7 @@
   const BUDGET = 4;          // weights of a relaxed day: a main thing 1, a small thing 0.5, food 0
   const ROOM_BUDGET = 5;     // "Room for one more?" may take the day this far
   const TRIES = 6;           // candidates tried for one answer before it goes to extras
+  const FILL_BELOW = 3;      // a composed day with fewer stops than this gets my default-day picks too
   const NEAR_M = 800;        // a small thing this close to a stop is on the way
   const HOME = 'pantheon';   // where distances start from when nothing is picked yet
   const STEP_ORDER = ['see', 'wander', 'wild', 'eat']; // the order the board fills in
@@ -377,6 +379,16 @@
       .map((x) => x.o);
   }
 
+  // A thing she asked for by name (answers.want) belongs to the sight or food she named it under
+  // (answers.wantFrom), else, as from a link, to the first of her answered sights and foods, in tap
+  // order, that it serves. That answer is the label on its card and the step it fills in with.
+  const wantReason = (o, answers) => {
+    const vibes = [...(answers.see || []), ...(answers.eat || [])];
+    const from = answers.wantFrom && answers.wantFrom[o.id];
+    if (from && vibes.includes(from) && rankFor(o, from) !== null) return from;
+    return vibes.find((r) => rankFor(o, r) !== null) || null;
+  };
+
   function compose(C, answers = {}) {
     const see = answers.see || [], eatIn = answers.eat || [];
     const wander = answers.wander || null, wild = answers.wild || null;
@@ -384,33 +396,55 @@
     const O = optionsById(C);
     const step = (id) => C.ask.steps.find((s) => s.id === id);
 
-    // The wander option first (it anchors the day's geography), then the wild card, then food (what
-    // she cares about most, and it costs the least), then the sights with what is left of the budget.
+    // The wander option first (it anchors the day's geography), then the wild card, then what she
+    // asked for by name, in the order she pressed it, then food (what she cares about most, and it
+    // costs the least), then the sights with what is left of the budget.
     const queue = [];
     const area = wander && step('wander').tiles.find((t) => t.id === wander);
     if (area && O[area.option]) queue.push({ reason: 'wander', step: 'wander', fixed: area.option });
     if (wild && O[wild]) queue.push({ reason: 'wild', step: 'wild', fixed: wild });
+    (answers.want || []).forEach((id) => {
+      const reason = O[id] && wantReason(O[id], answers);
+      if (reason) queue.push({ reason, step: see.includes(reason) ? 'see' : 'eat', fixed: id, want: true });
+    });
     FOOD_FIRST.filter((r) => eatIn.includes(r)).forEach((reason) => queue.push({ reason, step: 'eat' }));
     see.forEach((reason) => queue.push({ reason, step: 'see' }));
 
     const picks = [], extras = [];
     const ids = () => picks.map((p) => p.id);
-    const toExtras = (id, reason) => { if (id && !extras.some((e) => e.id === id) && !ids().includes(id)) extras.push({ id, reason }); };
+    const toExtras = (id, reason, want) => { if (id && !extras.some((e) => e.id === id) && !ids().includes(id)) extras.push(want ? { id, reason, want } : { id, reason }); };
     // Every composed day stays easy (see easyDay), so each addition is tested on the whole day.
+    // A named thing that was parked is tried again before each sight or food of mine (a lunch on the
+    // day can make room for it), while its own sight or food has no pick of mine yet. It is never my
+    // pick for another sight or food, so it always carries the one she named it under.
+    const parkedWant = (id) => extras.some((e) => e.want && e.id === id);
+    const retryWants = () => {
+      for (const e of extras.filter((x) => x.want)) {
+        if (picks.some((p) => !p.want && p.reason === e.reason)) continue;
+        const taken = ids();
+        if (weightOf(C, taken) + (O[e.id].weight || 0) > BUDGET || !easyDay(C, [...taken, e.id])) continue;
+        picks.push({ id: e.id, reason: e.reason, step: see.includes(e.reason) ? 'see' : 'eat', want: true });
+        extras.splice(extras.indexOf(e), 1);
+      }
+    };
     for (const q of queue) {
+      if (!q.fixed) retryWants();
       // The class is lunch, once it is on the day; if it did not fit, lunch gets its trattoria.
-      if (q.reason === 'lunch' && picks.some((p) => p.reason === 'class')) continue;
+      if (!q.fixed && q.reason === 'lunch' && picks.some((p) => p.reason === 'class')) continue;
+      // A sight or food with one of her named things on the day needs no pick of mine. If every
+      // thing she named under it was parked, it gets its pick as if she had named nothing.
+      if (!q.fixed && picks.some((p) => p.want && p.reason === q.reason)) continue;
       const taken = ids();
       const w = weightOf(C, taken);
       const fits = (id) => w + (O[id].weight || 0) <= BUDGET && easyDay(C, [...taken, id]);
       if (q.fixed) {
         if (taken.includes(q.fixed)) continue;
-        if (fits(q.fixed)) picks.push({ id: q.fixed, reason: q.reason, step: q.step }); else toExtras(q.fixed, q.reason);
+        if (fits(q.fixed)) picks.push({ id: q.fixed, reason: q.reason, step: q.step, want: !!q.want }); else toExtras(q.fixed, q.reason, q.want);
         continue;
       }
       // Street food beside a lunch already on the day: the second-lunch penalty in scoreOf (and
       // build's one-lunch rule) leave it the non-lunch stop (supplì).
-      const cands = ranked(C, q.reason, taken, taken);
+      const cands = ranked(C, q.reason, taken, taken, (o) => !parkedWant(o.id));
       let chosen = null, tries = 0;
       for (const o of cands) {
         if (w + (o.weight || 0) > BUDGET) continue; // too heavy for the day: a lighter one may still fit
@@ -421,9 +455,19 @@
       else if (cands.length) toExtras(cands[0].id, q.reason);
     }
     // The board fills in the order she answered: the sights, the area, the wild card, then food,
-    // and her tap order inside each step.
+    // and her tap order inside each step (things she asked for by name, in the order she pressed them).
     const tap = (p) => (p.step === 'see' ? see.indexOf(p.reason) : p.step === 'eat' ? eatIn.indexOf(p.reason) : 0);
     picks.sort((a, b) => STEP_ORDER.indexOf(a.step) - STEP_ORDER.indexOf(b.step) || tap(a) - tap(b));
+    // A light day (fewer than FILL_BELOW stops) gets my picks from the default day, the day that
+    // skipping every step gives, wherever they still fit: picking one thing never leaves her a
+    // thinner Friday than picking nothing. They go last on the board, as Felix's pick.
+    if (picks.length < FILL_BELOW) {
+      for (const d of C.defaultDay || []) {
+        const taken = ids();
+        if (!O[d.id] || taken.includes(d.id) || weightOf(C, taken) + (O[d.id].weight || 0) > BUDGET || !easyDay(C, [...taken, d.id])) continue;
+        picks.push({ id: d.id, reason: 'felix', step: 'felix' });
+      }
+    }
     return { picks: picks.map(({ id, reason }) => ({ id, reason })), extras: extras.filter((e) => !ids().includes(e.id)) };
   }
 
@@ -473,5 +517,5 @@
     return out;
   }
 
-  root.VenerdiPlan = { build, compose, alternatives, suggestions, bestReason, toMin, hhmm, fmt, haversine };
+  root.VenerdiPlan = { build, compose, alternatives, suggestions, bestReason, wantReason, toMin, hhmm, fmt, haversine };
 })(typeof window !== 'undefined' ? window : globalThis);

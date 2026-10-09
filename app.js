@@ -1,7 +1,8 @@
-/* Venerdì v5: four photo questions compose a relaxed Friday, played back on a DEPARTURES board,
-   then shown as story cards she can swap, remove and add to. Renders from window.SITE (data.js)
-   and plan.js (the composer and the day builder), then wires the boards, the sky, HUD, map,
-   persistence and sharing. Every visible string comes from content.json. */
+/* Venerdì v6: four photo questions compose a relaxed Friday, played back on a DEPARTURES board,
+   then shown as story cards she can swap, remove and add to. Behind every choice, one tap away, a
+   peek: the things in it, in photos, and a toggle to ask for one by name. Renders from window.SITE
+   (data.js) and plan.js (the composer and the day builder), then wires the boards, the sky, HUD,
+   map, persistence and sharing. Every visible string comes from content.json. */
 (() => {
   'use strict';
 
@@ -16,15 +17,27 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const slot = (name) => $(`[data-slot="${name}"]`);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const KEY = 'venerdi:v6:';
   const store = {
-    get(k, d) { try { const v = localStorage.getItem('venerdi:v5:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-    set(k, v) { try { localStorage.setItem('venerdi:v5:' + k, JSON.stringify(v)); } catch { /* private mode */ } },
+    get(k, d) { try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch { /* private mode */ } },
   };
+  // A v5 visitor's state is read once: on the first v6 visit every v5 key is copied over.
+  try {
+    if (localStorage.getItem(KEY + 'migrated') === null) {
+      const OLD = 'venerdi:v5:';
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+      keys.filter((k) => k.startsWith(OLD) && localStorage.getItem(KEY + k.slice(OLD.length)) === null).forEach((k) => localStorage.setItem(KEY + k.slice(OLD.length), localStorage.getItem(k)));
+      localStorage.setItem(KEY + 'migrated', '1');
+    }
+  } catch { /* private mode */ }
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const OPT = Object.fromEntries(C.options.map((o) => [o.id, o]));
   const WHY = C.pickReasons;
+  const PK = C.peek;
   const reasonLabel = (r) => (WHY[r] || WHY.added).label;
-  // Haptics (web-haptics): a tick on a tile, a firmer one on Plan Friday. Called inside the tap.
+  // Haptics (web-haptics): a tick on a tile or a toggle, a firmer one on Show me Friday. Called inside the tap.
   const haptics = window.WebHaptics ? new window.WebHaptics() : null;
   const buzz = (p) => { try { haptics?.trigger(p)?.catch?.(() => {}); } catch { /* no haptics here */ } };
 
@@ -33,6 +46,10 @@
     chev: '<svg class="i" viewBox="0 0 18 18" aria-hidden="true"><path d="m5 7 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     plus: '<svg class="mark-off" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.75v8.5M7.75 12h8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
     check: '<svg class="mark-on" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path class="tick" d="m7.5 12.4 3 3 6-6.7" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    tick: '<svg class="tick-i" viewBox="0 0 16 16" aria-hidden="true"><path d="m3.25 8.4 3 3 6.5-6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    photos: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.75" y="1.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/><rect x="8.75" y="1.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/><rect x="1.75" y="8.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/><rect x="8.75" y="8.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/></svg>',
+    close: '<svg class="i" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5 14.5 14.5M14.5 5.5 5.5 14.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    back: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3.5M7.5 4 3.5 8l4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
   /* ------------------------------------------------------------------ */
@@ -89,7 +106,14 @@
     f.ft.textContent = f.fb.textContent = f.lt.textContent = f.lb.textContent = ch;
     f.cur = ch;
   }
+  // Where a leaf rests (measured, qa/v6/perf.md). Blink pays for every composited layer, so in Chrome a
+  // leaf that has landed drops its transform and only flaps mid-flip are 3D. WebKit (Safari, every
+  // iPhone browser) pays more to repaint the board around flat leaves than to keep each leaf on its own
+  // layer, so there the leaves rest at rotateX(0) / -90deg, as in v5.
+  const LEAF_LAYERS = navigator.vendor === 'Apple Computer, Inc.';
+  const restFlat = (els) => { if (!LEAF_LAYERS) els.forEach((el) => { el.style.transform = ''; }); };
   // One flip: the upper leaf with the old glyph folds down, the lower leaf with the new glyph lands.
+  // Resting flat, the upper leaf takes the new glyph too, so nothing moves when the transforms drop.
   function addFlip(tl, f, next, at, d) {
     tl.call(() => {
       f.lt.textContent = f.cur;
@@ -99,7 +123,7 @@
     }, null, at);
     tl.fromTo(f.ltEl, { rotationX: 0 }, { rotationX: -90, duration: d, ease: 'power1.in', immediateRender: false }, at);
     tl.fromTo(f.lbEl, { rotationX: 90 }, { rotationX: 0, duration: d, ease: 'power1.out', immediateRender: false }, at + d);
-    tl.call(() => { f.fb.textContent = next; f.cur = next; }, null, at + 2 * d);
+    tl.call(() => { f.fb.textContent = next; f.cur = next; if (!LEAF_LAYERS) { f.lt.textContent = next; restFlat([f.ltEl, f.lbEl]); } }, null, at + 2 * d);
   }
   const GLYPHS = 'ABCDEFGHIJKLMNOPRSTUVZ0123456789';
   const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
@@ -167,6 +191,8 @@
     KINDS.forEach((k) => row.el.classList.remove(k));
     if (d && d.kind) row.el.classList.add('is-' + d.kind);
     if (d && d.live) row.el.classList.add('is-live');
+    // A row with nothing on it (the spare one kept for her TBC line): the board shows plain black there.
+    row.el.classList.toggle('is-empty', !d);
     const t = rowTexts(d, row.widths);
     row.srs[0].textContent = d ? (d.srTime ?? d.time ?? '') : '';
     row.srs[1].textContent = d ? (d.label || d.to || '') : '';
@@ -288,7 +314,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Static parts: note, send, bring, footer                             */
+  /* Static parts: note, send, footer                                    */
   /* ------------------------------------------------------------------ */
 
   function renderStatic() {
@@ -307,21 +333,8 @@
     slot('day-title').textContent = C.day.title;
     slot('change-answers').textContent = C.day.changeAnswers;
     slot('map-title').textContent = U.mapTitle;
-    slot('bring-title').textContent = U.bringTitle;
-    slot('bring').innerHTML = C.bring.map((b) => `<li>${esc(b)}</li>`).join('');
-
-    // Credits: every photo the page can show (question tiles and every option) plus hero-rome for og.jpg.
-    const shown = [];
-    const add = (k) => { if (k && IMG[k] && IMG[k].credit && !shown.includes(k)) shown.push(k); };
-    STEPS.forEach((s) => s.tiles.forEach((t) => add(tilePhoto(t))));
-    C.options.forEach((o) => (o.photos || []).forEach(add));
-    add('hero-rome');
-    slot('credits').innerHTML = shown.length
-      ? `<details class="credits"><summary>${esc(U.credits)}${ICON.chev}</summary><ul>${shown
-          .map((k) => { const c = IMG[k].credit; return `<li><a href="${esc(c.sourceUrl)}" target="_blank" rel="noopener">${esc(c.title)}</a>${c.author ? ` ${esc(U.creditBy)} ${esc(c.author)}` : ''}, ${c.licenseUrl ? `<a href="${esc(c.licenseUrl)}" target="_blank" rel="noopener">${esc(c.license)}</a>` : esc(c.license)}</li>`; })
-          .join('')}</ul></details>`
-      : '';
-    slot('footer').textContent = C.footer.line;
+    // Who took each photo is on credits.html (built by tooling/build-data.mjs); the footer links there.
+    slot('credits').textContent = U.credits;
 
     slot('hud').setAttribute('aria-label', U.hud.label);
     $$('main > section').forEach((sec) => { if (U.hud[sec.id]) sec.dataset.hud = U.hud[sec.id]; });
@@ -344,31 +357,54 @@
   const tileSub = (t) => tileOption(t)?.tileSub || t.sub || '';
   // The wild card stores its option id (compose() takes it as is); the other steps store the tile id.
   const tileValue = (s, t) => (s.id === 'wild' ? t.option : t.id);
-  const emptyAnswers = () => Object.fromEntries(STEPS.map((s) => [s.id, s.multi ? [] : null]));
+  const tileOf = (s, v) => s.tiles.find((t) => tileValue(s, t) === v);
+  // `want`: the things she named in a peek (option ids, in the order she pressed them), and
+  // `wantFrom`: the sight or food each was named under.
+  const emptyAnswers = () => ({ ...Object.fromEntries(STEPS.map((s) => [s.id, s.multi ? [] : null])), want: [], wantFrom: {} });
   const cloneAnswers = (a) => ({ ...emptyAnswers(), ...JSON.parse(JSON.stringify(a || {})) });
   const chosen = (a, s) => { const v = a[s.id]; return Array.isArray(v) ? v : v ? [v] : []; };
   const counterText = (i) => fmt(ASK.counter, { n: i + 1, total: STEPS.length });
+  const progressText = (i) => fmt(ASK.progress, { n: i + 1, total: STEPS.length });
+  // The sights and foods she answered (the pick-any steps), in tap order.
+  const vibesOf = (a) => STEPS.filter((s) => s.multi).flatMap((s) => a[s.id] || []);
+  const serves = (o, reason) => !!(o && o.serves && reason in o.serves);
+  // Every option behind a sight or a food, best first: what its peek lists.
+  const servedBy = (reason) => C.options.filter((o) => serves(o, reason)).sort((a, b) => a.serves[reason] - b.serves[reason]);
+  // Her named things under one sight or food (the same rule compose() uses).
+  const wantsFor = (a, reason) => (a.want || []).filter((id) => OPT[id] && P.wantReason(OPT[id], a) === reason);
 
-  // `draft` is what the open stage shows; `answers` (below) only changes on Plan Friday.
+  // `draft` is what the open stage shows; `answers` (below) only changes on Show me Friday.
   const stage = { step: 0, open: true, draft: emptyAnswers(), tl: null, count: [], busy: false };
 
+  // A tile is the photo, then its label and sub under it; the whole tile selects. Under the sub, a
+  // sibling text button (never inside the tile) opens the peek: "See all 8" on the pick-any steps,
+  // "Photos" on the pick-one steps. On the pick-one steps the none button is the grid's last cell.
   function stepHTML(s, i) {
     const lid = `ask-${esc(s.id)}-t`;
-    const tiles = s.tiles.map((t) => {
-      const state = s.multi ? 'aria-pressed="false"' : 'role="radio" aria-checked="false" tabindex="-1"';
-      return `<button type="button" class="tile" ${state} data-step="${i}" data-value="${esc(tileValue(s, t))}">
-          ${thumbHTML(tilePhoto(t), 'tile-photo', '(min-width: 900px) 160px, 46vw', '', { loading: i ? 'lazy' : 'eager' })}
-          <span class="tile-text"><span class="tile-label">${esc(tileLabel(t))}</span><span class="tile-sub">${esc(tileSub(t))}</span></span>
-          <span class="tile-check" aria-hidden="true">${ICON.check}</span>
-        </button>`;
+    const tiles = s.tiles.map((t, k) => {
+      const state = s.multi ? 'aria-pressed="false"' : `role="radio" aria-checked="false" aria-posinset="${k + 1}" aria-setsize="${s.tiles.length}" tabindex="-1"`;
+      const v = esc(tileValue(s, t));
+      // "See all 8", "See both", or plain "Photos" when one thing is behind it.
+      const n = s.multi ? servedBy(t.id).length : 1;
+      const more = n === 1 ? PK.openPhotos : n === 2 ? PK.openTwo : fmt(PK.open, { n });
+      return `<div class="tile-cell">
+          <button type="button" class="tile" ${state} data-step="${i}" data-value="${v}">
+            ${thumbHTML(tilePhoto(t), 'tile-photo', '(min-width: 1024px) 280px, (min-width: 640px) 31vw, 46vw', `<span class="tile-check" aria-hidden="true">${ICON.check}</span>`, { loading: i ? 'lazy' : 'eager' })}
+            <span class="tile-label">${esc(tileLabel(t))}</span><span class="tile-sub">${esc(tileSub(t))}</span>
+          </button>
+          <button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span></button>
+        </div>`;
     }).join('');
-    // Desktop: four across, or three when the tiles come in threes.
-    const cols = s.tiles.length > 4 && s.tiles.length % 3 === 0 ? 3 : 4;
+    // Laptop: four across. The none button fills the empty cells of the last row. When the tiles
+    // would fill every row of four (Wander's 8), the step goes five across instead, so the none
+    // button still closes the last row and the step fits one 900 px screen (spec 12.8, build-notes.md).
+    const n = s.tiles.length, cols = s.none && n % 4 === 0 ? 5 : 4;
+    const span = s.none ? (cols - (n % cols)) || cols : 0;
+    const none = s.none ? `<button type="button" class="step-none" data-action="none" style="--span:${span}">${esc(s.none)}</button>` : '';
     return `<fieldset class="step" data-step="${i}"${i ? ' hidden' : ''}>
-        <legend class="step-title" id="${lid}" tabindex="-1">${esc(s.title)}</legend>
+        <legend class="step-title" id="${lid}" tabindex="-1"><span class="sr-only">${esc(progressText(i))}: </span>${esc(s.title)}</legend>
         <p class="step-hint">${esc(s.hint)}</p>
-        <div class="tiles${s.multi ? '' : ' tiles--square'}" style="--cols:${cols}" role="${s.multi ? 'group' : 'radiogroup'}" aria-labelledby="${lid}">${tiles}</div>
-        ${s.none ? `<button type="button" class="step-none" data-action="none">${esc(s.none)}</button>` : ''}
+        <div class="tiles ${s.multi ? 'tiles--any' : 'tiles--one'}${n > 4 ? ' tiles--many' : ''}" style="--cols:${cols}"${s.multi ? ` role="group" aria-labelledby="${lid}"` : ''}>${tiles}${none}</div>
       </fieldset>`;
   }
   function renderStage() {
@@ -377,8 +413,8 @@
         <div class="stage-count" aria-hidden="true">${FLAP.repeat(Array.from(counterText(STEPS.length - 1)).length)}</div>
         <div class="stage-steps">${STEPS.map(stepHTML).join('')}</div>
         <div class="stage-foot">
-          <button type="button" class="btn stage-back" data-action="back">${esc(ASK.back)}</button>
-          <button type="button" class="btn btn--primary stage-next" data-action="next"></button>
+          <button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>
+          <button type="button" class="btn stage-next" data-action="next"></button>
         </div>
       </div>
       <div class="stage-closed"><p class="stage-answers"></p><button type="button" class="btn btn--small" data-action="change">${esc(ASK.change)}</button></div>`;
@@ -403,15 +439,22 @@
       addFlip(f.tl, f, ch, k * 0.03, 0.07);
     });
   }
-  // "Your answers: Old Rome, The view, Pastries, Trastevere": the answer's own label on the pick-any
-  // steps (as on the cards), the tile's label on the pick-one steps.
+  // "Your answers: Old Rome (Pantheon), Pastries, Trastevere": the answer's own label on the pick-any
+  // steps (as on the cards) with the things she named under it, the tile's label on the pick-one steps.
   const answersLine = (a) => {
     const labels = [];
-    STEPS.forEach((s) => chosen(a, s).forEach((v) => { const t = s.tiles.find((x) => tileValue(s, x) === v); if (t) labels.push(s.multi && WHY[v] ? WHY[v].label : tileLabel(t)); }));
-    // Nothing answered (every step skipped): the day is Felix's pick.
-    return labels.length ? fmt(ASK.answers, { list: labels.join(U.listJoin) }) : WHY.felix.label;
+    STEPS.forEach((s) => chosen(a, s).forEach((v) => {
+      const t = tileOf(s, v);
+      if (!t) return;
+      const label = s.multi && WHY[v] ? WHY[v].label : tileLabel(t);
+      const named = s.multi ? wantsFor(a, v).map((id) => OPT[id].title) : [];
+      labels.push(named.length ? fmt(ASK.answerWants, { label, list: named.join(U.listJoin) }) : label);
+    }));
+    // Nothing answered (every step skipped): "You left it to me :)".
+    return labels.length ? fmt(ASK.answers, { list: labels.join(U.listJoin) }) : ASK.answersNone;
   };
-  // Tiles, the primary button, Back, the counter's screen-reader text and the closed line follow the state.
+  // Tiles (and their subs), the primary button, Back, the counter's screen-reader text and the
+  // closed line follow the state.
   function syncStage() {
     const host = slot('stage');
     const s = STEPS[stage.step];
@@ -423,15 +466,26 @@
       const st = STEPS[+b.dataset.step];
       const on = chosen(stage.draft, st).includes(b.dataset.value);
       b.setAttribute(st.multi ? 'aria-pressed' : 'aria-checked', String(on));
+      // A sight or a food with things she named under it lists them in place of its sub.
+      if (!st.multi) return;
+      const w = on ? wantsFor(stage.draft, b.dataset.value) : [];
+      const sub = w.length ? fmt(PK.wanted, { list: w.map((id) => OPT[id].title).join(U.listJoin) }) : tileSub(tileOf(st, b.dataset.value));
+      const el = $('.tile-sub', b);
+      if (el.textContent !== sub) el.textContent = sub;
     });
-    // A radiogroup is one tab stop: the checked tile, or the first.
-    $$('.tiles[role="radiogroup"]', host).forEach((g) => {
+    // A set of radios is one tab stop: the checked tile, or the first.
+    $$('.tiles--one', host).forEach((g) => {
       const tiles = $$('.tile', g);
       const cur = tiles.find((b) => b.getAttribute('aria-checked') === 'true') || tiles[0];
       tiles.forEach((b) => { b.tabIndex = b === cur ? 0 : -1; });
     });
+    // Nothing picked: a quiet Skip. Something picked: Next, in the primary style. The last step
+    // always reads Show me Friday.
     const last = stage.step === STEPS.length - 1;
-    $('.stage-next', host).textContent = last ? ASK.plan : chosen(stage.draft, s).length ? ASK.next : ASK.skip;
+    const any = chosen(stage.draft, s).length > 0;
+    const next = $('.stage-next', host);
+    next.textContent = last ? ASK.plan : any ? ASK.next : ASK.skip;
+    next.classList.toggle('btn--primary', last || any);
     $('.stage-back', host).hidden = stage.step === 0;
     $('.stage-count', host).dataset.text = counterText(stage.step);
   }
@@ -465,32 +519,39 @@
       const tl = gsap.timeline({ onComplete: () => { stage.tl = null; stage.busy = false; } });
       stage.tl = tl;
       // Out: tiles fade and rise 8 px, staggered; in: tiles rise from 12 px; the title cross-fades.
-      tl.to($$('.tile', out), { opacity: 0, y: -8, duration: 0.15, stagger: 0.02, ease: 'power1.in' }, 0);
+      tl.to($$('.tile-cell', out), { opacity: 0, y: -8, duration: 0.15, stagger: 0.02, ease: 'power1.in' }, 0);
       tl.to(parts(out), { opacity: 0, duration: 0.15, ease: 'power1.in' }, 0);
-      tl.call(() => { out.hidden = true; gsap.set([...$$('.tile', out), ...parts(out)], { clearProps: 'opacity,transform' }); land(); });
+      tl.call(() => { out.hidden = true; gsap.set([...$$('.tile-cell', out), ...parts(out)], { clearProps: 'opacity,transform' }); land(); });
       tl.fromTo(parts(inn), { opacity: 0 }, { opacity: 1, duration: 0.24, ease: 'power2.out', clearProps: 'opacity' });
-      tl.fromTo($$('.tile', inn), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out', stagger: 0.04, clearProps: 'opacity,transform' }, '<');
+      tl.fromTo($$('.tile-cell', inn), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out', stagger: 0.04, clearProps: 'opacity,transform' }, '<');
     };
     // If the top of the stage has scrolled away, bring it back first.
     const top = host.getBoundingClientRect().top;
     if (top < hudBottom()) scrollToY(top + scrollY - ASK_GAP, 0.3, run); else run();
   }
+  // Unselecting a sight or a food also lets go of the things she named under it.
+  function dropWants(d, reason) {
+    const gone = wantsFor(d, reason);
+    d.want = d.want.filter((id) => !gone.includes(id));
+    gone.forEach((id) => { delete d.wantFrom[id]; });
+  }
   function onTile(b) {
     buzz('selection');
     const s = STEPS[+b.dataset.step];
     const v = b.dataset.value, d = stage.draft;
-    if (s.multi) d[s.id] = d[s.id].includes(v) ? d[s.id].filter((x) => x !== v) : [...d[s.id], v];
-    else d[s.id] = d[s.id] === v ? null : v;
+    if (s.multi) {
+      if (d[s.id].includes(v)) { dropWants(d, v); d[s.id] = d[s.id].filter((x) => x !== v); } else d[s.id] = [...d[s.id], v];
+    } else d[s.id] = d[s.id] === v ? null : v;
     syncStage();
   }
-  // Arrow keys move through a radiogroup and select as they go.
+  // Arrow keys move through the radios and select as they go.
   function onStageKey(e) {
-    const b = e.target.closest('.tiles[role="radiogroup"] .tile');
+    const b = e.target.closest('.tiles--one .tile');
     if (!b) return;
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
     if (!step) return;
     e.preventDefault();
-    const tiles = $$('.tile', b.parentElement);
+    const tiles = $$('.tile', b.closest('.tiles'));
     const next = tiles[(tiles.indexOf(b) + step + tiles.length) % tiles.length];
     const s = STEPS[+next.dataset.step];
     stage.draft[s.id] = next.dataset.value;
@@ -498,6 +559,13 @@
     next.focus();
   }
   function onStageClick(e) {
+    const more = e.target.closest('.tile-more');
+    if (more) {
+      const i = +more.dataset.step, s = STEPS[i], v = more.dataset.value;
+      if (s.multi) openPeek(more, 'vibe', { step: i, value: v });
+      else openPeek(more, 'pick', { step: i, value: v, id: tileOf(s, v).option });
+      return;
+    }
     const tile = e.target.closest('.tile');
     if (tile) { onTile(tile); return; }
     const a = e.target.closest('[data-action]')?.dataset.action;
@@ -527,7 +595,7 @@
     const sec = $('#ask');
     scrollToY(sec.getBoundingClientRect().top + scrollY - ASK_GAP, 0.5, () => $('.step-title', host).focus({ preventScroll: true }));
   }
-  // Plan Friday: compose her answers, close the stage, glide to the board and let it play.
+  // Show me Friday: compose her answers, close the stage, glide to the board and let it play.
   function planFriday() {
     buzz('medium');
     answers = cloneAnswers(stage.draft);
@@ -537,6 +605,7 @@
     undoDrop();
     saveState();
     stage.open = false;
+    showDay();
     syncStage();
     update();
     // Focus follows her to the board (the button she pressed is hidden with the stage).
@@ -549,7 +618,7 @@
   /* Picks: state (in board order), persistence, the link                */
   /* ------------------------------------------------------------------ */
 
-  let answers = null;      // her answers as of the last Plan Friday (null until then)
+  let answers = null;      // her answers as of the last Show me Friday (null until then)
   let picks = [];          // [{ id, reason }]: the order the board fills in; the replay and the link keep it
   let freeText = '';
   let fromLink = false;
@@ -568,24 +637,41 @@
   const composedIds = () => composed().picks.map((p) => p.id);
   // "Room for one more?" as it stands (worked out once per update).
   let roomNow = [];
-  // Answers that went to extras and still have no stop of their own, in the order she answered.
+  // Answers that went to extras and still have no stop of their own, in the order she answered. A
+  // thing she named counts as parked until that thing itself is on the day.
   function parkedNow() {
     if (!answers) return [];
     const at = (e) => { for (const [i, s] of STEPS.entries()) { const k = s.multi ? chosen(answers, s).indexOf(e.reason) : s.id === e.reason ? 0 : -1; if (k >= 0) return i * 10 + k; } return 99; };
-    return composed().extras.filter((e) => !picks.some((p) => p.id === e.id || p.reason === e.reason)).sort((a, b) => at(a) - at(b));
+    return composed().extras.filter((e) => !picks.some((p) => p.id === e.id || (!e.want && p.reason === e.reason))).sort((a, b) => at(a) - at(b));
   }
-  const parkedLabels = () => parkedNow().map((e) => reasonLabel(e.reason)).join(U.listJoin);
+  // "Didn't fit: The weird stuff, Bone crypt.": a parked answer by its label, a named thing by its title.
+  const parkedLabels = () => parkedNow().map((e) => (e.want ? OPT[e.id].title : reasonLabel(e.reason))).join(U.listJoin);
 
   // Her answers in the link: one group per step, joined by "-": the pick-any steps as their
-  // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped.
-  const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (s.multi ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-');
+  // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped. A
+  // fifth group, when she named things in a peek, holds their ids joined by "." in pressed order,
+  // each after the letter of the sight or food she named it under: ar-pl-0-0-acolosseum.rpantheon
+  // (an id with no letter, as in links from before, goes to the first answer it serves).
+  const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (s.multi ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-')
+    + (a.want?.length ? `-${a.want.map((id) => (WHY[P.wantReason(OPT[id], a)]?.code || '') + id).join('.')}` : '');
   function decodeAnswers(code) {
     const a = emptyAnswers();
-    String(code).split('-').forEach((part, i) => {
+    const parts = String(code).split('-');
+    parts.slice(0, STEPS.length).forEach((part, i) => {
       const s = STEPS[i];
-      if (!s || !part) return;
+      if (!part) return;
       if (s.multi) Array.from(part).forEach((c) => { const t = s.tiles.find((x) => WHY[x.id]?.code === c); if (t && !a[s.id].includes(t.id)) a[s.id].push(t.id); });
       else { const t = s.tiles[parseInt(part, 36)]; if (t) a[s.id] = tileValue(s, t); }
+    });
+    // Named things: ids the page does not know, or that serve none of her sights and foods, drop out.
+    // A leading answer letter says which sight or food it was named under, if she answered that one.
+    const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
+    String(parts[STEPS.length] || '').split('.').forEach((seg) => {
+      const id = OPT[seg] ? seg : OPT[seg.slice(1)] ? seg.slice(1) : null;
+      if (!id || a.want.includes(id) || !vibesOf(a).some((r) => serves(OPT[id], r))) return;
+      a.want.push(id);
+      const from = id === seg ? null : byCode[seg[0]];
+      if (from && vibesOf(a).includes(from) && serves(OPT[id], from)) a.wantFrom[id] = from;
     });
     return a;
   }
@@ -606,18 +692,27 @@
 
   function loadState() {
     const q = new URLSearchParams(location.search);
-    if (q.has('p')) {
+    if (q.has('p') || q.has('a')) {
       const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
       const codes = Array.from(q.get('r') || '');
-      const linkPicks = cleanPicks(q.get('p').split(',').map((s, i) => ({ id: s.trim(), reason: byCode[codes[i]] || 'added' })));
+      const linkAnswers = q.has('a') ? decodeAnswers(q.get('a')) : null;
+      // A link with answers but no picks composes them here.
+      const linkPicks = q.has('p')
+        ? cleanPicks(q.get('p').split(',').map((s, i) => ({ id: s.trim(), reason: byCode[codes[i]] || 'added' })))
+        : cleanPicks(P.compose(C, linkAnswers).picks);
       const linkNote = q.get('n') || '';
       // Keep her own day before adopting the link's, so "Back to my picks" can restore it.
       const saved = store.get('picks', null), savedNote = store.get('note', '');
       const ids = (list) => list.map((p) => p.id).sort().join();
-      hasBackup = Array.isArray(saved) && (ids(saved) !== ids(linkPicks) || savedNote !== linkNote);
-      store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null) } : null);
+      const same = Array.isArray(saved) && ids(saved) === ids(linkPicks) && savedNote === linkNote;
+      // The same link opened again (from the chat a second time): the day kept from the first time stays.
+      if (same && store.get('fromLink', false)) hasBackup = !!store.get('before-link', null);
+      else {
+        hasBackup = Array.isArray(saved) && !same;
+        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null) } : null);
+      }
       picks = linkPicks;
-      answers = q.has('a') ? decodeAnswers(q.get('a')) : answersFrom(linkPicks);
+      answers = linkAnswers || answersFrom(linkPicks);
       freeText = linkNote;
       fromLink = true;
       saveState();
@@ -739,9 +834,8 @@
     return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.blank, remark: hit ? hit.remark : DEPC.tbc.remark, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
   }
 
-  // The board for a plan: coffee, the stops, her TBC line, dinner, the end, then what didn't fit.
+  // The board for a plan: coffee, the stops, her TBC line, dinner, Laurin and Olivia, then what didn't fit.
   function depRows(pl, { tbc = tbcRow(), live = true } = {}) {
-    const heavy = pl.picked.length >= 7 || pl.walkM >= 8000;
     const rows = [anchorRow('coffee', { target: 'arrival', label: R.coffee.to })];
     for (const it of pl.items) {
       if (it.kind === 'lunch-filler') rows.push({ key: 'lunch', time: it.rough, to: R.lunch.to, remark: R.lunch.remark, kind: 'anchor', target: 'lunch', label: C.day.noLunch });
@@ -750,7 +844,7 @@
         if (tbc) rows.push(tbc);
         rows.push(anchorRow('dinner', { target: 'dinner', label: C.anchors.dinner.title }));
       } else if (it.kind === 'anchor' && it.id === 'end') {
-        rows.push(anchorRow('end', { remark: heavy ? R.end.heavyRemark : R.end.remark, target: 'end', label: C.anchors.end.title }));
+        rows.push(anchorRow('end', { target: 'end', label: C.anchors.end.title }));
       }
     }
     for (const d of pl.didntFit) rows.push({ key: 'x-' + d.option.id, time: DEPC.drop.time, to: d.option.board.to, remark: dropRemark(d), kind: 'drop', label: d.option.title, srTime: '', srRemark: d.reason });
@@ -769,8 +863,8 @@
     return rows;
   }
 
-  // Her parked answers on the board, in the drop-row grammar: STANDBY when "Room for one more?"
-  // offers it back now, NO ROOM TODAY when nothing serving it fits the day as it stands.
+  // Her parked answers on the board, in the drop-row grammar: MAYBE when "Room for one more?"
+  // offers it back now, NO ROOM when nothing serving it fits the day as it stands.
   const parkedRows = () => parkedNow().slice(0, 3).map((e) => {
     const o = OPT[e.id];
     const remark = roomNow.some((s) => s.id === e.id) ? DEPC.drop.reasons.standby : DEPC.drop.reasons.parked;
@@ -788,13 +882,24 @@
       columns: DEPC.columns, widths: DW, rows: 0, sun: true,
     });
   }
-  // The first 3D transform on a leaf is the expensive one (style read, layer setup), so give every
-  // leaf on the board its resting transform before the replay instead of in the middle of it.
+  // Before she plans, the page is the Arrivals board, the note and the questions. Her first Show me
+  // Friday (or a link, or a day kept from an earlier visit) shows the rest and builds the board.
+  let dayShown = false;
+  let motionCtx = null;
+  function showDay() {
+    if (dayShown) return;
+    dayShown = true;
+    ['dep', 'day', 'send', 'map'].forEach((id) => { document.getElementById(id).hidden = false; });
+    renderDepBoard();
+    if (motionCtx) motionCtx.add(depTriggers);
+  }
+  // GSAP's first tween on a leaf reads its computed style, so prime every leaf on the board before the
+  // replay instead of in the middle of it (in Chrome the transform it writes is dropped at once).
   const boardLeaves = () => [...DEP.board.rows, DEP.board.sun, ...DEP.board.parked].flatMap((row) => row.cols.flat()).flatMap((f) => [f.ltEl, f.lbEl]);
   function warmBoard() {
     const leaves = boardLeaves().filter((el) => !el._warm);
     leaves.forEach((el) => { el._warm = true; });
-    if (leaves.length) gsap.set(leaves, { rotationX: 0 });
+    if (leaves.length) { gsap.set(leaves, { rotationX: 0 }); restFlat(leaves); }
   }
   function setBoardNow(rows) {
     DEP.board.rows.forEach((row, i) => setRowNow(row, rows[i] || null));
@@ -852,6 +957,7 @@
   }
   // Tap during a replay, or a test: jump to the end.
   function finishBoard() {
+    if (!DEP.board) return;
     const r = DEP.replay;
     stopReplay();
     const finalRows = depRows(plan);
@@ -947,6 +1053,7 @@
         queueMicrotask(() => {
           if (r.stopping) return;
           gsap.set(boardLeaves(), { rotationX: 0 });
+          restFlat(boardLeaves());
           setBoardNow(states[1]);
           buildWaves(r, states, 2, 0, 0.02, full).tl.play(0);
           DEP.shown = states[states.length - 1];
@@ -975,6 +1082,7 @@
   let depTimer = 0;
   // After picks or her line change: settle the board now if she is looking at it, else on the next visit.
   function syncDepBoard({ initial = false } = {}) {
+    if (!DEP.board) return;
     const finalRows = depRows(plan);
     const sig = depSig();
     if (initial) {
@@ -1092,13 +1200,14 @@
     slot('send-after').innerHTML = `<p>${esc(fmt(D.willBook, { list }))}</p>`;
   }
 
-  // "About 55 min · €12 · I'll book it · Outdoors, rain cancels": duration, price, booking, instruction.
+  // "About 55 min · €12 · I'll book it · Outdoors, rain cancels": duration, price, booking (in her
+  // name for the named tickets), instruction.
   function factsOf(o) {
     const F = C.day.facts;
     const h = Math.floor(o.minutes / 60), m = o.minutes % 60;
     const d = h ? (m ? fmt(F.hm, { h, m: String(m).padStart(2, '0') }) : fmt(F.h, { h })) : fmt(F.m, { m });
     const price = typeof o.price === 'number' ? (o.price ? fmt(F.price, { n: o.price }) : F.free) : o.price || '';
-    return [fmt(F.about, { d }), price, o.book ? F.book : '', o.tag || ''].filter(Boolean).join(F.join);
+    return [fmt(F.about, { d }), price, o.book ? (o.named ? F.bookNamed : F.book) : '', o.tag || ''].filter(Boolean).join(F.join);
   }
   const groupLabel = (o) => (C.catalogue.groups.find((g) => g.id === o.group) || {}).label || '';
   const nowTag = `<span class="tag tag--now">${esc(U.nowTag)}</span>`;
@@ -1115,26 +1224,35 @@
         </li>`; }).join('')}</ul>
       </div></div>`;
   }
-  // One story card: time chip and the answer it came from, two photos, title, line, facts, actions.
+  // An option's photos in a scroll-snap strip with a dot per photo (story cards and the peek share
+  // it). `pill`, when given, sits over the photos (the "Photos" button that opens the peek).
+  function stripHTML(o, sizes, pill = '', loading = 'lazy') {
+    const photos = (o.photos || []).filter((k) => IMG[k]);
+    const strip = photos.map((k, n) => thumbHTML(k, 'stop-photo', sizes, '', { alt: true, loading }).replace('<span', `<span data-n="${n}"`)).join('');
+    const dots = photos.length > 1
+      ? `<div class="stop-dots">${photos.map((k, n) => `<button type="button" class="stop-dot" data-n="${n}" aria-label="${esc(IMG[k].alt || o.title)}"${n ? '' : ' aria-current="true"'}></button>`).join('')}</div>`
+      : '';
+    return `<div class="stop-photos"><div class="strip-frame"><div class="stop-strip">${strip}</div>${pill}</div>${dots}</div>`;
+  }
+  const photosPill = (o, cls) => `<button type="button" class="pill ${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog">${ICON.photos}${esc(PK.openPhotos)}<span class="sr-only">: ${esc(o.title)}</span></button>`;
+  const tipHTML = (o, cls) => (o.friendTip ? `<p class="${cls}">${esc(PK.tip)}</p>` : '');
+  // One story card: time chip and the answer it came from, the photos, title, line, facts, actions.
+  // On a laptop the card is a row: the photos on the left, the rest on the right.
   function stopHTML(it, time, attrs) {
     const o = it.option, D = C.day;
     const i = picks.findIndex((p) => p.id === o.id);
     const reason = i >= 0 ? picks[i].reason : 'added';
     const alts = i >= 0 ? P.alternatives(C, picks, i) : [];
-    const photos = (o.photos || []).filter((k) => IMG[k]);
-    const strip = photos.map((k, n) => thumbHTML(k, 'stop-photo', '(min-width: 768px) 640px, 92vw', '', { alt: true, loading: 'lazy' }).replace('<span', `<span data-n="${n}"`)).join('');
-    const dots = photos.length > 1
-      ? `<div class="stop-dots">${photos.map((k, n) => `<button type="button" class="stop-dot" data-n="${n}" aria-label="${esc(IMG[k].alt || o.title)}"${n ? '' : ' aria-current="true"'}></button>`).join('')}</div>`
-      : '';
     const id = esc(o.id);
     return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
         <article class="stop-card" aria-labelledby="st-${id}">
           <p class="stop-top"><span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span><span class="stop-why label">${esc(reasonLabel(reason))}</span>${nowTag}</p>
-          <div class="stop-photos"><div class="stop-strip">${strip}</div>${dots}</div>
+          ${stripHTML(o, '(min-width: 1024px) 340px, (min-width: 768px) 640px, 92vw', photosPill(o, 'strip-peek'))}
           <div class="stop-text">
             <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>
             <p class="stop-line">${esc(o.line)}</p>
             <p class="stop-facts">${esc(factsOf(o))}</p>
+            ${tipHTML(o, 'stop-tip')}
             <div class="stop-actions">${alts.length ? `<button type="button" class="btn btn--small" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>` : ''}<button type="button" class="btn btn--small" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>${mapLink(o)}</div>
           </div>
         </article>
@@ -1297,16 +1415,19 @@
     el.classList.add('is-flash');
     setTimeout(() => el.classList.remove('is-flash'), 1200);
   }
-  // Dots under a two-photo strip: a tap scrolls to that photo, a swipe moves the dot.
+  // Dots under a photo strip: a tap scrolls to that photo, a swipe moves the dot. Photos may be
+  // narrower than the strip (the peek lets the next one show), so positions come from the photos.
+  const stripLeft = (strip, n) => strip.children[n].offsetLeft - strip.children[0].offsetLeft;
   function onStripDot(dot) {
-    const strip = $('.stop-strip', dot.closest('.stop'));
-    strip.scrollTo({ left: +dot.dataset.n * strip.clientWidth, behavior: reduced ? 'auto' : 'smooth' });
+    const strip = $('.stop-strip', dot.closest('.stop-photos'));
+    strip.scrollTo({ left: stripLeft(strip, +dot.dataset.n), behavior: reduced ? 'auto' : 'smooth' });
   }
   function onStripScroll(e) {
     const strip = e.target;
     if (!strip.classList || !strip.classList.contains('stop-strip')) return;
-    const n = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
-    $$('.stop-dot', strip.closest('.stop')).forEach((d) => { if (+d.dataset.n === n) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+    let n = 0;
+    [...strip.children].forEach((_, k) => { if (Math.abs(stripLeft(strip, k) - strip.scrollLeft) < Math.abs(stripLeft(strip, n) - strip.scrollLeft)) n = k; });
+    $$('.stop-dot', strip.closest('.stop-photos')).forEach((d) => { if (+d.dataset.n === n) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
   }
   function onDayClick(e) {
     const dot = e.target.closest('.stop-dot');
@@ -1314,7 +1435,8 @@
     const b = e.target.closest('[data-action]');
     if (!b) return;
     const a = b.dataset.action;
-    if (a === 'swap') toggleSwap(b);
+    if (a === 'photos') openPeek(b, 'one', { id: b.dataset.id });
+    else if (a === 'swap') toggleSwap(b);
     else if (a === 'use') useAlternative(b);
     else if (a === 'remove') removeStop(b);
     else if (a === 'undo') undoRemove();
@@ -1333,10 +1455,13 @@
       <div class="sheet-body">${C.catalogue.groups.map((g) => {
         const opts = C.options.filter((o) => o.group === g.id);
         if (!opts.length) return '';
-        return `<section class="cat-group" aria-labelledby="cg-${esc(g.id)}"><h3 class="label" id="cg-${esc(g.id)}">${esc(g.label)}</h3><ul>${opts.map((o) => `<li class="cat-row">
-            ${thumbHTML(o.photos?.[0], 'cat-photo', '64px')}
+        // A tile per option, as on the questions: the photo, the text under it, then Add and Photos.
+        return `<section class="cat-group" aria-labelledby="cg-${esc(g.id)}"><h3 class="label" id="cg-${esc(g.id)}">${esc(g.label)}</h3><ul class="cat-list">${opts.map((o) => `<li class="cat-row">
+            ${thumbHTML(o.photos?.[0], 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw')}
             <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span><span class="cat-why" id="cw-${esc(o.id)}" hidden></span></span>
+            <span class="cat-acts">
             <button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button>
+            <button type="button" class="tile-more" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog">${esc(PK.openPhotos)}<span class="sr-only">: ${esc(o.title)}</span></button></span>
           </li>`).join('')}</ul></section>`;
       }).join('')}</div>`;
   }
@@ -1378,15 +1503,162 @@
     if (reduced) { dlg.close(); return; }
     gsap.to(dlg, { opacity: 0, y: 8, duration: 0.15, ease: 'power1.in', onComplete: () => { dlg.close(); gsap.set(dlg, { clearProps: 'opacity,transform' }); } });
   }
-  // Adding from here carries ADDED; tapping the check takes it off the day again.
+  // Adding from here carries ADDED; tapping the check takes it off the day again. Photos opens the peek.
   function onCatalogueClick(e) {
     if (e.target === slot('catalogue')) { closeCatalogue(); return; } // the backdrop
     if (e.target.closest('[data-action="close"]')) { closeCatalogue(); return; }
+    const ph = e.target.closest('[data-action="photos"]');
+    if (ph) { openPeek(ph, 'one', { id: ph.dataset.id }); return; }
     const b = e.target.closest('.cat-add');
     if (!b) return;
     const id = b.dataset.id;
     if (picks.some((p) => p.id === id)) setPicks(picks.filter((p) => p.id !== id));
     else addPick(id, 'added');
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* The peek: what is behind a choice, in photos, one tap away          */
+  /* ------------------------------------------------------------------ */
+
+  // One dialog, three uses: `vibe` ("See all 8" under a sight or a food: every thing behind it as a
+  // compact row, each with "This one"), `pick` ("Photos" under an area or a wild card: the place, with
+  // "This one"), and `one` (Photos on a story card or in the catalogue: the place, no toggle). A
+  // bottom sheet on a phone, a centred panel on a laptop.
+  const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false };
+  const toggleHTML = (o, action) => `<button type="button" class="peek-toggle" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`;
+  const peekTextHTML = (o) => `<div class="peek-text">
+          <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
+          <p class="peek-line">${esc(o.line)}</p>
+          <p class="peek-facts">${esc(factsOf(o))}</p>
+          ${tipHTML(o, 'peek-tip')}
+        </div>`;
+  // A row: thumbnail, title, line, facts, the friend's line and "This one". The thumbnail opens the
+  // row's photo strip in place; the first five rows' strips load with the peek, the rest on opening.
+  // On a phone the strip takes the 800 px files (about 2.6 px per CSS px at DPR 3, which looks the
+  // same), so a peek costs a fraction of the 1600s and its first photo is the thumbnail's own file.
+  const PEEK_ROW_SIZES = '(min-width: 1024px) 400px, (min-width: 640px) 80vw, 260px';
+  function peekRowHTML(o, k) {
+    const id = esc(o.id);
+    return `<article class="peek-row" aria-labelledby="pk-${id}">
+        <button type="button" class="peek-thumb" data-action="expand" aria-expanded="false" aria-controls="pp-${id}">${thumbHTML(o.photos?.[0], 'peek-thumb-img', '(min-width: 1024px) 160px, 112px')}<span class="sr-only">${esc(PK.openPhotos)}: ${esc(o.title)}</span></button>
+        ${peekTextHTML(o)}
+        <div class="peek-strip" id="pp-${id}" hidden>${stripHTML(o, PEEK_ROW_SIZES, '', k < 5 ? 'eager' : 'lazy')}</div>
+        ${toggleHTML(o, 'want')}
+      </article>`;
+  }
+  // The single peek: one thing, bigger (and "This one" on the questions).
+  const peekOneHTML = (o, toggle) => `<article class="peek-thing" aria-labelledby="pk-${esc(o.id)}">
+        ${stripHTML(o, '(min-width: 1024px) 920px, 80vw')}
+        ${peekTextHTML(o)}
+        ${toggle ? toggleHTML(o, 'pick') : ''}
+      </article>`;
+  function openPeek(opener, kind, { step = -1, value = null, id = null } = {}) {
+    const dlg = slot('peek');
+    if (dlg.open) return;
+    Object.assign(peek, { kind, step, value, id, opener, closing: false });
+    let title, hint = '', body;
+    if (kind === 'vibe') {
+      title = tileLabel(tileOf(STEPS[step], value));
+      hint = PK.vibeHint;
+      body = `<div class="peek-list">${servedBy(value).map(peekRowHTML).join('')}</div>`;
+    } else {
+      title = OPT[id].title;
+      body = peekOneHTML(OPT[id], kind === 'pick');
+    }
+    dlg.className = `sheet peek peek--${kind === 'vibe' ? 'list' : 'one'}`;
+    dlg.innerHTML = `<div class="peek-head">
+        <div class="peek-titles"><h2 id="peek-h" tabindex="-1">${esc(title)}</h2>${hint ? `<p class="peek-hint">${esc(hint)}</p>` : ''}</div>
+        <button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>
+      </div>
+      <div class="peek-body">${body}</div>
+      <div class="peek-foot">${kind === 'vibe' ? `<p class="peek-fits" hidden>${esc(PK.fits)}</p>` : ''}<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button></div>`;
+    syncPeek();
+    root.classList.add('is-locked');
+    dlg.showModal();
+    // The title takes focus (it names the dialog), not the close button.
+    $('#peek-h', dlg).focus({ preventScroll: true });
+    const from = reduced ? { opacity: 0 } : matchMedia('(min-width: 1024px)').matches ? { opacity: 0, scale: 0.98 } : { opacity: 0, y: 24 };
+    gsap.fromTo(dlg, from, { opacity: 1, y: 0, scale: 1, duration: 0.26, ease: 'power2.out', clearProps: 'opacity,transform' });
+  }
+  // The toggles show the draft: wanted things pressed, the picked area or wild card pressed.
+  function syncPeek() {
+    const dlg = slot('peek');
+    if (!peek.kind) return;
+    const d = stage.draft;
+    $$('.peek-toggle', dlg).forEach((b) => {
+      // A thing named under another sight shows unpressed here (pressing it moves it over).
+      const on = b.dataset.action === 'want' ? wantedHere(b.dataset.id) : d[STEPS[peek.step].id] === peek.value;
+      b.setAttribute('aria-pressed', String(on));
+    });
+    const fits = $('.peek-fits', dlg);
+    if (fits) fits.hidden = d.want.length < 3;
+  }
+  // Named under the sight or food this peek is for (not just named somewhere).
+  const wantedHere = (id) => stage.draft.want.includes(id) && P.wantReason(OPT[id], stage.draft) === peek.value;
+  // "This one" in a sight or a food names the thing under it (and selects the answer if it was not
+  // yet); pressed again it lets the thing go and leaves the answer selected. A thing already named
+  // under another sight moves over to this one. "This one" on an area or a wild card picks it
+  // (replacing the pick before), or clears it.
+  function onPeekToggle(b) {
+    buzz('selection');
+    const d = stage.draft, s = STEPS[peek.step];
+    if (b.dataset.action === 'want') {
+      const id = b.dataset.id;
+      if (wantedHere(id)) { d.want = d.want.filter((x) => x !== id); delete d.wantFrom[id]; }
+      else {
+        if (!d.want.includes(id)) d.want = [...d.want, id];
+        d.wantFrom[id] = peek.value;
+        if (!d[s.id].includes(peek.value)) d[s.id] = [...d[s.id], peek.value];
+      }
+    } else d[s.id] = d[s.id] === peek.value ? null : peek.value;
+    syncStage();
+    syncPeek();
+  }
+  // A row's photos open under it (200 ms) from the thumbnail, and close from it or the first photo.
+  function toggleStrip(btn) {
+    const el = $('.peek-strip', btn.closest('.peek-row'));
+    const open = el.hidden;
+    btn.setAttribute('aria-expanded', String(open));
+    gsap.killTweensOf(el);
+    if (open) {
+      el.hidden = false;
+      if (!reduced) gsap.fromTo(el, { height: 0, opacity: 0 }, { height: 'auto', opacity: 1, duration: 0.2, ease: 'power2.out', clearProps: 'height,opacity' });
+      return;
+    }
+    if (reduced) { el.hidden = true; return; }
+    gsap.to(el, { height: 0, opacity: 0, duration: 0.2, ease: 'power2.inOut', onComplete: () => { el.hidden = true; gsap.set(el, { clearProps: 'height,opacity' }); } });
+  }
+  // Out: 180 ms, 8 px down (a fade only under reduced motion). Escape, X, Done and the backdrop all close.
+  function closePeek() {
+    const dlg = slot('peek');
+    if (!dlg.open || peek.closing) return;
+    peek.closing = true;
+    // Focus goes back right after close(), so the browser's own focus restore cannot land elsewhere.
+    gsap.to(dlg, { opacity: 0, y: reduced ? 0 : 8, duration: 0.18, ease: 'power1.in', onComplete: () => { const o = peek.opener; dlg.close(); if (o && o.isConnected) o.focus({ preventScroll: true }); } });
+  }
+  function onPeekClick(e) {
+    const dlg = slot('peek');
+    if (e.target === dlg) { closePeek(); return; } // the backdrop
+    const dot = e.target.closest('.stop-dot');
+    if (dot) { onStripDot(dot); return; }
+    const first = e.target.closest('.peek-strip .stop-photo[data-n="0"]');
+    if (first) { toggleStrip($('.peek-thumb', first.closest('.peek-row'))); return; }
+    const b = e.target.closest('[data-action]');
+    if (!b) return;
+    if (b.dataset.action === 'peek-close') closePeek();
+    else if (b.dataset.action === 'expand') toggleStrip(b);
+    else if (b.dataset.action === 'want' || b.dataset.action === 'pick') onPeekToggle(b);
+  }
+  // However it closed: the page scrolls again and focus goes back to the button that opened it.
+  function onPeekClosed() {
+    const dlg = slot('peek');
+    gsap.killTweensOf(dlg);
+    gsap.set(dlg, { clearProps: 'opacity,transform' });
+    root.classList.remove('is-locked');
+    peek.kind = null;
+    peek.closing = false;
+    if (peek.opener && peek.opener.isConnected) peek.opener.focus({ preventScroll: true });
+    peek.opener = null;
   }
 
   /* ------------------------------------------------------------------ */
@@ -1578,20 +1850,22 @@
     return [L1 + (L2 - L1) * p, C1 + (C2 - C1) * p, (H1 + dh * p + 360) % 360];
   }
 
-  // Every frame: write the page and HUD backgrounds directly (cheap, no inheritance).
-  // The --sky custom property restyles the whole document, so it follows at most every 120 ms,
-  // when the colour has visibly moved, and once more when scrolling settles.
+  // Every frame: write the sky layer and the HUD backgrounds directly (cheap, no inheritance), and --sky
+  // on the two things that must match the page mid-scroll (the map's halos and river, the phone
+  // question bar).
+  // --sky on :root restyles the whole document, so it follows once the sky has been still for 200 ms
+  // (the cards ease to it over their 600 ms background transition).
   const themeMeta = $('meta[name="theme-color"]');
   const hud = $('.hud');
-  let skyHex = '', skyRgb = [0, 0, 0], varHex = '', varLch = null, varAt = 0, varTimer = 0;
+  const skyBg = $('.sky-bg');
+  let skyHex = '', varHex = '', varTimer = 0;
+  const stageHost = slot('stage');
   let isDark = false;
   function syncSkyVar() {
     clearTimeout(varTimer);
     varTimer = 0;
     if (skyHex === varHex) return;
     varHex = skyHex;
-    varLch = rgbToOklch(skyRgb);
-    varAt = performance.now();
     root.style.setProperty('--sky', skyHex);
     themeMeta.content = skyHex;
   }
@@ -1601,15 +1875,16 @@
     const hex = rgbHex(rgb);
     if (hex === skyHex) return;
     skyHex = hex;
-    skyRgb = rgb;
-    root.style.backgroundColor = hex;
+    skyBg.style.backgroundColor = hex;
     hud.style.backgroundColor = hex; // opaque: nothing reads through the bar
+    mapFig.style.setProperty('--sky', hex);
+    stageHost.style.setProperty('--sky', hex);
     const Y = relLum(rgb);
     const dark = contrast(Y, Y_LAMP) > contrast(Y, Y_INK); // flip at the luminance crossover
     if (dark !== isDark) { isDark = dark; root.toggleAttribute('data-dark', dark); syncSkyVar(); return; }
-    const moved = !varLch || Math.abs(lch[0] - varLch[0]) > 0.01 || Math.abs(((lch[2] - varLch[2] + 540) % 360) - 180) > 3;
-    if (moved && performance.now() - varAt >= 120) syncSkyVar();
-    else if (!varTimer) varTimer = setTimeout(syncSkyVar, 140);
+    if (!varHex) { syncSkyVar(); return; }
+    clearTimeout(varTimer);
+    varTimer = setTimeout(syncSkyVar, 200);
   }
 
   // HUD clock: four flaps, flipped only when a digit changes.
@@ -1767,10 +2042,11 @@
     const el = slot('weather');
     const M = C.meta;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${M.lat}&longitude=${M.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&hourly=precipitation_probability,weather_code&timezone=Europe%2FRome&start_date=${M.date}&end_date=${M.date}`;
-    const show = (data) => { const html = describeWeather(data); if (!html) return false; el.innerHTML = html; return true; };
+    // Only a real forecast for Friday shows; without one there is no weather line at all.
+    const show = (data) => { const html = describeWeather(data); if (!html) return false; el.innerHTML = html; el.hidden = false; refreshSoon(); return true; };
+    el.hidden = true;
     const cached = store.get('wx', null);
     if (cached && Date.now() - cached.t < 3600e3 && show(cached.d)) return;
-    el.textContent = WX.climate;
     try {
       const ctl = new AbortController();
       const timer = setTimeout(() => ctl.abort(), 8000);
@@ -1780,7 +2056,7 @@
       const data = await res.json();
       if (show(data)) { store.set('wx', { t: Date.now(), d: data }); return; }
     } catch { /* offline or API down: fall through */ }
-    if (cached) show(cached.d); // a stale forecast beats the climate line
+    if (cached) show(cached.d); // a stale forecast beats none
   }
 
   /* ------------------------------------------------------------------ */
@@ -1813,12 +2089,21 @@
   /* Motion                                                              */
   /* ------------------------------------------------------------------ */
 
+  // DEPARTURES: her build replays when the board comes into view; a replay under way waits while the
+  // board is off screen; a long board's Sunday row waits for its own trigger. Made with the board.
+  function depTriggers() {
+    ScrollTrigger.create({ trigger: '#dep .board', start: 'top 45%', onEnter: maybePlay, onEnterBack: maybePlay });
+    ScrollTrigger.create({ trigger: '#dep .board', start: 'top bottom', end: 'bottom top+=64', onLeave: pauseReplay, onLeaveBack: pauseReplay, onEnter: resumeReplay, onEnterBack: resumeReplay });
+    ScrollTrigger.create({ trigger: '#dep .board-sun', start: 'bottom bottom', onEnter: maybeSun });
+  }
+
   function setupMotion() {
     const mm = gsap.matchMedia();
 
     mm.add({ motion: '(prefers-reduced-motion: no-preference)', still: '(prefers-reduced-motion: reduce)' }, (ctx) => {
       reduced = !ctx.conditions.motion;
       skyHex = '';
+      motionCtx = null;
 
       if (reduced) {
         heroFinal();
@@ -1848,12 +2133,9 @@
         autoAlpha: 0, y: 18, duration: 0.8, ease: 'power3.out', stagger: 0.1, clearProps: 'transform,visibility,opacity',
       }, 0.75);
 
-      // DEPARTURES: her build replays when the board comes into view.
-      ScrollTrigger.create({ trigger: '#dep .board', start: 'top 45%', onEnter: maybePlay, onEnterBack: maybePlay });
-      // A replay under way waits while the board is off screen and carries on when it is back.
-      ScrollTrigger.create({ trigger: '#dep .board', start: 'top bottom', end: 'bottom top+=64', onLeave: pauseReplay, onLeaveBack: pauseReplay, onEnter: resumeReplay, onEnterBack: resumeReplay });
-      // A long board pushes the Sunday row below the fold; it then waits for its own trigger.
-      ScrollTrigger.create({ trigger: '#dep .board-sun', start: 'bottom bottom', onEnter: maybeSun });
+      // The board's triggers come with the board (showDay adds them to this context later).
+      motionCtx = ctx;
+      if (DEP.board) depTriggers();
 
       // Map: the first time it scrolls in, the lines draw and the dots pop in plan order.
       revealMap = () => {
@@ -1872,13 +2154,14 @@
       ScrollTrigger.create({ trigger: mapFig, start: 'top 75%', once: true, onEnter: () => revealMap() });
     });
 
-    // The HUD stays off the hero and the questions: it appears from DEPARTURES onward.
+    // The HUD stays off the hero and the questions: it appears from DEPARTURES onward (and never
+    // while DEPARTURES is still hidden).
     ScrollTrigger.create({
       trigger: '#dep',
       start: 'top top+=64',
-      onEnter: () => hud.setAttribute('data-on', ''),
+      onEnter: () => { if (dayShown) hud.setAttribute('data-on', ''); },
       onLeaveBack: () => hud.removeAttribute('data-on'),
-      onRefresh: (self) => hud.toggleAttribute('data-on', self.progress > 0 || scrollY > self.start),
+      onRefresh: (self) => hud.toggleAttribute('data-on', dayShown && (self.progress > 0 || scrollY > self.start)),
     });
 
     ScrollTrigger.addEventListener('refresh', () => { measure(); render(reduced ? scrollY : lastY); });
@@ -1894,11 +2177,11 @@
   renderStatic();
   renderStage();
   renderCatalogue();
-  renderDepBoard();
   renderMapFrame();
   placeMap();
   loadState();
   // A visitor who has planned (or opened a link) lands on her Friday; the stage waits closed.
+  if (answers || picks.length) showDay();
   stage.open = !answers;
   stage.draft = cloneAnswers(answers);
   syncStage();
@@ -1912,6 +2195,12 @@
   slot('day-body').addEventListener('click', onDayClick);
   slot('day-body').addEventListener('scroll', onStripScroll, true);
   slot('catalogue').addEventListener('click', onCatalogueClick);
+  slot('catalogue').addEventListener('scroll', onStripScroll, true);
+  slot('peek').addEventListener('click', onPeekClick);
+  slot('peek').addEventListener('scroll', onStripScroll, true);
+  // Escape plays the same exit as Done.
+  slot('peek').addEventListener('cancel', (e) => { e.preventDefault(); closePeek(); });
+  slot('peek').addEventListener('close', onPeekClosed);
   // Closing the sheet (Close, Escape, the backdrop) returns focus to "See everything".
   slot('catalogue').addEventListener('close', () => $('[data-action="catalogue"]', slot('day-body'))?.focus({ preventScroll: true }));
   let textTimer = 0;
@@ -1936,15 +2225,14 @@
   tick();
   setTimeout(() => { tick(); setInterval(tick, 60000); }, 60000 - (nowMs() % 60000) + 50);
   loadWeather();
-  (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => warmBoard(), { timeout: 3000 });
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => { if (DEP.board) warmBoard(); }, { timeout: 3000 });
   window.__venerdi = {
-    finishBoard, depRows: () => depRows(plan), boardRows: () => DEP.board.rows.map((r) => r.shown), replayStats: () => DEP.stats, plan: () => plan,
-    state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board.sun.shown, stageBusy: stage.busy }),
+    finishBoard, depRows: () => depRows(plan), boardRows: () => (DEP.board ? DEP.board.rows.map((r) => r.shown) : []), replayStats: () => DEP.stats, plan: () => plan,
+    state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
     parked: () => parkedNow().map((e) => ({ ...e })), parkedRows: () => parkedRows().map((r) => [r.time, r.to, r.remark]),
   };
 
-  $$('details').forEach((d) => d.addEventListener('toggle', () => ScrollTrigger.refresh()));
   if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());
   if (location.hash.length > 1) {
     const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
