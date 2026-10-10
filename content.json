@@ -400,12 +400,15 @@
       }
     ],
     "noFit": "Doesn't fit",
+    "instead": "Instead of {title}",
     "reasons": {
-      "closes": "Closes {time}",
+      "closes": "Last start {time}",
       "closedGap": "Shut {from} to {to}",
       "sunsetTaken": "One sunset a day",
       "lunchTaken": "Lunch is sorted",
-      "noTime": "No time left"
+      "noTime": "No time left",
+      "bumps": "Only if we skip {title}",
+      "snackGap": "Too soon after lunch"
     }
   },
   "send": {
@@ -570,7 +573,7 @@
       "id": "trevi",
       "group": "ancient",
       "title": "Trevi Fountain",
-      "line": "The steps down to the basin take a €2 ticket now, so you can get right up to the water.",
+      "line": "Before 11:30 we see it from the street; after, the steps down to the basin take a €2 ticket.",
       "board": {
         "to": "TREVI FOUNTAIN",
         "remark": "COIN OVER SHOULDER"
@@ -587,12 +590,12 @@
       "hours": {
         "intervals": [
           [
-            "11:30",
-            "22:00"
+            "00:00",
+            "23:59"
           ]
         ],
         "lastEntry": [
-          "21:00"
+          null
         ]
       },
       "order": 5,
@@ -2923,12 +2926,13 @@
     "reasons": {
       "sunsetTaken": "Sunset's already on the Vittoriano roof.",
       "lunchTaken": "Lunch is already sorted.",
-      "closes": "Closes at {time}, we'd get there too late.",
+      "closes": "The last start is {time}, we'd get there after it.",
       "closedGap": "Closed {from} to {to}, the timing doesn't work.",
       "noTimeDinner": "Not enough time before dinner.",
       "fixedMissed": "We'd get there after {time}.",
       "noTimeDay": "Not enough time before we get the bags.",
-      "noTimeEvening": "We wouldn't be out of the flat in time."
+      "noTimeEvening": "We wouldn't be out of the flat in time.",
+      "snackGap": "Too soon after lunch, we'd still be full."
     },
     "countdown": {
       "startsIn": "Starts in {time}",
@@ -3090,11 +3094,12 @@
     "drop": {
       "time": "--:--",
       "reasons": {
-        "closes": "CLOSES {time}",
+        "closes": "LAST START {time}",
         "closedGap": "SHUT {from}-{to}",
         "sunsetTaken": "ONE SUNSET A DAY",
         "lunchTaken": "LUNCH IS SORTED",
         "noTime": "NO TIME LEFT",
+        "snackGap": "TOO SOON AFTER LUNCH",
         "standby": "STANDBY",
         "parked": "ANOTHER DAY"
       }
