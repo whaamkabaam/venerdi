@@ -795,7 +795,8 @@
 
   /* The catalogue's Add (fold-in A3): what adding `id` by hand would cost. It fits as the day is; or
      the only things it pushes out are my picks (Felix's, never hers), which then make way; or it does
-     not fit, with its own reason, or "Only if we skip {title}" naming what it would push out. */
+     not fit, with its own reason, or "Only if we skip {title}" naming what it would push out when
+     skipping that makes room, or "No time left" when it does not. */
   function catalogueAdd(C, picks, id, { keep = null, answers = {} } = {}) {
     const ids = picks.map((p) => p.id);
     const before = dropsOf(C, ids, keep);
@@ -806,10 +807,10 @@
     const answered = [...(answers.see || []), ...(answers.eat || []), ...(answers.wander ? ['wander'] : []), ...(answers.wild ? ['wild'] : [])];
     const felixPick = (p) => !!p && (p.reason === 'felix' || (p.reason !== 'added' && !answered.includes(p.reason)));
     const yields = fresh.map((d) => d.option.id);
-    if (fresh.every((d) => felixPick(picks.find((p) => p.id === d.option.id)))) {
-      const rest = ids.filter((x) => !yields.includes(x));
-      if (noNewDrops(before.filter((x) => !yields.includes(x)), dropsOf(C, [...rest, id], keep))) return { ok: true, yields };
-    }
+    // Only true when skipping them makes room: else it is plain "No time left" (fold-in check N3).
+    const rest = ids.filter((x) => !yields.includes(x));
+    if (!noNewDrops(before.filter((x) => !yields.includes(x)), dropsOf(C, [...rest, id], keep))) return { ok: false, code: 'noTime', vars: {} };
+    if (fresh.every((d) => felixPick(picks.find((p) => p.id === d.option.id)))) return { ok: true, yields };
     return { ok: false, code: 'bumps', vars: { title: fresh.map((d) => d.option.title).join(C.ui.listJoin) } };
   }
 
