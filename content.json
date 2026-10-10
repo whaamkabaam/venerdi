@@ -345,7 +345,7 @@
       "hm": "{h}h {m}",
       "h": "{h}h",
       "m": "{m} min",
-      "price": "€{n}",
+      "price": "€{n} each",
       "free": "Free",
       "join": " · "
     }
@@ -542,7 +542,7 @@
       "id": "trevi",
       "group": "ancient",
       "title": "Trevi Fountain",
-      "line": "Before 11:30 we see it from the street; after, the steps down to the basin take a €2 ticket.",
+      "line": "Before 11:30 we see it from the street. After that, the steps down to the basin need a ticket, €2 each.",
       "board": {
         "to": "TREVI FOUNTAIN"
       },
@@ -1100,7 +1100,7 @@
         }
       ],
       "booking": "none",
-      "price": "€5 suggested donation",
+      "price": "€5 each (a donation)",
       "serves": {
         "odd": 6
       }
@@ -1547,7 +1547,7 @@
         }
       ],
       "booking": "none",
-      "price": "around €6",
+      "price": "around €6 each",
       "serves": {
         "street": 1
       }
@@ -1636,7 +1636,7 @@
         }
       ],
       "booking": "none",
-      "price": "€5 a trapizzino",
+      "price": "€5 each",
       "friendTip": true,
       "serves": {
         "street": 3
@@ -1685,7 +1685,7 @@
       ],
       "book": "lunch at Fortunata",
       "booking": "recommended",
-      "price": "around €25 to 30",
+      "price": "around €30 each",
       "serves": {
         "lunch": 1
       }
@@ -1740,7 +1740,7 @@
       ],
       "book": "lunch at Flavio",
       "booking": "recommended",
-      "price": "around €30",
+      "price": "around €30 each",
       "friendTip": true,
       "serves": {
         "lunch": 2
