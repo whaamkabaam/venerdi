@@ -372,15 +372,34 @@
   const servedBy = (reason) => C.options.filter((o) => serves(o, reason)).sort((a, b) => a.serves[reason] - b.serves[reason]);
   // Her named things under one sight or food (the same rule compose() uses).
   const wantsFor = (a, reason) => (a.want || []).filter((id) => OPT[id] && P.wantReason(OPT[id], a) === reason);
+  // A thing named in v6 whose home moved in v7 (one home each, mechanics F2) brings its answer along:
+  // its sight or food joins her answers (true: it stays a named thing, under that home); an area or a
+  // wild card fills that step if she left it empty (false: it is that step's answer now).
+  function rehome(a, id) {
+    const k = Object.keys(OPT[id].serves || {})[0];
+    if (!k) return false;
+    if (k === 'wild' || k.startsWith('wander:')) {
+      const s = STEPS.find((x) => x.id === (k === 'wild' ? 'wild' : 'wander'));
+      const t = s && s.tiles.find((x) => x.option === id);
+      if (t && !a[s.id]) a[s.id] = tileValue(s, t);
+      return false;
+    }
+    const s = STEPS.find((x) => x.multi && tileOf(x, k));
+    if (!s) return false;
+    if (!a[s.id].includes(k)) a[s.id].push(k);
+    a.wantFrom[id] = k;
+    return true;
+  }
   // Answers from storage or an old link, cut to what this page has: tiles that still exist, named
-  // things that still exist and serve one of her answers.
+  // things that still exist and serve one of her answers (a v6 one whose home moved brings its home).
   const cleanAnswers = (a) => {
     const c = cloneAnswers(a);
     STEPS.forEach((s) => {
       if (s.multi) c[s.id] = (Array.isArray(c[s.id]) ? c[s.id] : []).filter((v, i, arr) => tileOf(s, v) && arr.indexOf(v) === i);
       else if (!tileOf(s, c[s.id])) c[s.id] = null;
     });
-    c.want = (Array.isArray(c.want) ? c.want : []).filter((id, i, arr) => OPT[id] && arr.indexOf(id) === i && vibesOf(c).some((r) => serves(OPT[id], r)));
+    c.wantFrom = c.wantFrom && typeof c.wantFrom === 'object' ? c.wantFrom : {};
+    c.want = (Array.isArray(c.want) ? c.want : []).filter((id, i, arr) => OPT[id] && arr.indexOf(id) === i && (vibesOf(c).some((r) => serves(OPT[id], r)) || rehome(c, id)));
     c.wantFrom = Object.fromEntries(Object.entries(c.wantFrom || {}).filter(([id, r]) => c.want.includes(id) && vibesOf(c).includes(r) && serves(OPT[id], r)));
     return c;
   };
@@ -690,7 +709,8 @@
     const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
     String(parts[STEPS.length] || '').split('.').forEach((seg) => {
       const id = OPT[seg] ? seg : OPT[seg.slice(1)] ? seg.slice(1) : null;
-      if (!id || a.want.includes(id) || !vibesOf(a).some((r) => serves(OPT[id], r))) return;
+      // A v6 link's named thing whose home moved brings its home along (mechanics F2).
+      if (!id || a.want.includes(id) || !(vibesOf(a).some((r) => serves(OPT[id], r)) || (v6 && rehome(a, id)))) return;
       a.want.push(id);
       const from = id === seg ? null : byCode[seg[0]];
       if (from && vibesOf(a).includes(from) && serves(OPT[id], from)) a.wantFrom[id] = from;
@@ -723,7 +743,8 @@
       const linkIds = q.has('p') ? q.get('p').split(',').map((s) => s.trim()) : [];
       let linkPicks = q.has('p') ? cleanPicks(linkIds.map((id, i) => ({ id, reason: byCode[codes[i]] || 'added' }))) : null;
       if (!linkPicks || linkIds.some((id) => id && !OPT[id])) {
-        linkAnswers = linkAnswers || answersFrom(linkPicks || []);
+        // From the link's own ids and answer letters, before the gone places are cut (mechanics F6).
+        linkAnswers = linkAnswers || answersFrom(linkIds.map((id, i) => ({ id, reason: byCode[codes[i]] || 'added' })));
         linkPicks = cleanPicks(P.compose(C, linkAnswers).picks);
       }
       const linkNote = q.get('n') || '';
@@ -1273,12 +1294,13 @@
   // The rain line (spec 3.4, 13.7): on an outdoor stop with a rain plan, only when Friday's forecast
   // says 50 % or more. Its own words name what we do instead; when that is already on the day, or
   // there is nothing to swap to, we skip it.
-  let rainProb = null;
+  // plan.js picks the words (mechanics F3): the plan B only when it is open then and no other card
+  // has promised it.
+  let rainProb = null, rainNow = {};
   const rainy = () => typeof rainProb === 'number' && rainProb >= 50;
   function rainHTML(o) {
     if (!('rainPlan' in o)) return '';
-    const alt = o.rainPlan && OPT[o.rainPlan.id];
-    const text = alt && !plan.options.some((x) => x.id === alt.id) ? o.rainPlan.text : C.day.rainSkip;
+    const text = (rainNow[o.id] || {}).text || C.day.rainSkip;
     return `<p class="stop-rain"${rainy() ? '' : ' hidden'}>${esc(text)}</p>`;
   }
   function syncRain() {
@@ -1342,6 +1364,7 @@
     slot('day-parked').textContent = parked ? fmt(D.parked, { list: parked }) : '';
     slot('day-parked').hidden = !parked;
     if (!picks.length && !answers) { body.innerHTML = `<p class="day-empty">${esc(D.empty)}</p>`; return; }
+    rainNow = P.rainLines(C, plan);
     let html = '', group = '', walked = 0, undoShown = false;
     plan.items.forEach((it) => {
       if (it.kind === 'anchor' && it.id === 'dinner') html += roomHTML();
@@ -1412,11 +1435,16 @@
   // Remove: the card collapses (opacity first, then height over 220 ms); "Undo" holds its place for 6 s.
   function removeStop(btn) {
     const li = btn.closest('.stop');
-    const i = picks.findIndex((p) => p.id === li.dataset.key);
-    if (i < 0) return;
+    // A second tap while the card collapses would remove the next stop too (mechanics F1).
+    if (li.dataset.out) return;
+    const id = li.dataset.key;
+    if (!picks.some((p) => p.id === id)) return;
+    li.dataset.out = '1';
     let prev = li.previousElementSibling;
     while (prev && !prev.matches('.plan-item')) prev = prev.previousElementSibling;
     const go = () => {
+      const i = picks.findIndex((p) => p.id === id);
+      if (i < 0) return;
       undoDrop();
       undo = { pick: picks[i], index: i, after: prev ? prev.dataset.key : null, title: OPT[picks[i].id].title, timer: setTimeout(() => undoDrop(true), 6000) };
       setPicks(picks.filter((_, j) => j !== i), { keepUndo: true });
@@ -1516,27 +1544,30 @@
       }).join('')}</div>`;
   }
   // Each row: the check if it is on her day, else Add, or a disabled "Doesn't fit" with the short
-  // reason when build() says adding it would drop it (or knock something else off).
+  // reason (plan.js catalogueAdd, fold-in A3). When only my picks are in its way, Add works and the
+  // row says which of mine makes way ("Instead of Vittoriano roof"); when something of hers is, the
+  // refusal names it ("Only if we skip Monti").
+  let catNow = {};
   function syncCatalogue() {
     const K = C.catalogue;
     const ids = pickIds();
-    const before = plan.didntFit.map((d) => d.option.id);
+    catNow = {};
     $$('.cat-add', slot('catalogue')).forEach((b) => {
       const id = b.dataset.id;
       const on = ids.includes(id);
-      let why = '';
+      let why = '', note = '';
       if (!on) {
-        const fresh = P.build(C, [...ids, id], { keep: keepOf() }).didntFit.filter((d) => !before.includes(d.option.id));
-        const own = fresh.find((d) => d.option.id === id);
-        if (fresh.length) why = own ? fmt(K.reasons[own.code] || K.reasons.noTime, own.vars || {}) : K.reasons.noTime;
+        const res = catNow[id] = P.catalogueAdd(C, picks, id, { keep: keepOf(), answers: answers || {} });
+        if (!res.ok) why = fmt(K.reasons[res.code] || K.reasons.noTime, res.vars || {});
+        else if (res.yields.length) note = fmt(K.instead, { title: res.yields.map((y) => OPT[y].title).join(U.listJoin) });
       }
       b.setAttribute('aria-pressed', String(on));
       b.disabled = !!why;
       $('.cat-add-label', b).textContent = why ? K.noFit : C.day.add;
       const line = $(`#cw-${CSS.escape(id)}`, slot('catalogue'));
-      line.textContent = why;
-      line.hidden = !why;
-      if (why) b.setAttribute('aria-describedby', line.id); else b.removeAttribute('aria-describedby');
+      line.textContent = why || note;
+      line.hidden = !(why || note);
+      if (why || note) b.setAttribute('aria-describedby', line.id); else b.removeAttribute('aria-describedby');
     });
   }
   function openCatalogue() {
@@ -1562,8 +1593,11 @@
     const b = e.target.closest('.cat-add');
     if (!b) return;
     const id = b.dataset.id;
-    if (picks.some((p) => p.id === id)) setPicks(picks.filter((p) => p.id !== id));
-    else addPick(id, 'added');
+    if (picks.some((p) => p.id === id)) { setPicks(picks.filter((p) => p.id !== id)); return; }
+    // My picks in its way make way first (fold-in A3).
+    const yields = (catNow[id] && catNow[id].ok && catNow[id].yields) || [];
+    if (yields.length) picks = picks.filter((p) => !yields.includes(p.id));
+    addPick(id, 'added');
   }
 
   /* ------------------------------------------------------------------ */
