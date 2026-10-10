@@ -2513,21 +2513,21 @@
     {
       "from": "centro",
       "to": "north",
-      "text": "20 min walk, or metro to Barberini",
+      "text": "{min} min walk, or metro to Barberini",
       "m": 1500,
       "min": 20
     },
     {
       "from": "north",
       "to": "centro",
-      "text": "20 min walk downhill",
+      "text": "{min} min walk downhill",
       "m": 1500,
       "min": 20
     },
     {
       "from": "centro",
       "to": "trastevere",
-      "text": "15 min walk over Ponte Sisto",
+      "text": "{min} min walk over Ponte Sisto",
       "m": 1200,
       "min": 15
     },
@@ -2548,7 +2548,7 @@
     {
       "from": "testaccio",
       "to": "ostiense",
-      "text": "15 min walk",
+      "text": "{min} min walk",
       "m": 1200,
       "min": 15
     },
@@ -2569,14 +2569,14 @@
     {
       "from": "aventine",
       "to": "venezia",
-      "text": "20 min walk, downhill",
+      "text": "{min} min walk, downhill",
       "m": 1300,
       "min": 20
     },
     {
       "from": "centro",
       "to": "venezia",
-      "text": "10 min walk",
+      "text": "{min} min walk",
       "m": 800,
       "min": 10
     },
@@ -2590,7 +2590,7 @@
     {
       "from": "venezia",
       "to": "celio",
-      "text": "25 min walk past the Colosseum",
+      "text": "{min} min walk past the Colosseum",
       "m": 1800,
       "min": 25
     },
@@ -2625,7 +2625,7 @@
     {
       "from": "gianicolo",
       "to": "trastevere",
-      "text": "15 min walk downhill",
+      "text": "{min} min walk downhill",
       "m": 1000,
       "min": 15
     },
@@ -2639,7 +2639,7 @@
     {
       "from": "centro",
       "to": "celio",
-      "text": "20 min walk, or Metro B from Cavour",
+      "text": "{min} min walk, or Metro B from Cavour",
       "m": 1500,
       "min": 20
     },
@@ -2660,35 +2660,35 @@
     {
       "from": "venezia",
       "to": "monti",
-      "text": "10 min walk along the Forum",
+      "text": "{min} min walk along the Forum",
       "m": 800,
       "min": 10
     },
     {
       "from": "monti",
       "to": "celio",
-      "text": "10 min walk past the Colosseum",
+      "text": "{min} min walk past the Colosseum",
       "m": 800,
       "min": 10
     },
     {
       "from": "esquilino",
       "to": "monti",
-      "text": "15 min walk",
+      "text": "{min} min walk",
       "m": 1000,
       "min": 15
     },
     {
       "from": "esquilino",
       "to": "celio",
-      "text": "20 min walk down to the Colosseum",
+      "text": "{min} min walk down to the Colosseum",
       "m": 1300,
       "min": 20
     },
     {
       "from": "esquilino",
       "to": "venezia",
-      "text": "25 min walk through Monti",
+      "text": "{min} min walk through Monti",
       "m": 1800,
       "min": 25
     },
@@ -2765,7 +2765,7 @@
     {
       "from": "monti",
       "to": "esquilino",
-      "text": "15 min walk",
+      "text": "{min} min walk",
       "m": 1100,
       "min": 15
     },
@@ -2779,7 +2779,7 @@
     {
       "from": "venezia",
       "to": "esquilino",
-      "text": "25 min walk through Monti",
+      "text": "{min} min walk through Monti",
       "m": 1800,
       "min": 25
     },
@@ -2870,11 +2870,13 @@
   ],
   "places": {
     "hostel": {
+      "id": "hostel",
       "area": "esquilino",
       "lat": 41.90436,
       "lon": 12.50453
     },
     "flat": {
+      "id": "flat",
       "area": "pigneto",
       "lat": 41.88838,
       "lon": 12.52814
@@ -3112,5 +3114,1497 @@
       "maritozzo",
       "boccione"
     ]
+  },
+  "walks": {
+    "source": "Metres on foot from FOSSGIS OSRM foot routing on OpenStreetMap (routing.openstreetmap.de/routed-foot), at its own pace of 4.5 km/h. Metro rides: those walks to and from the station, a 5 minute wait and 2 minutes a stop (an estimate).",
+    "checked": "2026-10-10",
+    "m": {
+      "hostel": {
+        "maritozzo": 1411
+      },
+      "pantheon": {
+        "clemente": 2470,
+        "trevi": 680,
+        "vicus": 737,
+        "largo": 545,
+        "castel": 1419,
+        "pincio": 1907,
+        "capuchin": 1318,
+        "ignazio": 292,
+        "spada": 897,
+        "borghese": 2405,
+        "caravaggio": 265,
+        "doria": 540,
+        "haring": 566,
+        "kandinsky": 717,
+        "boccione": 774,
+        "innocenti": 1377,
+        "suppli": 1021,
+        "trapizzino": 1326,
+        "fortunata": 740,
+        "pasta": 569,
+        "trastevere": 1516,
+        "centre": 412,
+        "monti": 1637,
+        "ghetto": 892,
+        "coronati": 2695,
+        "sidecar": 803
+      },
+      "clemente": {
+        "monti": 991,
+        "circovr": 1342,
+        "coronati": 231,
+        "circusjog": 1564
+      },
+      "trevi": {
+        "pantheon": 680,
+        "clemente": 2102,
+        "vicus": 109,
+        "largo": 1067,
+        "castel": 1794,
+        "pincio": 1498,
+        "capuchin": 690,
+        "ignazio": 443,
+        "spada": 1504,
+        "borghese": 1842,
+        "caravaggio": 872,
+        "doria": 541,
+        "haring": 1173,
+        "kandinsky": 659,
+        "boccione": 1381,
+        "innocenti": 1984,
+        "suppli": 1628,
+        "trapizzino": 1933,
+        "fortunata": 1347,
+        "pasta": 1071,
+        "trastevere": 2123,
+        "centre": 1019,
+        "monti": 1131,
+        "ghetto": 1414,
+        "coronati": 2327,
+        "sidecar": 1216
+      },
+      "vicus": {
+        "pantheon": 737,
+        "clemente": 2013,
+        "trevi": 109,
+        "largo": 1039,
+        "pincio": 1553,
+        "capuchin": 706,
+        "ignazio": 500,
+        "spada": 1561,
+        "borghese": 1898,
+        "caravaggio": 929,
+        "doria": 498,
+        "haring": 1230,
+        "kandinsky": 577,
+        "boccione": 1373,
+        "innocenti": 2041,
+        "suppli": 1685,
+        "trapizzino": 1990,
+        "fortunata": 1405,
+        "pasta": 1165,
+        "trastevere": 2180,
+        "centre": 1076,
+        "monti": 1042,
+        "ghetto": 1350,
+        "coronati": 2238,
+        "sidecar": 1134
+      },
+      "largo": {
+        "pantheon": 545,
+        "clemente": 2103,
+        "trevi": 1067,
+        "vicus": 1039,
+        "castel": 1770,
+        "pincio": 2320,
+        "capuchin": 1705,
+        "ignazio": 640,
+        "spada": 690,
+        "borghese": 2819,
+        "caravaggio": 655,
+        "doria": 563,
+        "haring": 539,
+        "kandinsky": 512,
+        "boccione": 340,
+        "innocenti": 967,
+        "suppli": 937,
+        "trapizzino": 944,
+        "fortunata": 622,
+        "pasta": 935,
+        "trastevere": 1125,
+        "centre": 697,
+        "keyhole": 1801,
+        "monti": 1504,
+        "ghetto": 366,
+        "coronati": 2328,
+        "circusjog": 1422,
+        "sidecar": 277
+      },
+      "vittoriano": {
+        "dinner": 1814,
+        "gesu": 503
+      },
+      "castel": {
+        "pantheon": 1419,
+        "trevi": 1794,
+        "largo": 1770,
+        "pincio": 2392,
+        "ignazio": 1633,
+        "spada": 1452,
+        "caravaggio": 1185,
+        "doria": 1863,
+        "haring": 1190,
+        "kandinsky": 2011,
+        "boccione": 1980,
+        "suppli": 939,
+        "trapizzino": 1816,
+        "fortunata": 1288,
+        "pasta": 849,
+        "centre": 1117,
+        "cannon": 1771,
+        "sidecar": 2021
+      },
+      "pincio": {
+        "pantheon": 1907,
+        "trevi": 1498,
+        "vicus": 1553,
+        "largo": 2320,
+        "castel": 2392,
+        "capuchin": 1355,
+        "ignazio": 1845,
+        "spada": 2690,
+        "borghese": 1437,
+        "caravaggio": 1914,
+        "doria": 1945,
+        "haring": 2370,
+        "boccione": 2604,
+        "suppli": 2624,
+        "fortunata": 2564,
+        "pasta": 1944,
+        "centre": 2128,
+        "ghetto": 2667,
+        "sidecar": 2622
+      },
+      "capuchin": {
+        "pantheon": 1318,
+        "trevi": 690,
+        "vicus": 706,
+        "largo": 1705,
+        "pincio": 1355,
+        "ignazio": 1081,
+        "spada": 2142,
+        "borghese": 1350,
+        "caravaggio": 1480,
+        "doria": 1179,
+        "haring": 1811,
+        "kandinsky": 1297,
+        "boccione": 2020,
+        "suppli": 2266,
+        "fortunata": 1985,
+        "pasta": 1667,
+        "centre": 1657,
+        "monti": 1403,
+        "ghetto": 2053,
+        "sidecar": 1854
+      },
+      "ignazio": {
+        "pantheon": 292,
+        "clemente": 2178,
+        "trevi": 443,
+        "vicus": 500,
+        "largo": 640,
+        "castel": 1633,
+        "pincio": 1845,
+        "capuchin": 1081,
+        "spada": 1116,
+        "borghese": 2245,
+        "caravaggio": 484,
+        "doria": 234,
+        "haring": 785,
+        "kandinsky": 425,
+        "boccione": 961,
+        "innocenti": 1596,
+        "suppli": 1240,
+        "trapizzino": 1545,
+        "fortunata": 959,
+        "pasta": 783,
+        "trastevere": 1735,
+        "centre": 631,
+        "monti": 1345,
+        "ghetto": 987,
+        "coronati": 2403,
+        "circusjog": 1897,
+        "sidecar": 756
+      },
+      "spada": {
+        "pantheon": 897,
+        "clemente": 2654,
+        "trevi": 1504,
+        "vicus": 1561,
+        "largo": 690,
+        "castel": 1452,
+        "pincio": 2690,
+        "capuchin": 2142,
+        "ignazio": 1116,
+        "borghese": 3189,
+        "caravaggio": 777,
+        "doria": 1084,
+        "haring": 456,
+        "kandinsky": 1076,
+        "boccione": 551,
+        "innocenti": 945,
+        "suppli": 513,
+        "trapizzino": 462,
+        "fortunata": 284,
+        "pasta": 902,
+        "trastevere": 722,
+        "centre": 660,
+        "keyhole": 2023,
+        "ghetto": 656,
+        "coronati": 2879,
+        "circusjog": 1644,
+        "sidecar": 652
+      },
+      "gesu": {
+        "dinner": 2001,
+        "vittoriano": 503
+      },
+      "montemartini": {
+        "cemetery": 1339,
+        "market": 1617,
+        "flavio": 1299
+      },
+      "cemetery": {
+        "montemartini": 1339,
+        "innocenti": 1958,
+        "market": 702,
+        "flavio": 394,
+        "circovr": 1354,
+        "circusjog": 1465
+      },
+      "borghese": {
+        "pantheon": 2405,
+        "trevi": 1842,
+        "vicus": 1898,
+        "largo": 2819,
+        "pincio": 1437,
+        "capuchin": 1350,
+        "ignazio": 2245,
+        "spada": 3189,
+        "caravaggio": 2412,
+        "doria": 2343,
+        "haring": 2868,
+        "boccione": 3103,
+        "suppli": 3122,
+        "fortunata": 3063,
+        "pasta": 2443,
+        "centre": 2627,
+        "coppede": 1248,
+        "ghetto": 3166,
+        "sidecar": 3019
+      },
+      "caravaggio": {
+        "pantheon": 265,
+        "clemente": 2664,
+        "trevi": 872,
+        "vicus": 929,
+        "largo": 655,
+        "castel": 1185,
+        "pincio": 1914,
+        "capuchin": 1480,
+        "ignazio": 484,
+        "spada": 777,
+        "borghese": 2412,
+        "doria": 705,
+        "haring": 452,
+        "kandinsky": 892,
+        "boccione": 885,
+        "innocenti": 1487,
+        "suppli": 812,
+        "trapizzino": 1206,
+        "fortunata": 626,
+        "pasta": 335,
+        "trastevere": 1466,
+        "centre": 189,
+        "monti": 1829,
+        "ghetto": 1002,
+        "coronati": 2889,
+        "sidecar": 913
+      },
+      "doria": {
+        "pantheon": 540,
+        "clemente": 2023,
+        "trevi": 541,
+        "vicus": 498,
+        "largo": 563,
+        "castel": 1863,
+        "pincio": 1945,
+        "capuchin": 1179,
+        "ignazio": 234,
+        "spada": 1084,
+        "borghese": 2343,
+        "caravaggio": 705,
+        "haring": 904,
+        "kandinsky": 311,
+        "boccione": 884,
+        "innocenti": 1512,
+        "suppli": 1312,
+        "trapizzino": 1473,
+        "fortunata": 1012,
+        "pasta": 1013,
+        "trastevere": 1661,
+        "centre": 830,
+        "monti": 1261,
+        "ghetto": 910,
+        "coronati": 2248,
+        "circusjog": 1756,
+        "sidecar": 680
+      },
+      "haring": {
+        "pantheon": 566,
+        "clemente": 2548,
+        "trevi": 1173,
+        "vicus": 1230,
+        "largo": 539,
+        "castel": 1190,
+        "pincio": 2370,
+        "capuchin": 1811,
+        "ignazio": 785,
+        "spada": 456,
+        "borghese": 2868,
+        "caravaggio": 452,
+        "doria": 904,
+        "kandinsky": 908,
+        "boccione": 763,
+        "innocenti": 1302,
+        "suppli": 507,
+        "trapizzino": 885,
+        "fortunata": 206,
+        "pasta": 426,
+        "trastevere": 1144,
+        "centre": 287,
+        "ghetto": 889,
+        "coronati": 2773,
+        "sidecar": 798
+      },
+      "kandinsky": {
+        "pantheon": 717,
+        "clemente": 1762,
+        "trevi": 659,
+        "vicus": 577,
+        "largo": 512,
+        "castel": 2011,
+        "capuchin": 1297,
+        "ignazio": 425,
+        "spada": 1076,
+        "caravaggio": 892,
+        "doria": 311,
+        "haring": 908,
+        "boccione": 797,
+        "innocenti": 1445,
+        "suppli": 1316,
+        "trapizzino": 1411,
+        "fortunata": 1015,
+        "pasta": 1222,
+        "trastevere": 1592,
+        "centre": 1065,
+        "keyhole": 1914,
+        "monti": 990,
+        "ghetto": 773,
+        "circovr": 1925,
+        "coronati": 1987,
+        "circusjog": 1535,
+        "sidecar": 558
+      },
+      "boccione": {
+        "pantheon": 774,
+        "clemente": 2287,
+        "trevi": 1381,
+        "vicus": 1373,
+        "largo": 340,
+        "castel": 1980,
+        "pincio": 2604,
+        "capuchin": 2020,
+        "ignazio": 961,
+        "spada": 551,
+        "borghese": 3103,
+        "caravaggio": 885,
+        "doria": 884,
+        "haring": 763,
+        "kandinsky": 797,
+        "innocenti": 755,
+        "suppli": 966,
+        "trapizzino": 810,
+        "fortunata": 642,
+        "pasta": 1160,
+        "trastevere": 913,
+        "centre": 922,
+        "keyhole": 1561,
+        "monti": 1688,
+        "ghetto": 126,
+        "circovr": 1571,
+        "coronati": 2481,
+        "circusjog": 1182,
+        "sidecar": 253
+      },
+      "innocenti": {
+        "pantheon": 1377,
+        "largo": 967,
+        "ignazio": 1596,
+        "spada": 945,
+        "caravaggio": 1487,
+        "doria": 1512,
+        "haring": 1302,
+        "boccione": 755,
+        "suppli": 1429,
+        "trapizzino": 704,
+        "fortunata": 1155,
+        "pasta": 1699,
+        "trastevere": 525,
+        "centre": 1461,
+        "keyhole": 1438,
+        "monti": 2107,
+        "ghetto": 653,
+        "circovr": 1448,
+        "cannon": 1539,
+        "circusjog": 1059,
+        "sidecar": 935
+      },
+      "market": {
+        "montemartini": 1617,
+        "cemetery": 702,
+        "innocenti": 1727,
+        "flavio": 347,
+        "trastevere": 1895,
+        "circovr": 1786,
+        "circusjog": 1768
+      },
+      "suppli": {
+        "pantheon": 1021,
+        "clemente": 2956,
+        "trevi": 1628,
+        "vicus": 1685,
+        "largo": 937,
+        "castel": 939,
+        "pincio": 2624,
+        "capuchin": 2266,
+        "ignazio": 1240,
+        "spada": 513,
+        "borghese": 3122,
+        "caravaggio": 812,
+        "doria": 1312,
+        "haring": 507,
+        "kandinsky": 1316,
+        "boccione": 966,
+        "innocenti": 1429,
+        "trapizzino": 848,
+        "fortunata": 361,
+        "pasta": 712,
+        "trastevere": 1107,
+        "centre": 622,
+        "ghetto": 1070,
+        "coronati": 3181,
+        "sidecar": 1041
+      },
+      "trapizzino": {
+        "pantheon": 1326,
+        "largo": 944,
+        "castel": 1816,
+        "ignazio": 1545,
+        "spada": 462,
+        "caravaggio": 1206,
+        "doria": 1473,
+        "haring": 885,
+        "boccione": 810,
+        "innocenti": 704,
+        "suppli": 848,
+        "fortunata": 703,
+        "pasta": 1331,
+        "trastevere": 283,
+        "centre": 1089,
+        "keyhole": 1978,
+        "ghetto": 914,
+        "cannon": 1136,
+        "circusjog": 1599,
+        "sidecar": 911
+      },
+      "fortunata": {
+        "pantheon": 740,
+        "clemente": 2656,
+        "trevi": 1347,
+        "vicus": 1405,
+        "largo": 622,
+        "castel": 1288,
+        "pincio": 2564,
+        "capuchin": 1985,
+        "ignazio": 959,
+        "spada": 284,
+        "borghese": 3063,
+        "caravaggio": 626,
+        "doria": 1012,
+        "haring": 206,
+        "kandinsky": 1015,
+        "boccione": 642,
+        "innocenti": 1155,
+        "suppli": 361,
+        "trapizzino": 703,
+        "pasta": 704,
+        "trastevere": 963,
+        "centre": 461,
+        "keyhole": 2182,
+        "ghetto": 746,
+        "coronati": 2881,
+        "sidecar": 717
+      },
+      "flavio": {
+        "montemartini": 1299,
+        "cemetery": 394,
+        "innocenti": 1795,
+        "market": 347,
+        "circovr": 1625,
+        "circusjog": 1623
+      },
+      "pasta": {
+        "pantheon": 569,
+        "clemente": 2944,
+        "trevi": 1071,
+        "vicus": 1165,
+        "largo": 935,
+        "castel": 849,
+        "pincio": 1944,
+        "capuchin": 1667,
+        "ignazio": 783,
+        "spada": 902,
+        "borghese": 2443,
+        "caravaggio": 335,
+        "doria": 1013,
+        "haring": 426,
+        "kandinsky": 1222,
+        "boccione": 1160,
+        "innocenti": 1699,
+        "suppli": 712,
+        "trapizzino": 1331,
+        "fortunata": 704,
+        "trastevere": 1591,
+        "centre": 267,
+        "ghetto": 1286,
+        "coronati": 3169,
+        "sidecar": 1193
+      },
+      "trastevere": {
+        "pantheon": 1516,
+        "largo": 1125,
+        "ignazio": 1735,
+        "spada": 722,
+        "caravaggio": 1466,
+        "doria": 1661,
+        "haring": 1144,
+        "boccione": 913,
+        "innocenti": 525,
+        "suppli": 1107,
+        "trapizzino": 283,
+        "fortunata": 963,
+        "pasta": 1591,
+        "centre": 1348,
+        "keyhole": 1811,
+        "ghetto": 999,
+        "cannon": 1145,
+        "circusjog": 1432,
+        "sidecar": 1093
+      },
+      "centre": {
+        "pantheon": 412,
+        "clemente": 2706,
+        "trevi": 1019,
+        "vicus": 1076,
+        "largo": 697,
+        "castel": 1117,
+        "pincio": 2128,
+        "capuchin": 1657,
+        "ignazio": 631,
+        "spada": 660,
+        "borghese": 2627,
+        "caravaggio": 189,
+        "doria": 830,
+        "haring": 287,
+        "kandinsky": 1065,
+        "boccione": 922,
+        "innocenti": 1461,
+        "suppli": 622,
+        "trapizzino": 1089,
+        "fortunata": 461,
+        "pasta": 267,
+        "trastevere": 1348,
+        "ghetto": 1048,
+        "coronati": 2931,
+        "sidecar": 955
+      },
+      "keyhole": {
+        "largo": 1801,
+        "spada": 2023,
+        "cemetery": 987,
+        "kandinsky": 1914,
+        "boccione": 1561,
+        "innocenti": 1438,
+        "market": 1197,
+        "trapizzino": 1978,
+        "fortunata": 2182,
+        "flavio": 1052,
+        "trastevere": 1811,
+        "ghetto": 1427,
+        "circovr": 991,
+        "circusjog": 771,
+        "sidecar": 1534
+      },
+      "coppede": {
+        "borghese": 1248
+      },
+      "monti": {
+        "pantheon": 1637,
+        "clemente": 991,
+        "trevi": 1131,
+        "vicus": 1042,
+        "largo": 1504,
+        "capuchin": 1403,
+        "ignazio": 1345,
+        "caravaggio": 1829,
+        "doria": 1261,
+        "kandinsky": 990,
+        "boccione": 1688,
+        "innocenti": 2107,
+        "ghetto": 1573,
+        "circovr": 1522,
+        "coronati": 1216,
+        "circusjog": 1745,
+        "sidecar": 1408
+      },
+      "ghetto": {
+        "pantheon": 892,
+        "clemente": 2167,
+        "trevi": 1414,
+        "vicus": 1350,
+        "largo": 366,
+        "pincio": 2667,
+        "capuchin": 2053,
+        "ignazio": 987,
+        "spada": 656,
+        "borghese": 3166,
+        "caravaggio": 1002,
+        "doria": 910,
+        "haring": 889,
+        "kandinsky": 773,
+        "boccione": 126,
+        "innocenti": 653,
+        "suppli": 1070,
+        "trapizzino": 914,
+        "fortunata": 746,
+        "pasta": 1286,
+        "trastevere": 999,
+        "centre": 1048,
+        "keyhole": 1427,
+        "monti": 1573,
+        "circovr": 1437,
+        "coronati": 2355,
+        "circusjog": 1048,
+        "sidecar": 279
+      },
+      "circovr": {
+        "clemente": 1342,
+        "cemetery": 1354,
+        "kandinsky": 1925,
+        "boccione": 1571,
+        "innocenti": 1448,
+        "market": 1786,
+        "flavio": 1625,
+        "keyhole": 991,
+        "monti": 1522,
+        "ghetto": 1437,
+        "coronati": 1486,
+        "circusjog": 364,
+        "sidecar": 1544
+      },
+      "cannon": {
+        "largo": 2081,
+        "castel": 1771,
+        "spada": 1598,
+        "caravaggio": 2319,
+        "haring": 2021,
+        "boccione": 2020,
+        "innocenti": 1539,
+        "suppli": 1700,
+        "trapizzino": 1136,
+        "fortunata": 1839,
+        "pasta": 2124,
+        "trastevere": 1145,
+        "centre": 2102,
+        "ghetto": 2107,
+        "sidecar": 2048
+      },
+      "coronati": {
+        "clemente": 231,
+        "monti": 1216,
+        "circovr": 1486,
+        "circusjog": 1709
+      },
+      "circusjog": {
+        "clemente": 1564,
+        "largo": 1422,
+        "ignazio": 1897,
+        "spada": 1644,
+        "cemetery": 1465,
+        "doria": 1756,
+        "kandinsky": 1535,
+        "boccione": 1182,
+        "innocenti": 1059,
+        "market": 1768,
+        "trapizzino": 1599,
+        "flavio": 1623,
+        "trastevere": 1432,
+        "keyhole": 771,
+        "monti": 1745,
+        "ghetto": 1048,
+        "circovr": 364,
+        "coronati": 1709,
+        "sidecar": 1155
+      },
+      "sidecar": {
+        "pantheon": 803,
+        "clemente": 2007,
+        "trevi": 1216,
+        "vicus": 1134,
+        "largo": 277,
+        "castel": 2021,
+        "pincio": 2622,
+        "capuchin": 1854,
+        "ignazio": 756,
+        "spada": 652,
+        "borghese": 3019,
+        "caravaggio": 913,
+        "doria": 680,
+        "haring": 798,
+        "kandinsky": 558,
+        "boccione": 253,
+        "innocenti": 935,
+        "suppli": 1041,
+        "trapizzino": 911,
+        "fortunata": 717,
+        "pasta": 1193,
+        "trastevere": 1093,
+        "centre": 955,
+        "keyhole": 1534,
+        "monti": 1408,
+        "ghetto": 279,
+        "circovr": 1544,
+        "coronati": 2233,
+        "circusjog": 1155
+      }
+    }
+  },
+  "rides": {
+    "hostel>pantheon": {
+      "text": "Metro A from Termini to Barberini, then 17 min on foot",
+      "m": 1989,
+      "min": 35
+    },
+    "hostel>clemente": {
+      "text": "Metro B from Termini to Colosseo, then 8 min on foot",
+      "m": 1321,
+      "min": 26
+    },
+    "hostel>trevi": {
+      "text": "Metro A from Termini to Barberini, then 9 min on foot",
+      "m": 1361,
+      "min": 27
+    },
+    "hostel>vicus": {
+      "text": "Metro A from Termini to Barberini, then 9 min on foot",
+      "m": 1377,
+      "min": 27
+    },
+    "hostel>largo": {
+      "text": "Metro B from Termini to Colosseo, then 20 min on foot",
+      "m": 2176,
+      "min": 38
+    },
+    "hostel>vittoriano": {
+      "text": "Metro B from Termini to Colosseo, then 15 min on foot",
+      "m": 1848,
+      "min": 33
+    },
+    "hostel>castel": {
+      "text": "Metro A from Termini to Lepanto, then 19 min on foot",
+      "m": 2129,
+      "min": 43
+    },
+    "hostel>pincio": {
+      "text": "Metro A from Termini to Spagna, then 14 min on foot",
+      "m": 1767,
+      "min": 34
+    },
+    "hostel>capuchin": {
+      "text": "Metro A from Termini to Barberini",
+      "m": 796,
+      "min": 19
+    },
+    "hostel>ignazio": {
+      "text": "Metro A from Termini to Barberini, then 14 min on foot",
+      "m": 1752,
+      "min": 32
+    },
+    "hostel>spada": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "hostel>gesu": {
+      "text": "Metro B from Termini to Cavour, then 18 min on foot",
+      "m": 2076,
+      "min": 34
+    },
+    "hostel>montemartini": {
+      "text": "Metro B from Termini to Garbatella, then 8 min on foot",
+      "m": 1294,
+      "min": 32
+    },
+    "hostel>cemetery": {
+      "text": "Metro B from Termini to Piramide, then 7 min on foot",
+      "m": 1191,
+      "min": 29
+    },
+    "hostel>borghese": {
+      "text": "25 min walk",
+      "m": 1900,
+      "min": 25
+    },
+    "hostel>caravaggio": {
+      "text": "Metro A from Termini to Barberini, then 19 min on foot",
+      "m": 2151,
+      "min": 37
+    },
+    "hostel>doria": {
+      "text": "Metro A from Termini to Barberini, then 15 min on foot",
+      "m": 1850,
+      "min": 33
+    },
+    "hostel>haring": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "hostel>kandinsky": {
+      "text": "Metro B from Termini to Cavour, then 16 min on foot",
+      "m": 1935,
+      "min": 32
+    },
+    "hostel>boccione": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "hostel>market": {
+      "text": "Metro B from Termini to Piramide, then 15 min on foot",
+      "m": 1810,
+      "min": 37
+    },
+    "hostel>suppli": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "hostel>fortunata": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "hostel>flavio": {
+      "text": "Metro B from Termini to Piramide, then 11 min on foot",
+      "m": 1502,
+      "min": 33
+    },
+    "hostel>pasta": {
+      "text": "Metro A from Termini to Spagna, then 18 min on foot",
+      "m": 2077,
+      "min": 38
+    },
+    "hostel>centre": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "hostel>keyhole": {
+      "text": "Metro B from Termini to Circo Massimo, then 14 min on foot",
+      "m": 1776,
+      "min": 34
+    },
+    "hostel>acquedotti": {
+      "text": "Metro A from Termini to Subaugusta, then 16 min on foot",
+      "m": 1883,
+      "min": 56
+    },
+    "hostel>monti": {
+      "text": "Metro B from Termini to Cavour, then 4 min on foot",
+      "m": 980,
+      "min": 20
+    },
+    "hostel>ghetto": {
+      "text": "Metro B from Termini to Circo Massimo, then 20 min on foot",
+      "m": 2223,
+      "min": 40
+    },
+    "hostel>circovr": {
+      "text": "Metro B from Termini to Circo Massimo, then 3 min on foot",
+      "m": 946,
+      "min": 23
+    },
+    "hostel>coronati": {
+      "text": "Metro B from Termini to Colosseo, then 11 min on foot",
+      "m": 1547,
+      "min": 29
+    },
+    "hostel>circusjog": {
+      "text": "Metro B from Termini to Circo Massimo, then 7 min on foot",
+      "m": 1225,
+      "min": 27
+    },
+    "hostel>sidecar": {
+      "text": "Metro B from Termini to Colosseo, then 18 min on foot",
+      "m": 2080,
+      "min": 36
+    },
+    "pantheon>hostel": {
+      "text": "17 min on foot to Barberini, then Metro A to Termini",
+      "m": 1989,
+      "min": 35
+    },
+    "pantheon>maritozzo": {
+      "text": "17 min on foot to Barberini, then Metro A to Vittorio Emanuele",
+      "m": 1677,
+      "min": 33
+    },
+    "clemente>hostel": {
+      "text": "8 min on foot to Colosseo, then Metro B to Termini",
+      "m": 1321,
+      "min": 26
+    },
+    "clemente>maritozzo": {
+      "text": "12 min walk",
+      "m": 890,
+      "min": 12
+    },
+    "trevi>hostel": {
+      "text": "9 min on foot to Barberini, then Metro A to Termini",
+      "m": 1361,
+      "min": 27
+    },
+    "trevi>maritozzo": {
+      "text": "9 min on foot to Barberini, then Metro A to Vittorio Emanuele",
+      "m": 1049,
+      "min": 25
+    },
+    "vicus>hostel": {
+      "text": "9 min on foot to Barberini, then Metro A to Termini",
+      "m": 1377,
+      "min": 27
+    },
+    "vicus>maritozzo": {
+      "text": "9 min on foot to Barberini, then Metro A to Vittorio Emanuele",
+      "m": 1065,
+      "min": 25
+    },
+    "largo>hostel": {
+      "text": "20 min on foot to Colosseo, then Metro B to Termini",
+      "m": 2176,
+      "min": 38
+    },
+    "largo>maritozzo": {
+      "text": "31 min walk",
+      "m": 2336,
+      "min": 31
+    },
+    "vittoriano>hostel": {
+      "text": "15 min on foot to Colosseo, then Metro B to Termini",
+      "m": 1848,
+      "min": 33
+    },
+    "vittoriano>maritozzo": {
+      "text": "27 min walk",
+      "m": 2014,
+      "min": 27
+    },
+    "castel>hostel": {
+      "text": "19 min on foot to Lepanto, then Metro A to Termini",
+      "m": 2129,
+      "min": 43
+    },
+    "castel>maritozzo": {
+      "text": "19 min on foot to Lepanto, then Metro A to Vittorio Emanuele",
+      "m": 1817,
+      "min": 41
+    },
+    "pincio>hostel": {
+      "text": "14 min on foot to Spagna, then Metro A to Termini",
+      "m": 1767,
+      "min": 34
+    },
+    "pincio>maritozzo": {
+      "text": "14 min on foot to Spagna, then Metro A to Vittorio Emanuele",
+      "m": 1455,
+      "min": 32
+    },
+    "capuchin>hostel": {
+      "text": "Metro A from Barberini to Termini",
+      "m": 796,
+      "min": 19
+    },
+    "capuchin>maritozzo": {
+      "text": "Metro A from Barberini to Vittorio Emanuele",
+      "m": 484,
+      "min": 17
+    },
+    "ignazio>hostel": {
+      "text": "14 min on foot to Barberini, then Metro A to Termini",
+      "m": 1752,
+      "min": 32
+    },
+    "ignazio>maritozzo": {
+      "text": "14 min on foot to Barberini, then Metro A to Vittorio Emanuele",
+      "m": 1440,
+      "min": 30
+    },
+    "spada>hostel": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "spada>maritozzo": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "gesu>hostel": {
+      "text": "18 min on foot to Cavour, then Metro B to Termini",
+      "m": 2076,
+      "min": 34
+    },
+    "gesu>maritozzo": {
+      "text": "28 min walk",
+      "m": 2092,
+      "min": 28
+    },
+    "montemartini>hostel": {
+      "text": "8 min on foot to Garbatella, then Metro B to Termini",
+      "m": 1294,
+      "min": 32
+    },
+    "montemartini>maritozzo": {
+      "text": "8 min on foot to Garbatella, then Metro B to Cavour",
+      "m": 1315,
+      "min": 31
+    },
+    "cemetery>hostel": {
+      "text": "7 min on foot to Piramide, then Metro B to Termini",
+      "m": 1191,
+      "min": 29
+    },
+    "cemetery>maritozzo": {
+      "text": "7 min on foot to Piramide, then Metro B to Cavour",
+      "m": 1212,
+      "min": 28
+    },
+    "borghese>hostel": {
+      "text": "25 min walk",
+      "m": 1900,
+      "min": 25
+    },
+    "borghese>maritozzo": {
+      "text": "14 min on foot to Spagna, then Metro A to Vittorio Emanuele",
+      "m": 1450,
+      "min": 32
+    },
+    "caravaggio>hostel": {
+      "text": "19 min on foot to Barberini, then Metro A to Termini",
+      "m": 2151,
+      "min": 37
+    },
+    "caravaggio>maritozzo": {
+      "text": "19 min on foot to Barberini, then Metro A to Vittorio Emanuele",
+      "m": 1839,
+      "min": 35
+    },
+    "doria>hostel": {
+      "text": "15 min on foot to Barberini, then Metro A to Termini",
+      "m": 1850,
+      "min": 33
+    },
+    "doria>maritozzo": {
+      "text": "30 min walk",
+      "m": 2217,
+      "min": 30
+    },
+    "haring>hostel": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "haring>maritozzo": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "kandinsky>hostel": {
+      "text": "16 min on foot to Cavour, then Metro B to Termini",
+      "m": 1935,
+      "min": 32
+    },
+    "kandinsky>maritozzo": {
+      "text": "26 min walk",
+      "m": 1946,
+      "min": 26
+    },
+    "maritozzo>pantheon": {
+      "text": "Metro A from Vittorio Emanuele to Barberini, then 17 min on foot",
+      "m": 1677,
+      "min": 33
+    },
+    "maritozzo>clemente": {
+      "text": "12 min walk",
+      "m": 890,
+      "min": 12
+    },
+    "maritozzo>trevi": {
+      "text": "Metro A from Vittorio Emanuele to Barberini, then 9 min on foot",
+      "m": 1049,
+      "min": 25
+    },
+    "maritozzo>vicus": {
+      "text": "Metro A from Vittorio Emanuele to Barberini, then 9 min on foot",
+      "m": 1065,
+      "min": 25
+    },
+    "maritozzo>largo": {
+      "text": "31 min walk",
+      "m": 2336,
+      "min": 31
+    },
+    "maritozzo>vittoriano": {
+      "text": "27 min walk",
+      "m": 2014,
+      "min": 27
+    },
+    "maritozzo>castel": {
+      "text": "Metro A from Vittorio Emanuele to Lepanto, then 19 min on foot",
+      "m": 1817,
+      "min": 41
+    },
+    "maritozzo>pincio": {
+      "text": "Metro A from Vittorio Emanuele to Spagna, then 14 min on foot",
+      "m": 1455,
+      "min": 32
+    },
+    "maritozzo>capuchin": {
+      "text": "Metro A from Vittorio Emanuele to Barberini",
+      "m": 484,
+      "min": 17
+    },
+    "maritozzo>ignazio": {
+      "text": "Metro A from Vittorio Emanuele to Barberini, then 14 min on foot",
+      "m": 1440,
+      "min": 30
+    },
+    "maritozzo>spada": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "maritozzo>gesu": {
+      "text": "28 min walk",
+      "m": 2092,
+      "min": 28
+    },
+    "maritozzo>montemartini": {
+      "text": "Metro B from Cavour to Garbatella, then 8 min on foot",
+      "m": 1315,
+      "min": 31
+    },
+    "maritozzo>cemetery": {
+      "text": "Metro B from Cavour to Piramide, then 7 min on foot",
+      "m": 1212,
+      "min": 28
+    },
+    "maritozzo>borghese": {
+      "text": "Metro A from Vittorio Emanuele to Spagna, then 14 min on foot",
+      "m": 1450,
+      "min": 32
+    },
+    "maritozzo>caravaggio": {
+      "text": "Metro A from Vittorio Emanuele to Barberini, then 19 min on foot",
+      "m": 1839,
+      "min": 35
+    },
+    "maritozzo>doria": {
+      "text": "30 min walk",
+      "m": 2217,
+      "min": 30
+    },
+    "maritozzo>haring": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "maritozzo>kandinsky": {
+      "text": "26 min walk",
+      "m": 1946,
+      "min": 26
+    },
+    "maritozzo>boccione": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "maritozzo>market": {
+      "text": "Metro B from Cavour to Piramide, then 15 min on foot",
+      "m": 1831,
+      "min": 36
+    },
+    "maritozzo>suppli": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "maritozzo>fortunata": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "maritozzo>flavio": {
+      "text": "Metro B from Cavour to Piramide, then 11 min on foot",
+      "m": 1523,
+      "min": 32
+    },
+    "maritozzo>pasta": {
+      "text": "Metro A from Vittorio Emanuele to Spagna, then 18 min on foot",
+      "m": 1765,
+      "min": 36
+    },
+    "maritozzo>centre": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "maritozzo>keyhole": {
+      "text": "Metro B from Cavour to Circo Massimo, then 14 min on foot",
+      "m": 1797,
+      "min": 33
+    },
+    "maritozzo>acquedotti": {
+      "text": "Metro A from Vittorio Emanuele to Subaugusta, then 16 min on foot",
+      "m": 1571,
+      "min": 50
+    },
+    "maritozzo>monti": {
+      "text": "13 min walk",
+      "m": 964,
+      "min": 13
+    },
+    "maritozzo>ghetto": {
+      "text": "32 min walk",
+      "m": 2405,
+      "min": 32
+    },
+    "maritozzo>circovr": {
+      "text": "Metro B from Cavour to Circo Massimo, then 3 min on foot",
+      "m": 967,
+      "min": 22
+    },
+    "maritozzo>coronati": {
+      "text": "14 min walk",
+      "m": 1022,
+      "min": 14
+    },
+    "maritozzo>circusjog": {
+      "text": "Metro B from Cavour to Circo Massimo, then 7 min on foot",
+      "m": 1246,
+      "min": 26
+    },
+    "maritozzo>sidecar": {
+      "text": "30 min walk",
+      "m": 2240,
+      "min": 30
+    },
+    "boccione>hostel": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "boccione>maritozzo": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "market>hostel": {
+      "text": "15 min on foot to Piramide, then Metro B to Termini",
+      "m": 1810,
+      "min": 37
+    },
+    "market>maritozzo": {
+      "text": "15 min on foot to Piramide, then Metro B to Cavour",
+      "m": 1831,
+      "min": 36
+    },
+    "suppli>hostel": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "suppli>maritozzo": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "fortunata>hostel": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "fortunata>maritozzo": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "flavio>hostel": {
+      "text": "11 min on foot to Piramide, then Metro B to Termini",
+      "m": 1502,
+      "min": 33
+    },
+    "flavio>maritozzo": {
+      "text": "11 min on foot to Piramide, then Metro B to Cavour",
+      "m": 1523,
+      "min": 32
+    },
+    "pasta>hostel": {
+      "text": "18 min on foot to Spagna, then Metro A to Termini",
+      "m": 2077,
+      "min": 38
+    },
+    "pasta>maritozzo": {
+      "text": "18 min on foot to Spagna, then Metro A to Vittorio Emanuele",
+      "m": 1765,
+      "min": 36
+    },
+    "centre>hostel": {
+      "text": "Taxi, about 15 min",
+      "m": 0,
+      "min": 15,
+      "taxi": true
+    },
+    "centre>maritozzo": {
+      "text": "Taxi, about 10 min",
+      "m": 0,
+      "min": 10,
+      "taxi": true
+    },
+    "keyhole>hostel": {
+      "text": "14 min on foot to Circo Massimo, then Metro B to Termini",
+      "m": 1776,
+      "min": 34
+    },
+    "keyhole>maritozzo": {
+      "text": "14 min on foot to Circo Massimo, then Metro B to Cavour",
+      "m": 1797,
+      "min": 33
+    },
+    "acquedotti>hostel": {
+      "text": "16 min on foot to Subaugusta, then Metro A to Termini",
+      "m": 1883,
+      "min": 56
+    },
+    "acquedotti>maritozzo": {
+      "text": "16 min on foot to Subaugusta, then Metro A to Vittorio Emanuele",
+      "m": 1571,
+      "min": 50
+    },
+    "monti>hostel": {
+      "text": "4 min on foot to Cavour, then Metro B to Termini",
+      "m": 980,
+      "min": 20
+    },
+    "monti>maritozzo": {
+      "text": "13 min walk",
+      "m": 964,
+      "min": 13
+    },
+    "ghetto>hostel": {
+      "text": "20 min on foot to Circo Massimo, then Metro B to Termini",
+      "m": 2223,
+      "min": 40
+    },
+    "ghetto>maritozzo": {
+      "text": "32 min walk",
+      "m": 2405,
+      "min": 32
+    },
+    "circovr>hostel": {
+      "text": "3 min on foot to Circo Massimo, then Metro B to Termini",
+      "m": 946,
+      "min": 23
+    },
+    "circovr>maritozzo": {
+      "text": "3 min on foot to Circo Massimo, then Metro B to Cavour",
+      "m": 967,
+      "min": 22
+    },
+    "coronati>hostel": {
+      "text": "11 min on foot to Colosseo, then Metro B to Termini",
+      "m": 1547,
+      "min": 29
+    },
+    "coronati>maritozzo": {
+      "text": "14 min walk",
+      "m": 1022,
+      "min": 14
+    },
+    "circusjog>hostel": {
+      "text": "7 min on foot to Circo Massimo, then Metro B to Termini",
+      "m": 1225,
+      "min": 27
+    },
+    "circusjog>maritozzo": {
+      "text": "7 min on foot to Circo Massimo, then Metro B to Cavour",
+      "m": 1246,
+      "min": 26
+    },
+    "sidecar>hostel": {
+      "text": "18 min on foot to Colosseo, then Metro B to Termini",
+      "m": 2080,
+      "min": 36
+    },
+    "sidecar>maritozzo": {
+      "text": "30 min walk",
+      "m": 2240,
+      "min": 30
+    }
   }
 }

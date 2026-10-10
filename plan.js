@@ -121,18 +121,24 @@
     return !!w && (w.sessions ? w.sessions[0] : w.lo) < FRAME.MORNING_BY;
   };
 
+  /* Legs (gate B2 of the v7 fold-in): walks use the metres routed on foot in content.walks (OSRM on
+     OpenStreetMap), at its pace of 75 m a minute; a leg from or to the hostel's area uses its routed
+     ride in content.rides. A pair the tables lack falls back to the straight-line estimate. */
+  const placeId = (C, p) => p.id || (p === C.anchors.dinner ? 'dinner' : '');
   function makeTransfer(C, a, b) {
     const U = C.ui;
-    if (a.area === b.area) {
-      const m = Math.round(haversine(a, b) * 1.3);
-      const min = Math.max(1, Math.round(m / 75));
-      return { text: fmt(U.walk, { min }), m, min };
-    }
-    // A listed transfer with no walking in it is a taxi ride.
+    const ride = C.rides && C.rides[`${placeId(C, a)}>${placeId(C, b)}`];
+    if (ride) return { text: ride.text, m: ride.m, min: ride.min, taxi: !!ride.taxi };
+    const routed = C.walks && C.walks.m[placeId(C, a)] && C.walks.m[placeId(C, a)][placeId(C, b)];
+    const walk = (m, tpl = U.walk) => { const min = Math.max(1, Math.round(m / 75)); return { text: fmt(tpl, { min }), m, min }; };
+    if (a.area === b.area) return walk(routed ?? Math.round(haversine(a, b) * 1.3));
+    // A listed transfer: a walk ("{min} min walk ...") takes the routed minutes; one with no walking
+    // in it is a taxi ride.
     const e = (C.transfers || []).find((t) => t.from === a.area && t.to === b.area);
+    if (e && e.text.includes('{min}')) return routed !== undefined ? walk(routed, e.text) : { text: fmt(e.text, { min: e.min }), m: e.m, min: e.min };
     if (e) return { text: e.text, m: e.m, min: e.min, taxi: e.m === 0 };
     const d = haversine(a, b);
-    if (d < 1500) { const min = Math.max(1, Math.round(d / 75)); return { text: fmt(U.walk, { min }), m: Math.round(d), min }; }
+    if (d < 1500) return walk(routed ?? Math.round(d));
     const min = Math.max(10, Math.round((5 + d / 333) / 5) * 5); // a cab at city speed, plus finding one
     return { text: fmt(U.taxi, { min }), m: 0, min, taxi: true };
   }
