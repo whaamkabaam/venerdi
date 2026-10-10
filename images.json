@@ -1726,5 +1726,197 @@
    "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Trastevere_-_Fontanone_dei_cento_preti_a_piazza_Trilussa_1527.JPG"
   }
+ },
+ "colosseum-3": {
+  "src800": "img/colosseum-3-800.webp",
+  "src1600": "img/colosseum-3-1600.webp",
+  "w": 1600,
+  "h": 1167,
+  "alt": "The Colosseum at dusk under a blue cloudy sky, lamps glowing orange inside its upper arches, the paved square in front empty",
+  "focal": "35% 55%",
+  "color": "#587f94",
+  "credit": {
+   "title": "Colosseum arena photography",
+   "author": "David Köhler",
+   "license": "Unsplash License",
+   "licenseUrl": "https://unsplash.com/license",
+   "sourceUrl": "https://unsplash.com/photos/colosseum-arena-photography-VFRTXGw1VjU"
+  }
+ },
+ "colosseum-4": {
+  "src800": "img/colosseum-4-800.webp",
+  "src1600": "img/colosseum-4-1600.webp",
+  "w": 1600,
+  "h": 1007,
+  "alt": "Looking down over the Roman Forum from the Capitol: eight tall columns of the Temple of Saturn in front, the old paved street running away, the Colosseum at the far end",
+  "focal": "50% 45%",
+  "color": "#87817a",
+  "credit": {
+   "title": "Ancient pano (4362583154) (cropped)",
+   "author": "Stu Younger from Edinburgh",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ancient_pano_(4362583154)_(cropped).jpg"
+  }
+ },
+ "forum-1": {
+  "src800": "img/forum-1-800.webp",
+  "src1600": "img/forum-1-1600.webp",
+  "w": 1600,
+  "h": 1070,
+  "alt": "Three white columns of the Temple of Castor in the Roman Forum, with the brick ruins of the emperors' palaces on the Palatine rising behind under umbrella pines",
+  "focal": "60% 50%",
+  "color": "#907c66",
+  "credit": {
+   "title": "Forum Romanum through Arch of Septimius Severus Forum Romanum Rome",
+   "author": "Jebulon",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Forum_Romanum_through_Arch_of_Septimius_Severus_Forum_Romanum_Rome.jpg"
+  }
+ },
+ "forum-2": {
+  "src800": "img/forum-2-800.webp",
+  "src1600": "img/forum-2-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "From the edge of the Palatine, a grassy slope drops to the long sandy oval of the Circus Maximus, palace ruins on the right",
+  "focal": "45% 55%",
+  "color": "#908d72",
+  "credit": {
+   "title": "Circus Maximus (15472125828)",
+   "author": "Victor R. Ruiz from Arinaga, Canary Islands, Spain",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Circus_Maximus_(15472125828).jpg"
+  }
+ },
+ "stpeters-1": {
+  "src800": "img/stpeters-1-800.webp",
+  "src1600": "img/stpeters-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "St Peter's Square in morning sun: the tall Egyptian obelisk in front, the basilica's pale front and dome behind, the curved colonnades reaching out on both sides",
+  "focal": "45% 55%",
+  "color": "#6c757c",
+  "credit": {
+   "title": "0 Place Saint-Pierre - Vatican",
+   "author": "Jean-Pol GRANDMONT",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:0_Place_Saint-Pierre_-_Vatican.JPG"
+  }
+ },
+ "stpeters-2": {
+  "src800": "img/stpeters-2-800.webp",
+  "src1600": "img/stpeters-2-1600.webp",
+  "w": 1600,
+  "h": 1098,
+  "alt": "Looking straight up into the dome of St Peter's: gold and blue coffered ceiling, shafts of sunlight slanting down through the windows",
+  "focal": "50% 40%",
+  "color": "#544f43",
+  "credit": {
+   "title": "S. Pietro May 2022-13",
+   "author": "Alvesgaspar",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:S._Pietro_May_2022-13.jpg"
+  }
+ },
+ "coffee-1": {
+  "src800": "img/coffee-1-800.webp",
+  "src1600": "img/coffee-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A spoon lifting a scoop of thick, pale brown coffee foam out of a white cup at Sant'Eustachio Il Caffè",
+  "focal": "50% 45%",
+  "color": "#b89c75",
+  "credit": {
+   "title": "Caffè Crema",
+   "author": "Yves Sorge",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/155322279@N02/30252897487"
+  }
+ },
+ "gelato-1": {
+  "src800": "img/gelato-1-800.webp",
+  "src1600": "img/gelato-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A quiet cobbled lane off Via dei Coronari with potted plants, a bike, worn ochre walls and old stone steps, the green Gelateria del Teatro sign under the ivy",
+  "focal": "45% 55%",
+  "color": "#4b423c",
+  "credit": {
+   "title": "Gelateria del Teatro - panoramio (cropped to 4:3)",
+   "author": "Vadim Zhivotovsky",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gelateria_del_Teatro_-_panoramio.jpg"
+  }
+ },
+ "gelato-2": {
+  "src800": "img/gelato-2-800.webp",
+  "src1600": "img/gelato-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The gelato counter at Gelateria del Teatro with tubs labelled Greek yogurt, garden sage and raspberry, lavender and white peach, and rosemary honey and lemon, each topped with a leaf, fruit slice or herb sprig",
+  "focal": "50% 50%",
+  "color": "#807d75",
+  "credit": {
+   "title": "Flavors at Gelateria del Teatro",
+   "author": "Joy (joyosity)",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Flavors_at_Gelateria_del_Teatro_(8951081604)_(2).jpg"
+  }
+ },
+ "spanish-steps": {
+  "src800": "img/spanish-steps-800.webp",
+  "src1600": "img/spanish-steps-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Looking down the Spanish Steps from the top: people on the wide stone landings, Piazza di Spagna below and Via dei Condotti running straight on between ochre buildings",
+  "focal": "50% 55%",
+  "color": "#807e76",
+  "credit": {
+   "title": "L06 776 Spanische Treppe, Via dei Condotti",
+   "author": "Falk2",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:L06_776_Spanische_Treppe,_Via_dei_Condotti.jpg"
+  }
+ },
+ "sistine-1": {
+  "src800": "img/sistine-1-800.webp",
+  "src1600": "img/sistine-1-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "The Sistine Chapel ceiling seen from below: God's hand reaching to Adam's in the middle panel, Adam and Eve with the serpent above, painted prophets and sibyls in the side niches",
+  "focal": "45% 55%",
+  "color": "#867260",
+  "credit": {
+   "title": "Sistine Chapel Ceiling by Michelangelo (48466107736)",
+   "author": "Gary Todd from Xinzheng, China",
+   "license": "Public domain",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sistine_Chapel_Ceiling_by_Michelangelo_(48466107736).jpg"
+  }
+ },
+ "sistine-2": {
+  "src800": "img/sistine-2-800.webp",
+  "src1600": "img/sistine-2-1600.webp",
+  "w": 1600,
+  "h": 1024,
+  "alt": "The Sistine Chapel from the back: the painted ceiling running the length of the room to the Last Judgement on the end wall, frescoes along both sides, a marble screen with brass grilles in front",
+  "focal": "45% 50%",
+  "color": "#8a7d74",
+  "credit": {
+   "title": "Sistine Chapel ceiling 03",
+   "author": "Antoine Taveneaux",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sistine_Chapel_ceiling_03.jpg"
+  }
  }
 }
