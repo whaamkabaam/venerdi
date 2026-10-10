@@ -76,7 +76,7 @@
   "note": {
     "greeting": "Hey Sasha,",
     "paras": [
-      "Friday's free, so you get to pick. Tap whatever looks good and I'll do the Planung (planning). We'll do a few things and take our time :)"
+      "I put together a few ideas for Friday. Tap whatever looks good, none of it is fixed. I just like a bit of Planung (planning) :)"
     ],
     "sign": "Felix"
   },
@@ -320,6 +320,9 @@
   ],
   "day": {
     "title": "Your Friday",
+    "crowded": "That's a full Friday, so we'll pick on the day.",
+    "lunchChoice": "We'll only have one of these.",
+    "cant": "{title}: {why}.",
     "changeAnswers": "Change answers",
     "empty": "Answer the questions above and your Friday shows up here.",
     "noLunch": "Lunch wherever we are.",
@@ -334,9 +337,9 @@
     "swap": "Swap",
     "remove": "Remove",
     "undo": "Undo",
-    "instead": "Instead:",
+    "instead": "Or one of these:",
     "useThis": "Use this",
-    "roomTitle": "Room for one more?",
+    "roomTitle": "More ideas",
     "add": "Add",
     "seeEverything": "See everything",
     "close": "Close",
@@ -347,6 +350,7 @@
       "m": "{m} min",
       "price": "€{n} each",
       "free": "Free",
+      "needsBooking": "Needs booking",
       "join": " · "
     }
   },
@@ -388,10 +392,11 @@
   },
   "send": {
     "label": "Anything else?",
-    "placeholder": "Gelato, a nap, padel…",
+    "placeholder": "Padel, shopping, anything…",
     "button": "Send to Felix",
     "shareIntro": "My Friday:",
-    "shareExtra": "Also:"
+    "shareExtra": "Also:",
+    "shareDinner": "{time} Dinner at {title}"
   },
   "anchors": {
     "arrival": {
@@ -402,7 +407,7 @@
     },
     "bags": {
       "title": "Bags to the flat",
-      "body": "We grab the bags from my hostel and take a taxi to the flat in Pigneto. You'll have been up since before sunrise, so a nap is allowed :)",
+      "body": "We take the bags to the flat in Pigneto and have a break.",
       "hud": "Flat"
     },
     "dinner": {
@@ -2716,7 +2721,7 @@
     },
     "noteTitle": "A note from Felix",
     "mapTitle": "On the map",
-    "mapLabel": "Map of central Rome with your picks and their rough times",
+    "mapLabel": "Map of central Rome with your picks",
     "mapCredit": "Map data © OpenStreetMap contributors",
     "credits": "Photos",
     "creditBy": "by",
