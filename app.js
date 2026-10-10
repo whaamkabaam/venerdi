@@ -678,8 +678,9 @@
     const at = (e) => { for (const [i, s] of STEPS.entries()) { const k = s.multi ? chosen(answers, s).indexOf(e.reason) : s.id === e.reason ? 0 : -1; if (k >= 0) return i * 10 + k; } return 99; };
     return composed().extras.filter((e) => !picks.some((p) => p.id === e.id || (!e.want && p.reason === e.reason))).sort((a, b) => at(a) - at(b));
   }
-  // "Didn't fit: The weird stuff, Bone crypt.": a parked answer by its label, a named thing by its title.
-  const parkedLabels = () => parkedNow().map((e) => (e.want ? OPT[e.id].title : reasonLabel(e.reason))).join(U.listJoin);
+  // "Also on your list: The weird stuff, Bone crypt, Noon cannon.": a parked sight or food by its label; a
+  // named thing, her area and her wild card by the place's title, as the board's dim rows name them.
+  const parkedLabels = () => parkedNow().map((e) => (e.want || e.reason === 'wander' || e.reason === 'wild' ? OPT[e.id].title : reasonLabel(e.reason))).join(U.listJoin);
 
   // Her answers in the link: one group per step, joined by "-": the pick-any steps as their
   // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped. A
