@@ -639,6 +639,17 @@
         extras.splice(extras.indexOf(e), 1);
       }
     };
+    // Her area and her wild card she chose by name too. One that was parked only because nothing yet
+    // filled the morning (build puts the noon cannon first and the area after lunch, and the morning
+    // sits empty) is tried again at the end, once the rest of the day is in (fold-in check N1). Only
+    // at the end: tried before each later step, it would take the room of her sights and her lunch.
+    const retryTiles = () => {
+      for (const e of extras.filter((x) => !x.want && (x.reason === 'wander' || x.reason === 'wild'))) {
+        if (!fits(e.id, true)) continue;
+        picks.push({ id: e.id, reason: e.reason, step: e.reason });
+        extras.splice(extras.indexOf(e), 1);
+      }
+    };
     // A sight with no stop yet is tried once more right before the snack: a later stop (a museum
     // nearby) can have put one of its places on the way, and the snack must not take that place.
     const retrySights = () => {
@@ -686,8 +697,10 @@
       if (chosen) picks.push({ id: chosen.id, reason: q.reason, step: q.step });
       else if (cands.length && !q.lunchOnly && !extras.some((e) => e.want && e.reason === q.reason)) toExtras(cands[0].id, q.reason);
     }
-    // A later pick can put a parked named thing on the way: one last try, under her own label.
+    // A later pick can put a parked named thing on the way: one last try, under her own label; then
+    // her area and wild card.
     retryWants();
+    retryTiles();
     // Her named things outrank the tiles she only tapped (fold-in A2): a thing she named that is still
     // parked takes the place of the wild card, else of the area, when the day fits with it there.
     for (const e of extras.filter((x) => x.want && x.id !== must)) {
@@ -704,15 +717,19 @@
     // The board fills in the order she answered: the sights, the area, the wild card, then food,
     // and her tap order inside each step.
     const tap = (p) => (p.step === 'see' ? see.indexOf(p.reason) : p.step === 'eat' ? eatIn.indexOf(p.reason) : 0);
-    picks.sort((a, b) => STEP_ORDER.indexOf(a.step) - STEP_ORDER.indexOf(b.step) || tap(a) - tap(b));
+    const boardOrder = (a, b) => (a.step === 'felix') - (b.step === 'felix') || STEP_ORDER.indexOf(a.step) - STEP_ORDER.indexOf(b.step) || tap(a) - tap(b);
+    picks.sort(boardOrder);
     // A light day (fewer than FILL_BELOW picks) gets my picks from the default day wherever they still
-    // fit the caps and the clock. They go last on the board, as Felix's pick.
+    // fit the caps and the clock. They go last on the board, as Felix's pick. Her parked area or wild
+    // card is tried again after each one (a pastry of mine can fill the morning it was missing).
     if (picks.length < FILL_BELOW) {
       for (const d of C.defaultDay || []) {
         // A thing she named stays hers: it is never my pick, even when it is on my default day.
         if (!O[d.id] || ids().includes(d.id) || parkedWant(d.id) || !fits(d.id, false)) continue;
         picks.push({ id: d.id, reason: 'felix', step: 'felix' });
+        retryTiles();
       }
+      picks.sort(boardOrder);
     }
     return { picks: picks.map(({ id, reason }) => ({ id, reason })), extras: extras.filter((e) => !ids().includes(e.id)), keep: must };
   }
