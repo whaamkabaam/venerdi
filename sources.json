@@ -1,6 +1,28 @@
 {
  "checked": "2026-10-10",
  "options": {
+  "colosseum": [
+   "https://ticketing.colosseo.it/en/categorie/singoli-1-8-persone/",
+   "https://ticketing.colosseo.it/en/eventi/24h-colosseo-foro-romano-palatino/",
+   "https://ticketing.colosseo.it/en/eventi/full-experience/",
+   "https://ticketing.colosseo.it/en/eventi/full-experience-attico/",
+   "https://ticketing.colosseo.it/en/eventi/full-experience-sotterranei-e-arena/",
+   "https://ticketing.colosseo.it/en/eventi/24h-only-arena/",
+   "https://ticketing.colosseo.it/en/categorie/percorsi-didattici/",
+   "https://ticketing.colosseo.it/en/eventi/full-experience-sotterranei-e-arena-percorso-didattico/",
+   "https://ticketing.colosseo.it/en/eventi/colosseo-percorso-didattico/",
+   "https://ticketing.colosseo.it/en/eventi/full-experience-passaggio-di-commodo/",
+   "https://colosseo.it/en/opening-times-and-tickets/",
+   "https://www.earthtrekkers.com/best-views-of-rome/",
+   "https://community.ricksteves.com/travel-forum/italy/roman-forum-view"
+  ],
+  "forum": [
+   "https://ticketing.colosseo.it/en/eventi/pass-super/",
+   "https://ticketing.colosseo.it/en/categorie/singoli-1-8-persone/",
+   "https://ticketing.colosseo.it/en/eventi/percorso-didattico-foro-romano/",
+   "https://cultura.gov.it/luogo/parco-archeologico-del-colosseo-foro-romano-e-palatino",
+   "https://colosseo.it/orari-e-biglietti/"
+  ],
   "pantheon": [
    "https://direzionemuseiroma.cultura.gov.it/pantheon/",
    "https://portale.museiitaliani.it/b2c/buyTicketless/33f77159-0acd-40c4-8524-701f33aae108"
@@ -98,6 +120,14 @@
    "http://shop.gebart.it/",
    "https://www.tosc.it/en/artist/galleria-borghese/"
   ],
+  "stpeters": [
+   "https://www.basilicasanpietro.va/en/opening-hours",
+   "https://www.basilicasanpietro.va/en/news/new-opening-hours-for-st-peters-basilica",
+   "https://www.basilicasanpietro.va/en/help/the-basilica",
+   "https://www.basilicasanpietro.va/en/entering-the-basilica",
+   "https://www.basilicasanpietro.va/en/rules-for-the-common-good",
+   "https://press.vatican.va/content/salastampa/it/bollettino/pubblico/2026/08/28/0675.pdf"
+  ],
   "caravaggio": [
    "https://saintlouis-rome.net/horaires-visite-opening-hours/",
    "https://saintlouis-rome.net/caravage/",
@@ -119,11 +149,25 @@
    "https://www.mostrepalazzobonaparte.it/pianifica-la-tua-visita.php",
    "https://www.ticket.it/mostre/evento/kandinsky.aspx"
   ],
+  "sistine": [
+   "https://tickets.museivaticani.va/home/calendar/visit/MV-Biglietti",
+   "https://tickets.museivaticani.va/api/search/resultPerTag?lang=en&visitorNum=2&visitDate=16/10/2026&area=1&who=1&page=0&tag=MV-Biglietti",
+   "https://www.museivaticani.va/content/museivaticani/en.html"
+  ],
   "maritozzo": [
    "https://guide.michelin.com/ch/it/notizia/travel/vivere-roma-come-i-romani",
    "https://www.pasticceriaregoli.com/",
    "https://mesprestiges.com/en/roma/places/pasticceria-regoli",
    "https://katieparla.com/pasticceria-regoli-rome-cafe/"
+  ],
+  "coffee": [
+   "https://santeustachioilcaffe.it/",
+   "https://mesprestiges.com/en/roma/places/santeustachio-il-caffe",
+   "https://www.timeout.com/rome/restaurants/caffe-santeustachio",
+   "https://italyplanner.com/rome-coffee-bars.html",
+   "https://eurovistatrips.com/es/mejores-cafes-roma-economico-2026/",
+   "https://nominatim.openstreetmap.org",
+   "https://routing.openstreetmap.de/routed-foot/"
   ],
   "boccione": [
    "https://turismoroma.it/en/page/rione-xi-santangelo",
@@ -147,6 +191,13 @@
   "trapizzino": [
    "https://www.trapizzino.it/en/trapizzino/trapizzino-roma-trastevere/",
    "https://nominatim.openstreetmap.org/search?q=Piazza+Trilussa+46+Roma"
+  ],
+  "gelato": [
+   "https://www.gelateriadelteatro.it/gelateria/",
+   "https://www.gelateriadelteatro.it/contatti/",
+   "https://mesprestiges.com/en/roma/places/gelateria-del-teatro",
+   "https://www.wantedinrome.com/yellowpage/gelateria-del-teatro.html",
+   "https://routing.openstreetmap.de/routed-foot/"
   ],
   "fortunata": [
    "https://osteriadafortunata.it/prenota/",
@@ -242,9 +293,26 @@
    "https://vespasidecartour.com/faq"
   ]
  },
- "dinner": [
-  "https://lirioni.it/prenotazione/",
-  "https://lirioni.it/",
-  "https://nominatim.openstreetmap.org/search?q=Li+Rioni+Via+dei+Santi+Quattro+24+Roma"
- ]
+ "dinners": {
+  "lirioni": [
+   "https://lirioni.it/prenotazione/",
+   "https://lirioni.it/wp-content/uploads/2025/08/Li_Rioni_menu_ver.20250625_Web.pdf",
+   "https://timeout.com/rome/restaurants/li-rioni",
+   "https://www.frommers.com/destinations/rome/restaurants/li-rioni",
+   "https://routing.openstreetmap.de/routed-foot/"
+  ],
+  "remo": [
+   "https://tablejourney.com/italy/rome/casual-dining/pizzeria-da-remo/",
+   "https://www.timeout.com/rome/restaurants/pizzeria-da-remo",
+   "https://mapstr.com/place/ZPcK1APk7Zg",
+   "https://www.gamberorosso.it/notizie/rubriche/storie/pizzeria-remo-testaccio-roma/",
+   "https://routing.openstreetmap.de/routed-foot/"
+  ],
+  "ivo": [
+   "https://ivoatrastevere.it/",
+   "https://ivoatrastevere.it/wp-content/uploads/2026/01/Ivo-a-Trastevere-Menu.pdf",
+   "https://www.dissapore.com/pizzerie/ivo-a-trastevere-a-roma-recensione-come-sta-la-pizza-romana-nel-cuore-della-citta/",
+   "https://routing.openstreetmap.de/routed-foot/"
+  ]
+ }
 }

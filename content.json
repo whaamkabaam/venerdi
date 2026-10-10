@@ -101,13 +101,13 @@
           {
             "id": "ancient",
             "label": "Old Rome",
-            "sub": "The Pantheon, the Trevi Fountain, a house under a church",
-            "photoOf": "pantheon"
+            "sub": "The Colosseum, the Forum, the Pantheon, Trevi",
+            "photoOf": "colosseum"
           },
           {
             "id": "view",
             "label": "Rome from above",
-            "sub": "Sunset from the Vittoriano roof, Castel Sant'Angelo, the Pincio",
+            "sub": "Sunset from the Vittoriano roof, Castel Sant'Angelo, the Spanish Steps",
             "photoOf": "vittoriano"
           },
           {
@@ -119,7 +119,7 @@
           {
             "id": "art",
             "label": "Art that's worth it",
-            "sub": "Bernini's marble, three Caravaggios, Haring, Kandinsky",
+            "sub": "St Peter's, Bernini's marble, three Caravaggios, Haring",
             "photoOf": "borghese"
           }
         ]
@@ -132,14 +132,14 @@
         "tiles": [
           {
             "id": "pastry",
-            "label": "Pastries",
-            "sub": "A maritozzo at Regoli, and the Ghetto bakery with no sign",
+            "label": "Pastries and coffee",
+            "sub": "A maritozzo, the Ghetto bakery, coffee by the Pantheon",
             "photoOf": "maritozzo"
           },
           {
             "id": "street",
             "label": "Street food",
-            "sub": "Supplì, a trapizzino, a food market",
+            "sub": "Supplì, a food market, gelato that isn't too sweet",
             "photoOf": "suppli"
           },
           {
@@ -171,14 +171,14 @@
           },
           {
             "id": "centre",
-            "label": "The old centre",
-            "sub": "Navona, Campo de' Fiori and the small streets between",
+            "label": "Piazza Navona",
+            "sub": "Campo de' Fiori and the small streets around it",
             "option": "centre"
           },
           {
             "id": "aventine",
             "label": "The Aventine",
-            "sub": "The keyhole and the orange garden",
+            "sub": "The Mouth of Truth, the keyhole, the orange garden",
             "option": "keyhole"
           },
           {
@@ -268,7 +268,7 @@
       "code": "r"
     },
     "pastry": {
-      "label": "Pastries",
+      "label": "Pastries and coffee",
       "code": "p"
     },
     "street": {
@@ -408,18 +408,8 @@
     "dinner": {
       "time": "19:00",
       "title": "Dinner",
-      "place": "Li Rioni",
-      "body": "Pizza at Li Rioni, behind the Colosseum.",
-      "area": "celio",
-      "lat": 41.88869,
-      "lon": 12.49783,
-      "image": "suppli",
-      "links": [
-        {
-          "label": "Map",
-          "url": "https://maps.google.com/?q=Li+Rioni+a+Santiquattro+Via+dei+Santi+Quattro+24+Roma"
-        }
-      ],
+      "bodyNone": "Three pizza places. Pick one, or we decide on the day.",
+      "bodyPicked": "Pizza at {title}.",
       "hud": "Dinner"
     },
     "end": {
@@ -428,7 +418,149 @@
       "hud": "Night"
     }
   },
+  "dinners": {
+    "ideas": [
+      {
+        "id": "lirioni",
+        "title": "Li Rioni",
+        "board": "LI RIONI",
+        "line": "Thin, crispy Roman pizza from a wood oven, in a loud room done up like a street.",
+        "area": "Behind the Colosseum",
+        "booking": "We can book",
+        "price": "around €15 each",
+        "friendTip": false,
+        "lat": 41.88869,
+        "lon": 12.49783,
+        "links": [
+          {
+            "label": "Map",
+            "url": "https://maps.google.com/?q=Li+Rioni+a+Santiquattro+Via+dei+Santi+Quattro+24+Roma"
+          }
+        ]
+      },
+      {
+        "id": "remo",
+        "title": "Da Remo",
+        "board": "DA REMO",
+        "line": "Testaccio's loud, cheap pizza place. The pizzas come fast and there's usually a queue.",
+        "area": "Testaccio",
+        "booking": "Walk in, cash only",
+        "price": "around €15 each",
+        "friendTip": true,
+        "lat": 41.88093,
+        "lon": 12.47535,
+        "links": [
+          {
+            "label": "Map",
+            "url": "https://maps.google.com/?q=Pizzeria+Da+Remo+Piazza+di+Santa+Maria+Liberatrice+44+Roma"
+          }
+        ]
+      },
+      {
+        "id": "ivo",
+        "title": "Da Ivo",
+        "board": "DA IVO",
+        "line": "An old Trastevere pizzeria, open since 1962. They say a table always turns up.",
+        "area": "Trastevere",
+        "booking": "Walk in",
+        "price": "around €15 each",
+        "friendTip": true,
+        "lat": 41.88813,
+        "lon": 12.47109,
+        "links": [
+          {
+            "label": "Map",
+            "url": "https://maps.google.com/?q=Ivo+a+Trastevere+Via+di+San+Francesco+a+Ripa+158+Roma"
+          }
+        ]
+      }
+    ]
+  },
   "options": [
+    {
+      "id": "colosseum",
+      "group": "ancient",
+      "title": "Colosseum, from outside",
+      "line": "The inside is sold out online for Friday, so we walk round it and look down over the Forum from the Capitol.",
+      "board": {
+        "to": "COLOSSEUM"
+      },
+      "photos": [
+        "colosseum-3",
+        "colosseum-4"
+      ],
+      "area": "colosseo",
+      "lat": 41.8902,
+      "lon": 12.4922,
+      "role": "short",
+      "minutes": 60,
+      "hours": {
+        "intervals": [
+          [
+            "00:00",
+            "23:59"
+          ]
+        ],
+        "lastEntry": [
+          null
+        ]
+      },
+      "order": 33,
+      "hud": "Colosseum",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Colosseo+Roma"
+        }
+      ],
+      "booking": "none",
+      "price": 0,
+      "serves": {
+        "ancient": 1
+      }
+    },
+    {
+      "id": "forum",
+      "group": "ancient",
+      "title": "Roman Forum and Palatine",
+      "line": "We walk through the Roman Forum and up the Palatine, where the emperors lived, and look down on the Circus Maximus.",
+      "board": {
+        "to": "FORUM AND PALATINE"
+      },
+      "photos": [
+        "forum-1",
+        "forum-2"
+      ],
+      "area": "colosseo",
+      "lat": 41.8935,
+      "lon": 12.4868,
+      "role": "main",
+      "minutes": 90,
+      "hours": {
+        "intervals": [
+          [
+            "09:00",
+            "18:30"
+          ]
+        ],
+        "lastEntry": [
+          "17:30"
+        ]
+      },
+      "order": 33.5,
+      "hud": "Forum",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Foro+Romano+Largo+della+Salara+Vecchia+Roma"
+        }
+      ],
+      "booking": "required",
+      "price": 18,
+      "serves": {
+        "ancient": 2
+      }
+    },
     {
       "id": "pantheon",
       "group": "ancient",
@@ -469,7 +601,7 @@
       "booking": "recommended",
       "price": 7,
       "serves": {
-        "ancient": 1
+        "ancient": 3
       }
     },
     {
@@ -535,7 +667,7 @@
       "booking": "required",
       "price": 10,
       "serves": {
-        "ancient": 2
+        "ancient": 4
       }
     },
     {
@@ -577,7 +709,7 @@
       "booking": "none",
       "price": 2,
       "serves": {
-        "ancient": 3
+        "ancient": 5
       }
     },
     {
@@ -634,7 +766,7 @@
       "booking": "recommended",
       "price": 4,
       "serves": {
-        "ancient": 4
+        "ancient": 6
       }
     },
     {
@@ -676,7 +808,7 @@
       "booking": "none",
       "price": 0,
       "serves": {
-        "ancient": 5
+        "ancient": 7
       }
     },
     {
@@ -800,20 +932,20 @@
     {
       "id": "pincio",
       "group": "view",
-      "title": "The Pincio terrace",
-      "line": "We cut through Villa Borghese to a free terrace over Piazza del Popolo, look across at St Peter's dome, then walk down Via Margutta.",
+      "title": "Pincio and the Spanish Steps",
+      "line": "We cut through Villa Borghese to a free terrace over Piazza del Popolo, then walk along to the top of the Spanish Steps and down into Piazza di Spagna.",
       "board": {
-        "to": "PINCIO"
+        "to": "SPANISH STEPS"
       },
       "photos": [
         "pincio-2",
-        "pincio-sunset"
+        "spanish-steps"
       ],
       "area": "north",
       "lat": 41.91128,
       "lon": 12.47855,
       "role": "short",
-      "minutes": 45,
+      "minutes": 60,
       "hours": {
         "intervals": [
           [
@@ -826,7 +958,7 @@
         ]
       },
       "order": 41.5,
-      "hud": "Pincio",
+      "hud": "Spanish Steps",
       "links": [
         {
           "label": "Map",
@@ -1161,6 +1293,49 @@
       }
     },
     {
+      "id": "stpeters",
+      "group": "art",
+      "title": "St Peter's",
+      "line": "It's enormous, and it's free. Michelangelo's Pietà is just inside the door, and the light comes down from the dome.",
+      "board": {
+        "to": "ST PETER'S"
+      },
+      "photos": [
+        "stpeters-1",
+        "stpeters-2"
+      ],
+      "area": "vatican",
+      "lat": 41.9022,
+      "lon": 12.4539,
+      "role": "main",
+      "minutes": 75,
+      "hours": {
+        "intervals": [
+          [
+            "07:00",
+            "20:00"
+          ]
+        ],
+        "lastEntry": [
+          "19:15"
+        ]
+      },
+      "order": 12.5,
+      "hud": "St Peter's",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Basilica+di+San+Pietro"
+        }
+      ],
+      "booking": "none",
+      "price": 0,
+      "tag": "Shoulders and knees covered",
+      "serves": {
+        "art": 2
+      }
+    },
+    {
       "id": "caravaggio",
       "group": "art",
       "title": "Three Caravaggios",
@@ -1204,7 +1379,7 @@
       "booking": "none",
       "price": 0,
       "serves": {
-        "art": 2
+        "art": 3
       }
     },
     {
@@ -1265,7 +1440,7 @@
       "price": 17,
       "friendTip": true,
       "serves": {
-        "art": 3
+        "art": 4
       }
     },
     {
@@ -1335,7 +1510,7 @@
       "price": 17,
       "friendTip": true,
       "serves": {
-        "art": 4
+        "art": 5
       }
     },
     {
@@ -1378,7 +1553,49 @@
       "price": 18,
       "friendTip": true,
       "serves": {
-        "art": 5
+        "art": 6
+      }
+    },
+    {
+      "id": "sistine",
+      "group": "art",
+      "title": "Sistine Chapel",
+      "line": "Michelangelo's ceiling is at the end of the Vatican Museums.",
+      "fridayNo": "Sold out for Friday",
+      "board": {
+        "to": "SISTINE CHAPEL"
+      },
+      "photos": [
+        "sistine-1",
+        "sistine-2"
+      ],
+      "area": "vatican",
+      "lat": 41.9065,
+      "lon": 12.4536,
+      "role": "main",
+      "minutes": 180,
+      "hours": {
+        "intervals": [
+          [
+            "08:00",
+            "20:00"
+          ]
+        ],
+        "lastEntry": [
+          "18:00"
+        ]
+      },
+      "order": 12.6,
+      "hud": "Sistine Chapel",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Musei+Vaticani+Viale+Vaticano+Roma"
+        }
+      ],
+      "booking": "none",
+      "serves": {
+        "art": 7
       }
     },
     {
@@ -1410,7 +1627,7 @@
         ]
       },
       "order": -1,
-      "hud": "Breakfast",
+      "hud": "Maritozzo",
       "links": [
         {
           "label": "Map",
@@ -1421,6 +1638,47 @@
       "friendTip": true,
       "serves": {
         "pastry": 1
+      }
+    },
+    {
+      "id": "coffee",
+      "group": "food",
+      "title": "Coffee at Sant'Eustachio",
+      "line": "The old coffee bar by the Pantheon. We drink it standing at the counter. Say amaro, or it comes with sugar already in.",
+      "board": {
+        "to": "SANT'EUSTACHIO"
+      },
+      "photos": [
+        "coffee-1",
+        "sant-eustachio"
+      ],
+      "area": "centro",
+      "lat": 41.89825,
+      "lon": 12.47543,
+      "role": "pastry",
+      "minutes": 15,
+      "hours": {
+        "intervals": [
+          [
+            "07:30",
+            "23:59"
+          ]
+        ],
+        "lastEntry": [
+          null
+        ]
+      },
+      "order": 6.2,
+      "hud": "Coffee",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Sant+Eustachio+Il+Caffe+Roma"
+        }
+      ],
+      "booking": "none",
+      "serves": {
+        "pastry": 2
       }
     },
     {
@@ -1461,7 +1719,7 @@
       ],
       "booking": "none",
       "serves": {
-        "pastry": 2
+        "pastry": 3
       }
     },
     {
@@ -1502,7 +1760,7 @@
       ],
       "booking": "none",
       "serves": {
-        "pastry": 3
+        "pastry": 4
       }
     },
     {
@@ -1640,6 +1898,47 @@
       "friendTip": true,
       "serves": {
         "street": 3
+      }
+    },
+    {
+      "id": "gelato",
+      "group": "food",
+      "title": "Gelateria del Teatro",
+      "line": "They do flavours like sage and raspberry or Amalfi lemon, and the cream on top has no sugar in it.",
+      "board": {
+        "to": "GELATO"
+      },
+      "photos": [
+        "gelato-1",
+        "gelato-2"
+      ],
+      "area": "centro",
+      "lat": 41.90047,
+      "lon": 12.46957,
+      "role": "short",
+      "minutes": 15,
+      "hours": {
+        "intervals": [
+          [
+            "11:00",
+            "23:00"
+          ]
+        ],
+        "lastEntry": [
+          null
+        ]
+      },
+      "order": 9.5,
+      "hud": "Gelato",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Gelateria+del+Teatro+Via+dei+Coronari+65+Roma"
+        }
+      ],
+      "booking": "none",
+      "serves": {
+        "street": 4
       }
     },
     {
@@ -1844,13 +2143,13 @@
     {
       "id": "centre",
       "group": "wander",
-      "title": "The old centre",
-      "line": "Piazza Navona to Campo de' Fiori through the small streets in between, past the Pantheon.",
+      "title": "Piazza Navona and around",
+      "line": "We start at Bernini's fountain in Piazza Navona and wander the small streets to Campo de' Fiori, past the Pantheon.",
       "board": {
-        "to": "OLD CENTRE"
+        "to": "PIAZZA NAVONA"
       },
       "photos": [
-        "centre-1",
+        "navona",
         "centre-2"
       ],
       "area": "centro",
@@ -1870,7 +2169,7 @@
         ]
       },
       "order": 9,
-      "hud": "Old centre",
+      "hud": "Navona",
       "links": [
         {
           "label": "Map",
@@ -1886,28 +2185,33 @@
     {
       "id": "keyhole",
       "group": "wander",
-      "title": "Aventine keyhole",
-      "line": "Look through a keyhole and St Peter's dome is framed in it. Next door, a terrace of orange trees over the river.",
+      "title": "Mouth of Truth and the keyhole",
+      "line": "First the Mouth of Truth: you put your hand in and see if it bites. Then up the hill to the keyhole with St Peter's dome framed in it, and the orange trees next door.",
       "board": {
-        "to": "KEYHOLE"
+        "to": "MOUTH OF TRUTH"
       },
       "photos": [
         "keyhole",
-        "orange-garden"
+        "bocca"
       ],
       "area": "aventine",
       "lat": 41.884,
       "lon": 12.479,
       "role": "area",
-      "minutes": 60,
+      "minutes": 75,
       "hours": {
         "intervals": [
           [
-            "07:00",
-            "18:00"
+            "09:30",
+            "13:00"
+          ],
+          [
+            "14:00",
+            "17:50"
           ]
         ],
         "lastEntry": [
+          null,
           null
         ]
       },
@@ -2168,7 +2472,7 @@
       "id": "cannon",
       "group": "wild",
       "title": "Noon cannon",
-      "line": "A cannon fires below the Gianicolo terrace at noon. Loud, and the view of Rome is free.",
+      "line": "A cannon fires below the Gianicolo terrace at noon. Loud, and the view of Rome is free at any hour.",
       "board": {
         "to": "NOON CANNON"
       },
@@ -2373,7 +2677,9 @@
     "borgo",
     "circo",
     "esquilino",
-    "pigneto"
+    "pigneto",
+    "colosseo",
+    "vatican"
   ],
   "places": {
     "hostel": {
