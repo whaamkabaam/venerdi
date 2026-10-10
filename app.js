@@ -1,8 +1,9 @@
-/* Venerdì v6: four photo questions compose a relaxed Friday, played back on a DEPARTURES board,
-   then shown as story cards she can swap, remove and add to. Behind every choice, one tap away, a
-   peek: the things in it, in photos, and a toggle to ask for one by name. Renders from window.SITE
-   (data.js) and plan.js (the composer and the day builder), then wires the boards, the sky, HUD,
-   map, persistence and sharing. Every visible string comes from content.json. */
+/* Venerdì v7: four photo questions compose a calm Friday inside the day's frame (the bags, the flat,
+   dinner at 19:00), played back on a DEPARTURES board, then shown as story cards she can swap,
+   remove and add to. Behind every choice, one tap away, a peek: the things in it, in photos, and a
+   toggle to ask for one by name (the first one she names is the one the day is planned around).
+   Renders from window.SITE (data.js) and plan.js (the composer and the day builder), then wires the
+   boards, the sky, HUD, map, persistence and sharing. Every visible string comes from content.json. */
 (() => {
   'use strict';
 
@@ -17,18 +18,17 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const slot = (name) => $(`[data-slot="${name}"]`);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const KEY = 'venerdi:v6:';
+  const KEY = 'venerdi:v7:';
   const store = {
     get(k, d) { try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
     set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch { /* private mode */ } },
   };
-  // A v5 visitor's state is read once: on the first v6 visit every v5 key is copied over.
+  // A v6 visitor's answers are read once (nothing else): her day is composed again from them, because
+  // a v6 day was built for a busier Friday (spec 4.5).
   try {
     if (localStorage.getItem(KEY + 'migrated') === null) {
-      const OLD = 'venerdi:v5:';
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
-      keys.filter((k) => k.startsWith(OLD) && localStorage.getItem(KEY + k.slice(OLD.length)) === null).forEach((k) => localStorage.setItem(KEY + k.slice(OLD.length), localStorage.getItem(k)));
+      const old = localStorage.getItem('venerdi:v6:answers');
+      if (old !== null && localStorage.getItem(KEY + 'answers') === null) localStorage.setItem(KEY + 'answers', old);
       localStorage.setItem(KEY + 'migrated', '1');
     }
   } catch { /* private mode */ }
@@ -160,7 +160,7 @@
     const cls = ['time', 'who', 'note'];
     host.innerHTML = `<div class="board">
       <div class="board-head"><p class="board-title">${esc(title)}</p><p class="board-sub label">${esc(sub)}</p></div>
-      <div class="board-grid" role="table" aria-label="${esc(label)}" style="--n1:${widths[0]};--n2:${widths[1]};--n3:${widths[2]}">
+      <div class="board-grid" role="table" aria-label="${esc(label)}" style="--n1:${widths[0]};--n2:${widths[1]};--n3:${widths[2]};--nw:${Math.max(widths[1], widths[2])}">
         <div class="board-colheads" role="row">${columns.map((c, i) => `<span class="ch c--${cls[i]} label" role="columnheader">${esc(c)}</span>`).join('')}</div>
         <div class="board-rows" role="rowgroup"></div>
         ${sun ? `<div class="dep-gap" aria-hidden="true"></div><div class="board-sun" role="rowgroup">${rowHTML(widths)}</div><div class="board-parked" role="rowgroup"></div>` : ''}
@@ -372,6 +372,20 @@
   const servedBy = (reason) => C.options.filter((o) => serves(o, reason)).sort((a, b) => a.serves[reason] - b.serves[reason]);
   // Her named things under one sight or food (the same rule compose() uses).
   const wantsFor = (a, reason) => (a.want || []).filter((id) => OPT[id] && P.wantReason(OPT[id], a) === reason);
+  // Answers from storage or an old link, cut to what this page has: tiles that still exist, named
+  // things that still exist and serve one of her answers.
+  const cleanAnswers = (a) => {
+    const c = cloneAnswers(a);
+    STEPS.forEach((s) => {
+      if (s.multi) c[s.id] = (Array.isArray(c[s.id]) ? c[s.id] : []).filter((v, i, arr) => tileOf(s, v) && arr.indexOf(v) === i);
+      else if (!tileOf(s, c[s.id])) c[s.id] = null;
+    });
+    c.want = (Array.isArray(c.want) ? c.want : []).filter((id, i, arr) => OPT[id] && arr.indexOf(id) === i && vibesOf(c).some((r) => serves(OPT[id], r)));
+    c.wantFrom = Object.fromEntries(Object.entries(c.wantFrom || {}).filter(([id, r]) => c.want.includes(id) && vibesOf(c).includes(r) && serves(OPT[id], r)));
+    return c;
+  };
+  // The must-do (spec 3.1): the first thing she named. Every build, Swap and Room offer keeps it.
+  const keepOf = () => (answers ? P.mustOf(C, answers) : null);
 
   // `draft` is what the open stage shows; `answers` (below) only changes on Show me Friday.
   const stage = { step: 0, open: true, draft: emptyAnswers(), tl: null, count: [], busy: false };
@@ -396,8 +410,8 @@
         </div>`;
     }).join('');
     // Laptop: four across. The none button fills the empty cells of the last row. When the tiles
-    // would fill every row of four (Wander's 8), the step goes five across instead, so the none
-    // button still closes the last row and the step fits one 900 px screen (spec 12.8, build-notes.md).
+    // would fill every row of four (the Wild card's 4), the step goes five across instead, so the none
+    // button still closes the last row and the step fits one 900 px screen (qa/v7/build-notes.md).
     const n = s.tiles.length, cols = s.none && n % 4 === 0 ? 5 : 4;
     const span = s.none ? (cols - (n % cols)) || cols : 0;
     const none = s.none ? `<button type="button" class="step-none" data-action="none" style="--span:${span}">${esc(s.none)}</button>` : '';
@@ -420,11 +434,12 @@
       <div class="stage-closed"><p class="stage-answers"></p><button type="button" class="btn btn--small" data-action="change">${esc(ASK.change)}</button></div>`;
     stage.count = $$('.stage-count .flap', host).map(flapOf);
     setCount(0, false);
-    // The buttons appear once the first step's tiles are well in view, so the first screen offers
-    // photos to tap, not a lone "Skip".
+    // The buttons appear once the first step's tiles are well in view (about 170 px of them), so the
+    // first screen offers photos to tap, not a lone "Skip". (v7: the two-row ARRIVALS board is
+    // shorter, so v6's 120 px would show the bar over the photos on load.)
     const showFoot = () => host.classList.add('is-foot');
     if (!('IntersectionObserver' in window)) { showFoot(); return; }
-    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { showFoot(); io.disconnect(); } }, { rootMargin: '0px 0px -120px 0px' });
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { showFoot(); io.disconnect(); } }, { rootMargin: '0px 0px -168px 0px' });
     io.observe($('.step .tiles', host));
   }
   // The counter's flaps flip only where a character changes (D 0.07, like the HUD clock).
@@ -654,13 +669,20 @@
   // (an id with no letter, as in links from before, goes to the first answer it serves).
   const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (s.multi ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-')
     + (a.want?.length ? `-${a.want.map((id) => (WHY[P.wantReason(OPT[id], a)]?.code || '') + id).join('.')}` : '');
-  function decodeAnswers(code) {
+  // A link without `v=7` is from v6: its pick-one steps hold positions in v6's tile lists, read through
+  // these frozen tables. A v6 tile that is gone (the Appian Way, the film fest, the Domus) reads as none.
+  const V6_TILES = {
+    wander: ['trastevere', 'centre', 'aventine', 'appia', 'acquedotti', 'coppede', 'monti', 'ghetto'],
+    wild: ['circovr', 'filmfest', 'domus', 'cannon', 'circusjog', 'coronati'],
+  };
+  function decodeAnswers(code, { v6 = false } = {}) {
     const a = emptyAnswers();
     const parts = String(code).split('-');
     parts.slice(0, STEPS.length).forEach((part, i) => {
       const s = STEPS[i];
       if (!part) return;
       if (s.multi) Array.from(part).forEach((c) => { const t = s.tiles.find((x) => WHY[x.id]?.code === c); if (t && !a[s.id].includes(t.id)) a[s.id].push(t.id); });
+      else if (v6 && V6_TILES[s.id]) { const v = V6_TILES[s.id][parseInt(part, 36)]; if (tileOf(s, v)) a[s.id] = v; }
       else { const t = s.tiles[parseInt(part, 36)]; if (t) a[s.id] = tileValue(s, t); }
     });
     // Named things: ids the page does not know, or that serve none of her sights and foods, drop out.
@@ -695,11 +717,15 @@
     if (q.has('p') || q.has('a')) {
       const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
       const codes = Array.from(q.get('r') || '');
-      const linkAnswers = q.has('a') ? decodeAnswers(q.get('a')) : null;
-      // A link with answers but no picks composes them here.
-      const linkPicks = q.has('p')
-        ? cleanPicks(q.get('p').split(',').map((s, i) => ({ id: s.trim(), reason: byCode[codes[i]] || 'added' })))
-        : cleanPicks(P.compose(C, linkAnswers).picks);
+      let linkAnswers = q.has('a') ? decodeAnswers(q.get('a'), { v6: q.get('v') !== '7' }) : null;
+      // A link with answers but no picks composes them here, and so does a link whose picks name a
+      // place this page no longer has (a v6 link with the Colosseum, say): its day comes from its answers.
+      const linkIds = q.has('p') ? q.get('p').split(',').map((s) => s.trim()) : [];
+      let linkPicks = q.has('p') ? cleanPicks(linkIds.map((id, i) => ({ id, reason: byCode[codes[i]] || 'added' }))) : null;
+      if (!linkPicks || linkIds.some((id) => id && !OPT[id])) {
+        linkAnswers = linkAnswers || answersFrom(linkPicks || []);
+        linkPicks = cleanPicks(P.compose(C, linkAnswers).picks);
+      }
       const linkNote = q.get('n') || '';
       // Keep her own day before adopting the link's, so "Back to my picks" can restore it.
       const saved = store.get('picks', null), savedNote = store.get('note', '');
@@ -725,11 +751,13 @@
     }
     picks = cleanPicks(store.get('picks', null));
     answers = store.get('answers', null);
-    if (answers) answers = cloneAnswers(answers);
+    if (answers) answers = cleanAnswers(answers);
     freeText = store.get('note', '');
     // Someone's link, opened earlier: the note and "Back to my picks" stay until the day changes.
     fromLink = !!store.get('fromLink', false);
     hasBackup = fromLink && !!store.get('before-link', null);
+    // Answers with no day yet (read over from v6): compose it.
+    if (answers && store.get('picks', null) === null) { picks = cleanPicks(P.compose(C, answers).picks); saveState(); }
   }
   function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('fromLink', fromLink); }
 
@@ -737,7 +765,7 @@
     const b = store.get('before-link', null);
     if (!b) return;
     picks = cleanPicks(b.picks);
-    answers = b.answers ? cloneAnswers(b.answers) : null;
+    answers = b.answers ? cleanAnswers(b.answers) : null;
     freeText = b.note || '';
     slot('free-text').value = freeText;
     fromLink = false;
@@ -759,7 +787,7 @@
     const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
     const a = answers ? encodeAnswers(answers) : null;
     const r = picks.map((p) => (WHY[p.reason] || WHY.added).code).join('');
-    return `${base}?${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}p=${pickIds().join(',')}`;
+    return `${base}?v=7&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}p=${pickIds().join(',')}`;
   }
   // A mini timetable: "10:00 Maritozzo" per stop, what did not fit, then her line, then the link.
   function shareText() {
@@ -803,12 +831,15 @@
   const DW = [5, 20, 20];
   const R = DEPC.rows;
   const anchorRow = (key, extra = {}) => ({ key, time: R[key].time, to: R[key].to, remark: R[key].remark, kind: 'anchor', ...extra });
-  const skeletonRows = () => [anchorRow('coffee'), anchorRow('dinner'), anchorRow('end')];
+  // The bags row: the time comes from the plan (around when we get the bags from the hostel).
+  const bagsRow = (it) => ({ key: 'bags', time: it.rough, to: R.bags.to, remark: R.bags.remark, kind: 'anchor', target: 'bags', label: C.anchors.bags.title });
+  // Before her picks land, the board shows the day's frame: coffee, the bags, dinner, the early night.
+  const skeletonRows = () => [anchorRow('coffee'), bagsRow(P.build(C, []).items.find((it) => it.id === 'bags')), anchorRow('dinner'), anchorRow('end')];
   const sundayRow = (egg) => {
     const S = DEPC.sunday;
     return { key: 'sunday', time: S.time, to: S.to, remark: egg ? S.egg.remark : S.remark, kind: 'sun', en: S.egg.en, enOn: !!egg, target: 'sunday', hitLabel: `${S.to}, ${egg ? S.egg.remark : S.remark}` };
   };
-  const dropRemark = (d) => (d.code === 'sunsetTaken' && d.option.slotTakenRemark ? d.option.slotTakenRemark : fmt(DEPC.drop.reasons[d.code] || '', d.vars || {}));
+  const dropRemark = (d) => fmt(DEPC.drop.reasons[d.code] || '', d.vars || {});
 
   // Whole-word, case-insensitive keyword match ("nap" matches "a nap", not "napoli").
   const escRe = (w) => w.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
@@ -834,11 +865,13 @@
     return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.blank, remark: hit ? hit.remark : DEPC.tbc.remark, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
   }
 
-  // The board for a plan: coffee, the stops, her TBC line, dinner, Laurin and Olivia, then what didn't fit.
+  // The board for a plan: coffee, the daytime stops, the bags, the evening stops, her TBC line,
+  // dinner, the early night, then what didn't fit.
   function depRows(pl, { tbc = tbcRow(), live = true } = {}) {
     const rows = [anchorRow('coffee', { target: 'arrival', label: R.coffee.to })];
     for (const it of pl.items) {
       if (it.kind === 'lunch-filler') rows.push({ key: 'lunch', time: it.rough, to: R.lunch.to, remark: R.lunch.remark, kind: 'anchor', target: 'lunch', label: C.day.noLunch });
+      else if (it.kind === 'anchor' && it.id === 'bags') rows.push(bagsRow(it));
       else if (it.kind === 'option') rows.push({ key: it.id, time: it.rough, to: it.option.board.to, remark: it.secondBreakfast ? DEPC.secondBreakfast : it.option.board.remark, kind: 'pick', target: it.id, label: it.option.title });
       else if (it.kind === 'anchor' && it.id === 'dinner') {
         if (tbc) rows.push(tbc);
@@ -863,8 +896,8 @@
     return rows;
   }
 
-  // Her parked answers on the board, in the drop-row grammar: MAYBE when "Room for one more?"
-  // offers it back now, NO ROOM when nothing serving it fits the day as it stands.
+  // Her parked answers on the board, in the drop-row grammar: STANDBY when "Room for one more?"
+  // offers it back now, ANOTHER DAY when it does not fit the day as it stands.
   const parkedRows = () => parkedNow().slice(0, 3).map((e) => {
     const o = OPT[e.id];
     const remark = roomNow.some((s) => s.id === e.id) ? DEPC.drop.reasons.standby : DEPC.drop.reasons.parked;
@@ -943,7 +976,8 @@
     const order = pickIds();
     const finalRows = depRows(plan);
     if (!order.length) return [skeletonRows(), finalRows];
-    return [skeletonRows(), ...order.map((_, i) => (i === order.length - 1 ? finalRows : depRows(P.build(C, order.slice(0, i + 1)), { tbc: null })))];
+    const keep = keepOf();
+    return [skeletonRows(), ...order.map((_, i) => (i === order.length - 1 ? finalRows : depRows(P.build(C, order.slice(0, i + 1), { keep }), { tbc: null })))];
   }
   function stopReplay() {
     const r = DEP.replay;
@@ -1236,13 +1270,28 @@
   }
   const photosPill = (o, cls) => `<button type="button" class="pill ${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog">${ICON.photos}${esc(PK.openPhotos)}<span class="sr-only">: ${esc(o.title)}</span></button>`;
   const tipHTML = (o, cls) => (o.friendTip ? `<p class="${cls}">${esc(PK.tip)}</p>` : '');
+  // The rain line (spec 3.4, 13.7): on an outdoor stop with a rain plan, only when Friday's forecast
+  // says 50 % or more. Its own words name what we do instead; when that is already on the day, or
+  // there is nothing to swap to, we skip it.
+  let rainProb = null;
+  const rainy = () => typeof rainProb === 'number' && rainProb >= 50;
+  function rainHTML(o) {
+    if (!('rainPlan' in o)) return '';
+    const alt = o.rainPlan && OPT[o.rainPlan.id];
+    const text = alt && !plan.options.some((x) => x.id === alt.id) ? o.rainPlan.text : C.day.rainSkip;
+    return `<p class="stop-rain"${rainy() ? '' : ' hidden'}>${esc(text)}</p>`;
+  }
+  function syncRain() {
+    $$('.stop-rain', slot('day-body')).forEach((el) => { el.hidden = !rainy(); });
+    refreshSoon();
+  }
   // One story card: time chip and the answer it came from, the photos, title, line, facts, actions.
   // On a laptop the card is a row: the photos on the left, the rest on the right.
   function stopHTML(it, time, attrs) {
     const o = it.option, D = C.day;
     const i = picks.findIndex((p) => p.id === o.id);
     const reason = i >= 0 ? picks[i].reason : 'added';
-    const alts = i >= 0 ? P.alternatives(C, picks, i) : [];
+    const alts = i >= 0 ? P.alternatives(C, picks, i, { keep: keepOf(), want: answers?.want || [] }) : [];
     const id = esc(o.id);
     return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
         <article class="stop-card" aria-labelledby="st-${id}">
@@ -1252,6 +1301,7 @@
             <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>
             <p class="stop-line">${esc(o.line)}</p>
             <p class="stop-facts">${esc(factsOf(o))}</p>
+            ${rainHTML(o)}
             ${tipHTML(o, 'stop-tip')}
             <div class="stop-actions">${alts.length ? `<button type="button" class="btn btn--small" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>` : ''}<button type="button" class="btn btn--small" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>${mapLink(o)}</div>
           </div>
@@ -1268,7 +1318,7 @@
       const o = OPT[x.id];
       const label = x.reason === 'added' ? groupLabel(o) : reasonLabel(x.reason);
       // Where build() would put it: "around 16:30".
-      const lands = P.build(C, [...pickIds(), x.id]).items.find((it) => it.kind === 'option' && it.id === x.id);
+      const lands = P.build(C, [...pickIds(), x.id], { keep: keepOf() }).items.find((it) => it.kind === 'option' && it.id === x.id);
       return `<li class="room-tile">
           ${thumbHTML(o.photos?.[0], 'room-photo', '(min-width: 768px) 200px, 30vw')}
           <span class="room-why label">${esc(label)}</span>
@@ -1476,7 +1526,7 @@
       const on = ids.includes(id);
       let why = '';
       if (!on) {
-        const fresh = P.build(C, [...ids, id]).didntFit.filter((d) => !before.includes(d.option.id));
+        const fresh = P.build(C, [...ids, id], { keep: keepOf() }).didntFit.filter((d) => !before.includes(d.option.id));
         const own = fresh.find((d) => d.option.id === id);
         if (fresh.length) why = own ? fmt(K.reasons[own.code] || K.reasons.noTime, own.vars || {}) : K.reasons.noTime;
       }
@@ -1571,7 +1621,7 @@
         <button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>
       </div>
       <div class="peek-body">${body}</div>
-      <div class="peek-foot">${kind === 'vibe' ? `<p class="peek-fits" hidden>${esc(PK.fits)}</p>` : ''}<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button></div>`;
+      <div class="peek-foot">${kind === 'vibe' ? `<p class="peek-fits" hidden></p>` : ''}<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button></div>`;
     syncPeek();
     root.classList.add('is-locked');
     dlg.showModal();
@@ -1590,8 +1640,13 @@
       const on = b.dataset.action === 'want' ? wantedHere(b.dataset.id) : d[STEPS[peek.step].id] === peek.value;
       b.setAttribute('aria-pressed', String(on));
     });
+    // From two named things: we won't get to all of them, and the day is planned around the first.
     const fits = $('.peek-fits', dlg);
-    if (fits) fits.hidden = d.want.length < 3;
+    if (fits) {
+      const first = d.want.length >= 2 ? P.mustOf(C, d) : null;
+      fits.hidden = !first;
+      if (first) fits.textContent = fmt(PK.fits, { first: OPT[first].title });
+    }
   }
   // Named under the sight or food this peek is for (not just named somewhere).
   const wantedHere = (id) => stage.draft.want.includes(id) && P.wantReason(OPT[id], stage.draft) === peek.value;
@@ -2043,7 +2098,16 @@
     const M = C.meta;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${M.lat}&longitude=${M.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&hourly=precipitation_probability,weather_code&timezone=Europe%2FRome&start_date=${M.date}&end_date=${M.date}`;
     // Only a real forecast for Friday shows; without one there is no weather line at all.
-    const show = (data) => { const html = describeWeather(data); if (!html) return false; el.innerHTML = html; el.hidden = false; refreshSoon(); return true; };
+    const show = (data) => {
+      const html = describeWeather(data);
+      if (!html) return false;
+      el.innerHTML = html;
+      el.hidden = false;
+      const prob = data.daily.precipitation_probability_max?.[0];
+      rainProb = typeof prob === 'number' ? prob : null;
+      syncRain();
+      return true;
+    };
     el.hidden = true;
     const cached = store.get('wx', null);
     if (cached && Date.now() - cached.t < 3600e3 && show(cached.d)) return;
@@ -2069,8 +2133,9 @@
   function syncSend() { slot('send').disabled = !picks.length && !freeText.trim(); }
 
   function update() {
-    plan = P.build(C, pickIds());
-    roomNow = picks.length || answers ? P.suggestions(C, picks, answers || {}) : [];
+    const keep = keepOf();
+    plan = P.build(C, pickIds(), { keep });
+    roomNow = picks.length || answers ? P.suggestions(C, picks, answers || {}, { keep }) : [];
     syncSend();
     renderDepNote();
     renderDay();
@@ -2231,6 +2296,7 @@
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
     parked: () => parkedNow().map((e) => ({ ...e })), parkedRows: () => parkedRows().map((r) => [r.time, r.to, r.remark]),
+    shareText: () => shareText(), keep: () => keepOf(), rain: () => rainProb,
   };
 
   if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());

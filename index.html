@@ -23,8 +23,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script>
-  /* Preload the two critical fonts. Skipped on file://, where a crossorigin preload only logs CORS errors. */
-  if (location.protocol !== 'file:') ['bodoni-moda-latin-opsz-normal', 'archivo-latin-wdth-normal'].forEach(function (f) {
+  /* Preload the critical fonts (both display subsets are on the first screen). Skipped on file://, where a crossorigin preload only logs CORS errors. */
+  if (location.protocol !== 'file:') ['michelangelus-bold', 'michelangelus-italic', 'archivo-latin-wdth-normal'].forEach(function (f) {
     var l = document.createElement('link');
     l.rel = 'preload'; l.as = 'font'; l.type = 'font/woff2'; l.crossOrigin = 'anonymous'; l.href = 'fonts/' + f + '.woff2';
     document.head.appendChild(l);
