@@ -43,6 +43,7 @@
     COST_CAP: 80,                  // per-person euros before dinner on a composed day
     ROOM_COST_CAP: 100,            // ...and with a Room offer
     NEAR_M: 1200,                  // "on the way": straight-line metres
+    SNACK_GAP: 120,                // street food starts this long after lunch ends, ends this long before dinner (fold-in C3)
   });
   const frameCache = new WeakMap();
   function frameOf(C) {
@@ -153,17 +154,30 @@
   /* The daytime, from the hostel at START (spec 7.2 step 1). Lunch goes in by the clock: before the
      first stop that would start at noon or later. Fixed-time things (the noon cannon) go in before
      anything that would make us miss them, lunch included. `lunchBefore`, when set, puts lunch right
-     before that stop whatever the clock says (build's lunch repair uses it). */
+     before that stop whatever the clock says (build's lunch repair uses it). Street food is never a
+     third meal (fold-in C3): with no sit-down lunch on the day, the snack is lunch (it takes the plain
+     lunch line's place, by the clock); with one, it comes after it, starts SNACK_GAP after lunch ends
+     (we wait, as for an opening time) and ends SNACK_GAP before dinner. */
   function daytime(C, F, seq, lunches, fixed, lunchBefore) {
     const out = [], drops = [];
     const fixedQ = [...fixed].sort((a, b) => toMin(a.fixedAt) - toMin(b.fixedAt));
-    let clock = F.START, prev = C.places.hostel, lunchDone = false, idle = 0;
+    let clock = F.START, prev = C.places.hostel, lunchDone = false, lunchEnd = null, idle = 0;
+    const isSnack = (o) => o.role === 'snack';
+    const snackLunch = lunches.length ? null : seq.find(isSnack) || null;
 
     // When we would get to `o` from where we are now, and the first start we can make there.
     function arrival(o, from = prev) {
       const t = makeTransfer(C, from, o);
       const arrive = clock + t.min;
-      const start = firstFeasible(o, arrive + earlyOf(o));
+      let start = firstFeasible(o, arrive + earlyOf(o));
+      if (isSnack(o) && start !== null) {
+        // Waiting for the gap after lunch, and done two hours before dinner; when only the gap is in
+        // the way, that is the reason (snackGap), not the opening hours.
+        const snackBy = F.DINNER - F.SNACK_GAP - o.minutes;
+        const gapped = firstFeasible(o, Math.max(arrive + earlyOf(o), lunchEnd === null ? -Infinity : lunchEnd + F.SNACK_GAP));
+        if (gapped === null || gapped > snackBy) return { t, arrive, start: arrive, code: start <= snackBy ? 'snackGap' : 'closes', vars: { time: hhmm(Math.min(lastStartOf(o), snackBy)) } };
+        start = gapped;
+      }
       if (start === null) return { t, arrive, start: arrive, code: o.fixedAt ? 'fixedMissed' : 'closes', vars: { time: o.fixedAt || hhmm(lastStartOf(o)) } };
       return { t, arrive, start };
     }
@@ -185,9 +199,18 @@
       if (a.code) drops.push(dropOf(C, X, a.code, a.vars));
       else place(X, a);
     }
-    // The lunch that would be placed right now: the first lunch pick we can make, else the plain line.
+    // The snack as lunch: by the clock, not before the plain lunch line would be.
+    function snackAsLunch() {
+      const a = arrival(snackLunch);
+      if (a.code) return a;
+      const start = firstFeasible(snackLunch, Math.max(a.start, F.LUNCH_FROM));
+      return start === null ? { ...a, code: 'closes', vars: { time: hhmm(lastStartOf(snackLunch)) } } : { ...a, start };
+    }
+    // The lunch that would be placed right now: the first lunch pick we can make, else the snack,
+    // else the plain line.
     function lunchPreview() {
       for (const L of lunches) { const a = arrival(L); if (!a.code) return { end: a.start + stay(L), loc: L }; }
+      if (snackLunch) { const a = snackAsLunch(); if (!a.code) return { end: a.start + stay(snackLunch), loc: snackLunch }; }
       return { end: Math.max(clock, F.LUNCH_FROM) + F.LUNCH_MINUTES, loc: prev };
     }
     function placeLunch() {
@@ -197,18 +220,26 @@
         const a = arrival(lunches[i]);
         if (a.code) { drops.push(dropOf(C, lunches[i], a.code, a.vars)); continue; }
         place(lunches[i], a);
+        lunchEnd = a.start + lunches[i].minutes;
         lunches.slice(i + 1).forEach((o) => drops.push(dropOf(C, o, 'lunchTaken')));
         return;
+      }
+      if (snackLunch) {
+        const a = snackAsLunch();
+        if (!a.code) { place(snackLunch, a); out[out.length - 1].asLunch = true; lunchEnd = a.start + snackLunch.minutes; return; }
+        drops.push(dropOf(C, snackLunch, a.code, a.vars));
       }
       const at = Math.max(clock, F.LUNCH_FROM);
       out.push({ kind: 'lunch-filler', start: at, end: at + F.LUNCH_MINUTES, transfer: null });
       clock = at + F.LUNCH_MINUTES;
+      lunchEnd = clock;
     }
 
     for (const o of seq) {
+      if (o === snackLunch) continue; // it goes in with lunch, by the clock
       while (fixedQ.length) { const a = arrival(o); if (a.code || !missesFixed(a.start + stay(o), o)) break; placeFixed(); }
       // Compared on the rounded time, so a stop shown under Morning never reads "around 12:00".
-      if (!lunchDone && (o === lunchBefore || round30(arrival(o).start) >= F.NOON)) placeLunch();
+      if (!lunchDone && (o === lunchBefore || isSnack(o) || round30(arrival(o).start) >= F.NOON)) placeLunch();
       const a = arrival(o);
       if (a.code) { drops.push(dropOf(C, o, a.code, a.vars)); continue; }
       place(o, a);
@@ -411,13 +442,13 @@
     };
     for (const x of day.out) {
       const o = x.option;
-      const isLunch = x.kind === 'lunch-filler' || o.lunch;
+      const isLunch = x.kind === 'lunch-filler' || o.lunch || x.asLunch;
       // A fixed-time stop before lunch (the noon cannon) is filed under Morning.
       const slot = isLunch ? 'lunch' : lunchSeen ? 'afternoon' : 'morning';
       if (isLunch) lunchSeen = true;
       const entry = x.kind === 'lunch-filler'
         ? { kind: 'lunch-filler', start: x.start, end: x.end, slot }
-        : { kind: 'option', id: o.id, option: o, start: x.start, end: x.end, arrive: x.arrive, slot, exact: isTimed(o) };
+        : { kind: 'option', id: o.id, option: o, start: x.start, end: x.end, arrive: x.arrive, slot, exact: isTimed(o), ...(x.asLunch ? { asLunch: true } : {}) };
       pushStop(entry, x.transfer, true);
       lastEnd = x.end;
     }
@@ -455,7 +486,11 @@
   const TRIES = 6;           // candidates tried for one answer before it goes to extras
   const FILL_BELOW = 3;      // a composed day with fewer picks than this gets my default-day picks too
   const STEP_ORDER = ['see', 'wander', 'wild', 'eat']; // the order the board fills in
-  const FOOD_FIRST = ['class', 'pastry', 'lunch', 'street']; // the order food answers are composed in
+  // Food that anchors the clock is composed before the sights (street food only when it is a lunch,
+  // the market); a snack comes after them, the last thing added, so it never takes a sight's place
+  // (fold-in A1).
+  const FOOD_FIRST = ['class', 'pastry', 'lunch'];
+  const SNACK_LAST = 'street';
 
   const byIdCache = new WeakMap();
   const optionsById = (C) => {
@@ -553,8 +588,9 @@
   // The must-do (spec 3.1): the first thing she named that still exists and serves one of her answers.
   const mustOf = (C, answers = {}) => { const O = optionsById(C); return (answers.want || []).find((id) => O[id] && wantReason(O[id], answers)) || null; };
 
-  /* compose(C, answers) -> { picks, extras, keep } (spec 7.1). The must-do first, then the area,
-     the wild card, the other things she named (in the order she pressed them), food, and the sights,
+  /* compose(C, answers) -> { picks, extras, keep } (spec 7.1, with the fold-in's order): the must-do
+     first, then the other things she named (in the order she pressed them), the area, the wild card,
+     the food that anchors the clock (the class, a pastry, lunch), the sights, and street food last,
      each only while the calmer caps and the clock allow. */
   function compose(C, answers = {}) {
     const see = answers.see || [], eatIn = answers.eat || [];
@@ -567,16 +603,19 @@
 
     const queue = [];
     if (must) { const reason = wantReason(O[must], answers); queue.push({ reason, step: stepFor(reason), fixed: must, want: true, must: true }); }
-    const area = wander && step('wander').tiles.find((t) => t.id === wander);
-    if (area && O[area.option]) queue.push({ reason: 'wander', step: 'wander', fixed: area.option });
-    if (wild && O[wild]) queue.push({ reason: 'wild', step: 'wild', fixed: wild });
+    // The things she named by hand come before the tiles she only tapped (fold-in A2).
     (answers.want || []).forEach((id) => {
       if (id === must) return;
       const reason = O[id] && wantReason(O[id], answers);
       if (reason) queue.push({ reason, step: stepFor(reason), fixed: id, want: true });
     });
+    const area = wander && step('wander').tiles.find((t) => t.id === wander);
+    if (area && O[area.option]) queue.push({ reason: 'wander', step: 'wander', fixed: area.option });
+    if (wild && O[wild]) queue.push({ reason: 'wild', step: 'wild', fixed: wild });
     FOOD_FIRST.filter((r) => eatIn.includes(r)).forEach((reason) => queue.push({ reason, step: 'eat' }));
+    if (eatIn.includes(SNACK_LAST)) queue.push({ reason: SNACK_LAST, step: 'eat', lunchOnly: true });
     see.forEach((reason) => queue.push({ reason, step: 'see' }));
+    if (eatIn.includes(SNACK_LAST)) queue.push({ reason: SNACK_LAST, step: 'eat' });
 
     const picks = [], extras = [];
     const ids = () => picks.map((p) => p.id);
@@ -587,24 +626,48 @@
       return capsOK(C, next) && costOf(C, next) <= FRAME.COST_CAP && (O[id].role !== 'short' || exempt || onTheWay(C, id, ids()));
     };
     const fits = (id, exempt) => light(id, exempt) && easyDay(C, [...ids(), id], must);
-    const exemptFor = (q) => !!(q.must || q.reason === 'wander' || q.reason === 'wild');
+    // What she chose by name needs no "on the way": a thing she named, her area, her wild card.
+    const exemptFor = (q) => !!(q.want || q.reason === 'wander' || q.reason === 'wild');
     // A named thing that was parked is tried again before each sight or food of mine (a lunch on the
     // day can make room for it), while its own sight or food has no pick of mine yet.
     const parkedWant = (id) => extras.some((e) => e.want && e.id === id);
     const retryWants = () => {
       for (const e of extras.filter((x) => x.want)) {
         if (picks.some((p) => !p.want && p.reason === e.reason)) continue;
-        if (!fits(e.id, e.id === must)) continue;
+        if (!fits(e.id, true)) continue;
         picks.push({ id: e.id, reason: e.reason, step: stepFor(e.reason), want: true });
         extras.splice(extras.indexOf(e), 1);
       }
     };
+    // A sight with no stop yet is tried once more right before the snack: a later stop (a museum
+    // nearby) can have put one of its places on the way, and the snack must not take that place.
+    const retrySights = () => {
+      for (const reason of see) {
+        if (picks.some((p) => p.reason === reason) || extras.some((e) => e.want && e.reason === reason)) continue;
+        const taken = ids();
+        let tries = 0;
+        for (const o of ranked(C, reason, taken, taken, (x) => !parkedWant(x.id))) {
+          if (!light(o.id, false)) continue;
+          if (tries++ >= TRIES) break;
+          if (!easyDay(C, [...taken, o.id], must)) continue;
+          picks.push({ id: o.id, reason, step: 'see' });
+          const k = extras.findIndex((e) => !e.want && e.reason === reason);
+          if (k >= 0) extras.splice(k, 1);
+          break;
+        }
+      }
+    };
     for (const q of queue) {
       if (!q.fixed) retryWants();
+      if (!q.fixed && q.reason === SNACK_LAST && !q.lunchOnly) retrySights();
       // The class is lunch, once it is on the day; if it did not fit, lunch gets its trattoria.
       if (!q.fixed && q.reason === 'lunch' && picks.some((p) => p.reason === 'class')) continue;
+      // Street food: the market as lunch early, while the day has no lunch; anything else after the sights.
+      if (!q.fixed && q.reason === SNACK_LAST && (picks.some((p) => p.reason === SNACK_LAST) || (q.lunchOnly && picks.some((p) => O[p.id].lunch)))) continue;
       // A sight or food with one of her named things on the day needs no pick of mine. If every
-      // thing she named under it was parked, it gets its pick as if she had named nothing.
+      // thing she named under it was parked, it still gets a pick when one fits; when none does,
+      // her named things already hold the answer on her list, so nothing more is parked for it
+      // (fold-in F4: the same sight twice on the list and the board).
       if (!q.fixed && picks.some((p) => p.want && p.reason === q.reason)) continue;
       if (q.fixed) {
         if (ids().includes(q.fixed)) continue;
@@ -613,7 +676,7 @@
         continue;
       }
       const taken = ids();
-      const cands = ranked(C, q.reason, taken, taken, (o) => !parkedWant(o.id));
+      const cands = ranked(C, q.reason, taken, taken, (o) => !parkedWant(o.id) && (!q.lunchOnly || !!o.lunch));
       let chosen = null, tries = 0;
       for (const o of cands) {
         if (!light(o.id, false)) continue; // over a cap or off the way: another may still fit
@@ -621,10 +684,23 @@
         if (easyDay(C, [...taken, o.id], must)) { chosen = o; break; }
       }
       if (chosen) picks.push({ id: chosen.id, reason: q.reason, step: q.step });
-      else if (cands.length) toExtras(cands[0].id, q.reason);
+      else if (cands.length && !q.lunchOnly && !extras.some((e) => e.want && e.reason === q.reason)) toExtras(cands[0].id, q.reason);
     }
     // A later pick can put a parked named thing on the way: one last try, under her own label.
     retryWants();
+    // Her named things outrank the tiles she only tapped (fold-in A2): a thing she named that is still
+    // parked takes the place of the wild card, else of the area, when the day fits with it there.
+    for (const e of extras.filter((x) => x.want && x.id !== must)) {
+      for (const reason of ['wild', 'wander']) {
+        const t = picks.find((p) => p.reason === reason);
+        if (!t) continue;
+        const next = [...ids().filter((id) => id !== t.id), e.id];
+        if (!capsOK(C, next) || costOf(C, next) > FRAME.COST_CAP || !easyDay(C, next, must)) continue;
+        picks.splice(picks.indexOf(t), 1, { id: e.id, reason: e.reason, step: stepFor(e.reason), want: true });
+        extras.splice(extras.indexOf(e), 1, { id: t.id, reason });
+        break;
+      }
+    }
     // The board fills in the order she answered: the sights, the area, the wild card, then food,
     // and her tap order inside each step.
     const tap = (p) => (p.step === 'see' ? see.indexOf(p.reason) : p.step === 'eat' ? eatIn.indexOf(p.reason) : 0);
@@ -700,8 +776,46 @@
     return out;
   }
 
+  /* The catalogue's Add (fold-in A3): what adding `id` by hand would cost. It fits as the day is; or
+     the only things it pushes out are my picks (Felix's, never hers), which then make way; or it does
+     not fit, with its own reason, or "Only if we skip {title}" naming what it would push out. */
+  function catalogueAdd(C, picks, id, { keep = null, answers = {} } = {}) {
+    const ids = picks.map((p) => p.id);
+    const before = dropsOf(C, ids, keep);
+    const fresh = build(C, [...ids, id], { keep }).didntFit.filter((d) => !before.includes(d.option.id));
+    if (!fresh.length) return { ok: true, yields: [] };
+    const own = fresh.find((d) => d.option.id === id);
+    if (own) return { ok: false, code: own.code, vars: own.vars };
+    const answered = [...(answers.see || []), ...(answers.eat || []), ...(answers.wander ? ['wander'] : []), ...(answers.wild ? ['wild'] : [])];
+    const felixPick = (p) => !!p && (p.reason === 'felix' || (p.reason !== 'added' && !answered.includes(p.reason)));
+    const yields = fresh.map((d) => d.option.id);
+    if (fresh.every((d) => felixPick(picks.find((p) => p.id === d.option.id)))) {
+      const rest = ids.filter((x) => !yields.includes(x));
+      if (noNewDrops(before.filter((x) => !yields.includes(x)), dropsOf(C, [...rest, id], keep))) return { ok: true, yields };
+    }
+    return { ok: false, code: 'bumps', vars: { title: fresh.map((d) => d.option.title).join(C.ui.listJoin) } };
+  }
+
+  /* Rain lines (spec 3.4 and 13.7; fold-in F3): a card names its plan B only when that place is open
+     within RAIN_SLACK minutes of the stop it stands in for, is not on the day already, and no earlier
+     card has promised it; otherwise the card says we skip it. Returns { <option id>: { id, text } }. */
+  const RAIN_SLACK = 15;
+  function rainLines(C, plan) {
+    const O = optionsById(C);
+    const out = {}, taken = new Set(plan.options.map((o) => o.id));
+    for (const it of plan.items) {
+      if (it.kind !== 'option' || !('rainPlan' in it.option)) continue;
+      const alt = it.option.rainPlan && O[it.option.rainPlan.id];
+      const s = alt && !taken.has(alt.id) ? firstFeasible(alt, it.start - RAIN_SLACK) : null;
+      if (s !== null && s <= it.start + RAIN_SLACK) { out[it.id] = { id: alt.id, text: it.option.rainPlan.text }; taken.add(alt.id); }
+      else out[it.id] = { id: null, text: C.day.rainSkip };
+    }
+    return out;
+  }
+
   root.VenerdiPlan = {
     build, compose, alternatives, suggestions, bestReason, wantReason, mustOf, toMin, hhmm, fmt, haversine,
     windowsOf, firstFeasible, roleCaps: ROLE_CAPS, FRAME, frameOf, makeTransfer, onTheWay, capsOK, weightOf, costOf, easyDay,
+    catalogueAdd, rainLines, RAIN_SLACK,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
