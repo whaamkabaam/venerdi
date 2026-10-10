@@ -1,0 +1,250 @@
+{
+ "checked": "2026-10-10",
+ "options": {
+  "pantheon": [
+   "https://direzionemuseiroma.cultura.gov.it/pantheon/",
+   "https://portale.museiitaliani.it/b2c/buyTicketless/33f77159-0acd-40c4-8524-701f33aae108"
+  ],
+  "clemente": [
+   "https://www.basilicasanclemente.com/eng/opening-hours-and-info/",
+   "https://calendar.google.com/calendar/ical/gnromi8bjsoj8rfhfoe3lao3j4%40group.calendar.google.com/public/basic.ics",
+   "https://eu5.bookingkit.de/onPage/ajaxGetBookingDay/?v=4f9d9f81f3a1eadd37c59b7b36fc25d6&date=2026-10-16&e=88bbbeb9cb335dd9125e32d96e80b3d9&version=v.2&pos=top&cw=2d051ec3a783322fa6ab60eb31a79680",
+   "https://www.basilicasanclemente.com/eng/booking/",
+   "https://www.basilicasanclemente.com/eng/prepare-your-visit/",
+   "https://www.basilicasanclemente.com/eng/the-basilica-and-the-excavations/"
+  ],
+  "trevi": [
+   "https://www.fontanaditrevi.roma.it/en",
+   "https://www.fontanaditrevi.roma.it/en/faq"
+  ],
+  "vicus": [
+   "https://www.vicuscaprarius.com/faq/",
+   "https://www.vicuscaprarius.com/orari-di-apertura/",
+   "https://www.vicuscaprarius.com/biglietti/",
+   "https://www.vicuscaprarius.com/area-archeologica/",
+   "https://www.vicuscaprarius.com/contatti/",
+   "https://nominatim.openstreetmap.org/search?q=Vicus+Caprarius+Roma&format=json"
+  ],
+  "largo": [
+   "https://www.gattidiroma.net/web/en/where-we-are-and-contacts/",
+   "https://www.sovraintendenzaroma.it/i_luoghi/roma_antica/aree_archeologiche/area_sacra_di_largo_argentina",
+   "https://www.sovraintendenzaroma.it/content/la-curia-di-pompeo",
+   "https://museiincomuneroma.vivaticket.it/it/event/ingresso-sito/210334?idt=3453"
+  ],
+  "vittoriano": [
+   "https://vive.cultura.gov.it/it/info-e-orari-1",
+   "https://vive.cultura.gov.it/it/terrazza-panoramica",
+   "https://vive.midaticket.com/",
+   "https://vive.midaticket.com/eventi/ingresso/",
+   "https://api.sunrise-sunset.org/json?lat=41.9028&lng=12.4964&date=2026-10-16&formatted=0"
+  ],
+  "castel": [
+   "https://direzionemuseiroma.cultura.gov.it/museo-nazionale-di-castel-santangelo/",
+   "https://direzionemuseiroma.cultura.gov.it/en/museo-nazionale-di-castel-santangelo/",
+   "https://www.museiitaliani.it/musei/8a0b28e3-bbd8-4b9f-9914-d1a994c93746",
+   "https://ticketing.coopculture.it/event/1B1BEF74-7656-EBB1-3EDA-01986293EF71"
+  ],
+  "pincio": [
+   "https://www.timeanddate.com/sun/italy/rome?month=10&year=2026",
+   "https://api.sunrise-sunset.org/json?lat=41.9028&lng=12.4964&date=2026-10-16&formatted=0",
+   "https://www.turismoroma.it/it/luoghi/terrazza-e-passeggiata-del-pincio",
+   "https://www.sovraintendenzaroma.it/i_luoghi/ville_e_parchi_storici/passeggiate_parchi_e_giardini/passeggiata_del_pincio",
+   "https://www.sovraintendenzaroma.it/i_luoghi/ville_e_parchi_storici/ville_dei_nobili/villa_borghese"
+  ],
+  "capuchin": [
+   "https://www.museoecriptacappuccini.it/acquista-i-biglietti/",
+   "https://www.museoecriptacappuccini.it/",
+   "https://www.museoecriptacappuccini.it/la-cripta/",
+   "https://www.museoecriptacappuccini.it/visite-serali/"
+  ],
+  "ignazio": [
+   "https://chiesasantignazio.it/orari-contatti/",
+   "https://chiesasantignazio.it/storia-della-chiesa/",
+   "https://chiesasantignazio.it/opere-arte-chiesa/"
+  ],
+  "spada": [
+   "https://galleriaspada.cultura.gov.it/biglietti-e-info/",
+   "https://galleriaspada.cultura.gov.it/la-prospettiva/",
+   "https://cultura.gov.it/agevolazioni",
+   "https://www.visititaly.eu/art-and-culture/galleria-spada-rome-borromini-optical-illusion",
+   "https://www.italia.it/it/lazio/roma/palazzo-e-galleria-spada"
+  ],
+  "gesu": [
+   "https://www.chiesadelgesu.org/sec_event/inizio-orario-invernale/",
+   "https://www.chiesadelgesu.org/orari-periodo-invernale/",
+   "https://www.chiesadelgesu.org/contatti/orari/",
+   "https://www.chiesadelgesu.org/?p=6397",
+   "https://www.chiesadelgesu.org/la-chiesa/visita-virtuale/macchina-barocca/",
+   "https://www.liturgicalartsjournal.com/2026/04/the-macchina-barocca-baroque-machine-of.html"
+  ],
+  "montemartini": [
+   "https://www.centralemontemartini.org/it/informazioni_pratiche/biglietti",
+   "https://www.centralemontemartini.org/informazioni_pratiche/biglietti",
+   "https://www.centralemontemartini.org/it/informazioni_pratiche/orari_e_indirizzi",
+   "https://www.centralemontemartini.org/informazioni_pratiche/condizioni_di_gratuita_e_riduzioni",
+   "https://www.centralemontemartini.org/it/servizi/avvisi",
+   "https://www.centralemontemartini.org/it/infopage/presentazione"
+  ],
+  "cemetery": [
+   "https://cemeteryrome.it/en/information/plan-your-visit/",
+   "https://cemeteryrome.it/en/",
+   "https://cemeteryrome.it/en/information/rules/"
+  ],
+  "borghese": [
+   "https://galleriaborghese.cultura.gov.it/visita/info-biglietti/",
+   "https://www.gebart.it/musei/galleria-borghese/",
+   "https://www.gebart.it/musei/galleria-borghese/apollo-e-dafne/",
+   "https://www.gebart.it/musei/galleria-borghese/david/",
+   "http://shop.gebart.it/",
+   "https://www.tosc.it/en/artist/galleria-borghese/"
+  ],
+  "caravaggio": [
+   "https://saintlouis-rome.net/horaires-visite-opening-hours/",
+   "https://saintlouis-rome.net/caravage/",
+   "https://saintlouis-rome.net/horaires-habituels-des-celebrations-annonces/",
+   "https://saintlouis-rome.net/"
+  ],
+  "doria": [
+   "https://www.doriapamphilj.it/en/rome/your-visit/",
+   "https://ticketroma.doriapamphilj.it/en/biglietteria/gallery-ticket/",
+   "https://www.doriapamphilj.it/en/rome/the-place/the-gallery/",
+   "https://www.doriapamphilj.it/en/rome/the-place/apartments/"
+  ],
+  "haring": [
+   "https://museodiroma.it/it/mostra-evento/keith-haring",
+   "https://museiincomuneroma.vivaticket.it/it/event/keith-haring/309873?idt=4923"
+  ],
+  "kandinsky": [
+   "https://www.mostrepalazzobonaparte.it/mostra-kandinsky.php",
+   "https://www.mostrepalazzobonaparte.it/pianifica-la-tua-visita.php",
+   "https://www.ticket.it/mostre/evento/kandinsky.aspx"
+  ],
+  "maritozzo": [
+   "https://guide.michelin.com/ch/it/notizia/travel/vivere-roma-come-i-romani",
+   "https://www.pasticceriaregoli.com/",
+   "https://mesprestiges.com/en/roma/places/pasticceria-regoli",
+   "https://katieparla.com/pasticceria-regoli-rome-cafe/"
+  ],
+  "boccione": [
+   "https://turismoroma.it/en/page/rione-xi-santangelo",
+   "https://guide.michelin.com/it/it/notizia/travel/le-migliori-pasticcerie-di-roma",
+   "https://www.gamberorosso.it/notizie/attualita/ghetto-ebraico-pasticceria-boccione/",
+   "https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&start=2026-10-01&end=2026-10-31&c=on&geo=pos&latitude=41.892&longitude=12.477&tzid=Europe/Rome"
+  ],
+  "innocenti": [
+   "https://biscottificioartigianoinnocenti.wordpress.com/"
+  ],
+  "market": [
+   "https://www.mercatoditestaccio.it/info/",
+   "https://www.mercatoditestaccio.it/",
+   "https://www.turismoroma.it/en/hospitality/mordi-e-vai",
+   "https://katieparla.com/mordi-e-vai-testaccio-market/",
+   "https://doeatbetterexperience.com/blog/testaccio-food-guide-rome/"
+  ],
+  "suppli": [
+   "https://www.supplizioroma.it/"
+  ],
+  "trapizzino": [
+   "https://www.trapizzino.it/en/trapizzino/trapizzino-roma-trastevere/",
+   "https://nominatim.openstreetmap.org/search?q=Piazza+Trilussa+46+Roma"
+  ],
+  "fortunata": [
+   "https://osteriadafortunata.it/prenota/",
+   "https://osteriadafortunata.it/contatti/",
+   "https://osteriadafortunata.it/",
+   "https://osteriadafortunata.it/wp-content/uploads/2025/12/MENU_ROMA.pdf"
+  ],
+  "flavio": [
+   "https://www.ristorantevelavevodetto.it/ristoranti/roma-testaccio/",
+   "https://www.ristorantevelavevodetto.it/en/restaurants/roma-testaccio/",
+   "https://www.sevenrooms.com/explore/flavioalvelavevodetto/reservations/create/search/?date=2026-10-16&party_size=2",
+   "https://www.ristorantevelavevodetto.it/menu/",
+   "https://www.scattidigusto.it/flavio-al-velavevodetto",
+   "https://www.timeout.com/rome/restaurants/flavio-al-velavevodetto"
+  ],
+  "pasta": [
+   "https://www.eatandwalkitaly.it/experience-class/fettuccine-pasta-and-tiramisu-dessert/",
+   "https://widgets.bokun.io/online-sales/c5cae21a-2ab9-4aaa-818c-271edbc13310/experience-calendar/112395"
+  ],
+  "trastevere": [
+   "https://pifebo.com/pages/trastevere",
+   "https://www.cylex-italia.it/roma/twice-vintage-shop-13396835.html",
+   "https://www.romeing.it/negozi-seconda-mano-vintage-roma/"
+  ],
+  "centre": [
+   "https://turismoroma.it/it/luoghi/campo-de%E2%80%99-fiori",
+   "https://www.turismoroma.it/it/luoghi/campo-de-fiori",
+   "https://cultura.gov.it/luogo/pantheon"
+  ],
+  "keyhole": [
+   "https://www.turismoroma.it/it/luoghi/parco-savello-o-giardino-degli-aranci",
+   "https://www.sovraintendenzaroma.it/i_luoghi/ville_e_parchi_storici/passeggiate_parchi_e_giardini/parco_savello",
+   "https://turismoroma.it/it/luoghi/aventino",
+   "https://www.orderofmalta.int/sovereign-order-of-malta/headquarters/villa-magistrale-aventine/",
+   "https://060608.comune.roma.it/green-and-sport/giardini-ville-e-parchi-urbani/parco-savello-giardino-degli-aranci-3412",
+   "https://api.sunrise-sunset.org/json?lat=41.9028&lng=12.4964&date=2026-10-16&formatted=0"
+  ],
+  "acquedotti": [
+   "https://www.parcoarcheologicoappiaantica.it/luoghi/via-appia-antica/parco-degli-acquedotti-via-lemonia/",
+   "https://www.turismoroma.it/it/node/1952",
+   "https://cultura.gov.it/luogo/parco-archeologico-dell-appia-antica-acquedotti-claudio-marcio-e-anio-novus",
+   "https://api.sunrise-sunset.org/json?lat=41.9028&lng=12.4964&date=2026-10-16&formatted=0"
+  ],
+  "coppede": [
+   "https://www.turismoroma.it/en/places/quartiere-copped%C3%A8",
+   "https://nominatim.openstreetmap.org/search?q=Piazza+Mincio,+Roma"
+  ],
+  "monti": [
+   "https://pifebo.com/pages/rione-monti",
+   "https://www.turismoroma.it/it/luoghi/basilica-di-santa-prassede",
+   "https://www.humanavintage.it/store-locator",
+   "https://www.romeing.it/negozi-seconda-mano-vintage-roma/",
+   "https://www.cylex-italia.it/roma/basilica-di-santa-prassede-15196233.html"
+  ],
+  "ghetto": [
+   "https://www.comune.roma.it/web/it/notizia.page?contentId=NWS1095968",
+   "https://www.shalom.it/roma-ebraica/la-fondazione-museo-della-shoah-presenta-le-iniziative-per-l83-anniversario-del-16-ottobre-1943/",
+   "https://www.agensir.it/quotidiano/2026/10/8/16-ottobre-1943-fondazione-museo-della-shoah-presentato-oggi-il-programma-per-l83-anniversario-del-rastrellamento-degli-ebrei-di-roma/",
+   "https://www.romaebraica.it/",
+   "https://www.agi.it/cronaca/video/2025-10-16/shoah-ricordo-ghetto-33699576/",
+   "https://turismoroma.it/it/node/59575",
+   "https://turismoroma.it/en/places/church-santangelo-pescheria",
+   "https://www.turismoroma.it/it/luoghi/teatro-di-marcello",
+   "https://turismoroma.it/it/luoghi/piazza-mattei"
+  ],
+  "circovr": [
+   "https://www.circomaximoexperience.it/",
+   "https://museiincomuneroma.vivaticket.it/it/event/circo-maximo-experience/177940?idt=2513"
+  ],
+  "cannon": [
+   "https://turismoroma.it/en/page/janiculum-hill-cannon",
+   "https://turismoroma.it/it/node/1927",
+   "https://www.esercito.difesa.it/en/History/Pagine/The-Cannon-of-Gianicolo.aspx"
+  ],
+  "coronati": [
+   "https://monacheagostinianesantiquattrocoronati.it/informazioni-turistiche/",
+   "https://www.arte.it/work_of_art/oratory-of-san-silvestro-262",
+   "https://www.turismoroma.it/en/node/755",
+   "https://en.wikipedia.org/wiki/Santi_Quattro_Coronati"
+  ],
+  "circusjog": [
+   "https://www.turismoroma.it/it/luoghi/circo-massimo",
+   "https://www.sovraintendenzaroma.it/i_luoghi/roma_antica/monumenti/circo_massimo",
+   "https://www.fao.org/seeds-to-foods/en",
+   "https://www.romehalfmarathon.it/"
+  ],
+  "sidecar": [
+   "https://fareharbor.com/api/v1/companies/romeingolfcart/items/600962/calendar/2026/10/",
+   "https://fareharbor.com/embeds/book/romeingolfcart/items/600962/availability/2050938619/book/",
+   "https://fareharbor.com/embeds/book/romeingolfcart/items/600962/?full-items=yes&flow=no",
+   "https://www.sidecartourinrome.com/rome-in-a-flash-90-minute-vespa-sidecar-tour-highlights/",
+   "https://www.sidecartourinrome.com/faq-vespa-sidecar-tour-in-rome/",
+   "https://vespasidecartour.com/faq"
+  ]
+ },
+ "dinner": [
+  "https://lirioni.it/prenotazione/",
+  "https://lirioni.it/",
+  "https://nominatim.openstreetmap.org/search?q=Li+Rioni+Via+dei+Santi+Quattro+24+Roma"
+ ]
+}

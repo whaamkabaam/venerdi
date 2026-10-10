@@ -340,7 +340,7 @@
   "src1600": "img/pincio-sunset-1600.webp",
   "w": 1600,
   "h": 1067,
-  "alt": "Sunset over Piazza del Popolo and St Peter's dome from the Pincio terrace",
+  "alt": "The same terrace at sunset",
   "focal": "50% 40%",
   "color": "#6b5c48",
   "credit": {
@@ -1677,6 +1677,54 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Freshly_baked_Roman_maritozzo.jpg"
+  }
+ },
+ "kandinsky-1": {
+  "src800": "img/kandinsky-1-800.webp",
+  "src1600": "img/kandinsky-1-1600.webp",
+  "w": 1600,
+  "h": 1021,
+  "alt": "Kandinsky's Yellow-Red-Blue, 1925: a yellow block on the left and a deep blue circle on the right, crossed by black lines and a wavy black stroke",
+  "focal": "50% 50%",
+  "color": "#9c8f79",
+  "credit": {
+   "title": "Yellow-Red-Blue (Wassily Kandinsky, 1925)",
+   "author": "Wassily Kandinsky",
+   "license": "Public domain",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gelb-Rot-Blau,_by_Wassily_Kandinsky,_Centre_Pompidou.jpg"
+  }
+ },
+ "kandinsky-2": {
+  "src800": "img/kandinsky-2-800.webp",
+  "src1600": "img/kandinsky-2-1600.webp",
+  "w": 1600,
+  "h": 1201,
+  "alt": "Palazzo Bonaparte on Piazza Venezia: an ochre palace with green shutters and a small tower on the roof",
+  "focal": "50% 45%",
+  "color": "#877f6e",
+  "credit": {
+   "title": "Palazzo Bonaparte (cropped to 4:3)",
+   "author": "Perituss",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palazzo_Bonaparte.jpg"
+  }
+ },
+ "trapizzino-2": {
+  "src800": "img/trapizzino-2-800.webp",
+  "src1600": "img/trapizzino-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Piazza Trilussa in Trastevere, the square the trapizzino shop is on: wide stone steps up to a white fountain arch between trees",
+  "focal": "50% 60%",
+  "color": "#6a757b",
+  "credit": {
+   "title": "Trastevere - Fontanone dei cento preti a piazza Trilussa 1527",
+   "author": "Lalupa",
+   "license": "Public domain",
+   "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Trastevere_-_Fontanone_dei_cento_preti_a_piazza_Trilussa_1527.JPG"
   }
  }
 }
