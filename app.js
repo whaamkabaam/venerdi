@@ -341,7 +341,9 @@
 
     slot('day-title').textContent = C.day.title;
     slot('change-answers').textContent = C.day.changeAnswers;
-    slot('map-title').textContent = U.mapTitle;
+    // The map's accessible description carries both credits (no credit on the page itself, brief 3).
+    slot('map-credit').textContent = `${U.mapCredit} ${U.mapNolliCredit}`;
+    slot('hud-map').setAttribute('aria-label', U.mapTitle);
 
     slot('hud').setAttribute('aria-label', U.hud.label);
     $$('main > section').forEach((sec) => { if (U.hud[sec.id]) sec.dataset.hud = U.hud[sec.id]; });
@@ -550,11 +552,15 @@
   }
   const hudBottom = () => (hud.hasAttribute('data-on') ? hud.getBoundingClientRect().bottom : 0);
   // Programmatic scrolls run on a short tween, so the sky and the HUD follow them like a real scroll.
+  // While one runs the map holds still and moves once, where it lands (the sky's 0.4 s smoothing included).
+  let glideTimer = 0;
   function scrollToY(y, duration, done) {
     y = Math.max(0, Math.min(y, ScrollTrigger.maxScroll(window)));
     if (reduced || Math.abs(y - scrollY) < 2) { scrollTo(0, y); if (done) done(); return; }
     const st = { y: scrollY };
-    gsap.to(st, { y, duration, ease: 'power2.inOut', onUpdate: () => scrollTo(0, st.y), onComplete: done });
+    gliding = true;
+    clearTimeout(glideTimer);
+    gsap.to(st, { y, duration, ease: 'power2.inOut', onUpdate: () => scrollTo(0, st.y), onComplete: () => { glideTimer = setTimeout(() => { gliding = false; mapFollow(itemAt(lastY)); }, 450); if (done) done(); } });
   }
   // Where a programmatic scroll lands a section: under the HUD, like an anchor jump. The HUD stays
   // away from the questions, so the stage only keeps a small gap.
@@ -596,6 +602,7 @@
   }
   function onTile(b) {
     buzz('selection');
+    loadNolli();
     const s = STEPS[+b.dataset.step];
     const v = b.dataset.value, d = stage.draft;
     if (s.multi) {
@@ -657,6 +664,7 @@
   // Show me Friday: compose her answers, close the stage, glide to the board and let it play.
   function planFriday() {
     buzz('medium');
+    loadNolli();
     answers = cloneAnswers(stage.draft);
     picks = P.compose(C, answers).picks;
     fromLink = false;
@@ -980,8 +988,10 @@
   function showDay() {
     if (dayShown) return;
     dayShown = true;
-    ['dep', 'day', 'send', 'map'].forEach((id) => { document.getElementById(id).hidden = false; });
+    ['dep', 'day', 'send'].forEach((id) => { document.getElementById(id).hidden = false; });
+    slot('hud-map').hidden = false;
     renderDepBoard();
+    ensureAtlases();
     // Only a change of width matters; the rebuild waits for the next frame, so the observer never sees
     // a size change made inside its own callback.
     let seenW = 0;
@@ -1413,7 +1423,7 @@
       li.dataset.dot = dinner ? 'dinner' : '';
     }
     renderDepNote();
-    renderMapPlan();
+    syncMap();
     syncDepBoard();
     syncSend();
     refreshSoon();
@@ -1901,130 +1911,480 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Map                                                                 */
+  /* Map: Nolli's Rome in 1748 under her day (design-v9 amendments b2)  */
   /* ------------------------------------------------------------------ */
 
-  const mapFig = document.createElement('figure');
-  mapFig.className = 'map';
-  const PR = MAP.proj;
+  // From 1280 px the map sits sticky and unboxed left of her day; below 1280 px a pocket map in the bar
+  // opens it as a sheet. One renderer (dir-2's Atlas): a canvas for the engraving, one SVG of marks on top.
+  const wideMQ = matchMedia('(min-width: 1280px)');
+  // Every new idle call: requestIdleCallback where it exists, else a timer (Safari has none).
+  const idle = (fn, ms) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: ms }) : setTimeout(fn, 200));
+  const NOL = MAP.nolli;
+  const SVGNS = 'http://www.w3.org/2000/svg';
   const rad = (d) => (d * Math.PI) / 180;
-  const project = (lat, lon) => [PR.R * rad(lon - PR.lon0) * Math.cos(rad(PR.phi0)), PR.R * rad(PR.lat0 - lat)];
-  let mapPts = [];
-  let mapRevealed = false;
-  let revealMap = null;
-
-  function renderMapFrame() {
-    const [vx, vy, vw, vh] = MAP.viewBox;
-    // The river is clipped to the frame; fade its ends into the sky instead of a hard cut.
-    const fade = (id, x2, y2) => `<linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="${vx}" y1="${vy}" x2="${x2}" y2="${y2}">
-        <stop offset="0" stop-color="#000"/><stop offset="0.09" stop-color="#fff"/><stop offset="0.91" stop-color="#fff"/><stop offset="1" stop-color="#000"/>
-      </linearGradient>
-      <mask id="${id}" maskUnits="userSpaceOnUse" x="${vx}" y="${vy}" width="${vw}" height="${vh}"><rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="url(#${id}g)"/></mask>`;
-    mapFig.innerHTML = `<svg viewBox="${vx} ${vy} ${vw} ${vh}" role="img" aria-label="${esc(U.mapLabel)}">
-        <defs>${fade('mapFadeX', vx + vw, vy)}${fade('mapFadeY', vx, vy + vh)}</defs>
-        <g mask="url(#mapFadeY)"><path class="map-river" d="${MAP.river}" mask="url(#mapFadeX)"/></g>
-        <g class="map-plan"></g>
-      </svg>
-      <figcaption class="label">${esc(U.mapCredit)}</figcaption>`;
+  // lat/lon to the engraving's master pixels (2250 x 2200): the affine fit in research/v9_nolli (RMS about 9 m).
+  function toMap(lat, lon) {
+    const e = (lon - NOL.lon0) * 111320 * Math.cos(rad(NOL.lat0)), n = (lat - NOL.lat0) * 110574;
+    return { x: (NOL.ax[0] * e + NOL.ax[1] * n + NOL.ax[2] - NOL.crop[0]) * NOL.scale, y: (NOL.ay[0] * e + NOL.ay[1] * n + NOL.ay[2] - NOL.crop[1]) * NOL.scale };
+  }
+  // Today's OSM Tiber (map.json), carried onto the engraving: it is drawn until the engraving has come in,
+  // and stays if the engraving never arrives.
+  const RIVER = (() => {
+    const PR = MAP.proj, out = [];
+    for (const m of MAP.river.matchAll(/([ML])\s*(-?[\d.]+)[\s,]+(-?[\d.]+)/g)) {
+      const lat = PR.lat0 - ((+m[3] / PR.R) * 180) / Math.PI, lon = PR.lon0 + ((+m[2] / (PR.R * Math.cos(rad(PR.phi0)))) * 180) / Math.PI;
+      if (m[1] === 'M' || !out.length) out.push([]);
+      out[out.length - 1].push(toMap(lat, lon));
+    }
+    return out;
+  })();
+  // Seven places lie off the engraving or within 110 px (206 m) of its edge (Montemartini, the Pyramid, Villa
+  // Borghese, St Peter's, the Sistine Chapel, the aqueducts, Coppedè). Each is a ring on the plan's edge, where
+  // the line from the Pantheon towards it crosses the plan inset by 60 px.
+  const PANTHEON = toMap(41.8986, 12.4768);
+  const EDGE = { x0: 60, y0: 60, x1: NOL.w - 60, y1: NOL.h - 60 };
+  const offSheet = (p) => p.x < 110 || p.y < 110 || p.x > NOL.w - 110 || p.y > NOL.h - 110;
+  function edgePoint(p) {
+    const E = EDGE;
+    if (p.x >= E.x0 && p.x <= E.x1 && p.y >= E.y0 && p.y <= E.y1) return { x: p.x, y: p.y };
+    const dx = p.x - PANTHEON.x, dy = p.y - PANTHEON.y;
+    let t = 1;
+    if (dx < 0) t = Math.min(t, (E.x0 - PANTHEON.x) / dx);
+    if (dx > 0) t = Math.min(t, (E.x1 - PANTHEON.x) / dx);
+    if (dy < 0) t = Math.min(t, (E.y0 - PANTHEON.y) / dy);
+    if (dy > 0) t = Math.min(t, (E.y1 - PANTHEON.y) / dy);
+    return { x: PANTHEON.x + dx * t, y: PANTHEON.y + dy * t };
+  }
+  // Two edge rings closer than 36 px: the later one in her day slides 36 px along its edge, away from the other.
+  function slideEdge(m, o) {
+    const E = EDGE;
+    const d = [[Math.abs(m.x - E.x0), 'y'], [Math.abs(m.x - E.x1), 'y'], [Math.abs(m.y - E.y0), 'x'], [Math.abs(m.y - E.y1), 'x']].sort((a, b) => a[0] - b[0])[0][1];
+    let dir = Math.sign(m[d] - o[d]) || 1;
+    const lo = d === 'x' ? E.x0 : E.y0, hi = d === 'x' ? E.x1 : E.y1;
+    if (m[d] + dir * 36 < lo || m[d] + dir * 36 > hi) dir = -dir;
+    m[d] += dir * 36;
   }
 
-  // Her day's cards as dots with their short names (spec 7.2), plus her dinner pick. No lines, no times.
-  // A place outside the frame (the aqueduct park, far to the south-east) sits on the frame's edge.
-  function renderMapPlan() {
-    const svg = $('svg', mapFig);
-    const [vx, vy, vw, vh] = MAP.viewBox;
-    const pin = (v, lo, span) => Math.min(lo + span * 0.97, Math.max(lo + span * 0.03, v));
-    const point = (id, lat, lon, label) => { const [x, y] = project(lat, lon); return { id, x: Math.round(pin(x, vx, vw)), y: Math.round(pin(y, vy, vh)), label }; };
-    mapPts = (picks.length ? plan.items : []).filter(placeOf).map((it) => { const o = placeOf(it); return point(it.id, o.lat, o.lon, o.hud || o.title); });
-    const din = dinner && IDEA[dinner];
-    if (din && picks.length) mapPts.push(point('dinner', din.lat, din.lon, din.title));
-    $('.map-plan', svg).innerHTML = mapPts
-      .map((p) => `<g class="map-stop" data-id="${esc(p.id)}" data-o="${p.x} ${p.y}">
-        <circle class="map-halo" cx="${p.x}" cy="${p.y}"/>
-        <circle class="map-dot" cx="${p.x}" cy="${p.y}"/>
-        <text class="map-label" x="${p.x}" y="${p.y}" dominant-baseline="central">${esc(p.label)}</text>
-      </g>`)
-      .join('');
-    mapUnit = 0;
-    mapCurrent = null;
-    layoutMap();
-    if (!mapRevealed && !reduced && window.gsap) $$('.map-stop', svg).forEach((g) => gsap.set(g, { scale: 0, autoAlpha: 0, svgOrigin: g.dataset.o }));
+  // Her day as marks: each place in day order, her dinner pick, and the three pizza places (shown only while
+  // dinner is the current entry). A mark's `key` is its entry's data-key.
+  function markList() {
+    if (!plan) return [];
+    const list = [];
+    if (picks.length) plan.items.forEach((it) => {
+      const o = placeOf(it);
+      if (!o) return;
+      const p = toMap(o.lat, o.lon);
+      const edge = offSheet(p);
+      list.push({ id: it.id, key: it.id, label: o.hud || o.title, kind: edge ? 'edge' : 'stop', ...(edge ? edgePoint(p) : p) });
+    });
+    const edges = list.filter((m) => m.kind === 'edge');
+    edges.forEach((m, i) => { for (let n = 0; n < 6; n++) { const o = edges.slice(0, i).find((e) => Math.hypot(e.x - m.x, e.y - m.y) < 36); if (!o) break; slideEdge(m, o); } });
+    if (dinner && IDEA[dinner]) list.push({ id: 'dinner', key: 'dinner', label: IDEA[dinner].title, kind: 'stop', ...toMap(IDEA[dinner].lat, IDEA[dinner].lon) });
+    IDEAS.forEach((d) => list.push({ id: 'idea-' + d.id, key: 'dinner', idea: d.id, label: d.title, kind: 'idea', ...toMap(d.lat, d.lon) }));
+    return list;
   }
 
-  // Sizes in the SVG follow the rendered width so dots and labels keep a fixed on-screen size
-  // (labels 12.5 px) whether the map is 250 px wide on a phone or sticky on desktop.
-  let mapUnit = 0;
-  function layoutMap() {
-    const svg = $('svg', mapFig);
-    const w = svg && svg.getBoundingClientRect().width;
-    if (!w) return;
-    const u = MAP.viewBox[2] / w;
-    if (mapUnit && Math.abs(u - mapUnit) < mapUnit * 0.02) return;
-    mapUnit = u;
-    const set = (sel, attrs) => $$(sel, svg).forEach((el) => Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v)));
-    set('.map-river', { 'stroke-width': 80 });
-    set('.map-dot', { r: 4.5 * u, 'stroke-width': 1.75 * u });
-    set('.map-halo', { r: 9.5 * u, 'stroke-width': 2 * u });
-    set('.map-label', { 'font-size': 12.5 * u, 'stroke-width': 3.5 * u });
-    placeLabels(svg, u);
+  // The engraving: an alpha WebP (the ink colour in RGB, the engraving in the alpha), fetched and decoded off
+  // the main thread. Below 1280 px only the 1125 px file loads, from 1280 px only the 2250 px one; a later
+  // resize keeps what loaded. `k` is master px per bitmap px. The laptop also gets a half-size copy for far
+  // views, and both widths get lamplight copies for the night, each made in its own idle task.
+  const INKS = { day: 0.42, night: 0.36 };
+  const INK = { day: [], night: [], dark: false, p: 0, ready: null, failed: false };
+  const ATLASES = [];
+  const bitmapOf = async (src, opts) => {
+    try { return opts ? await createImageBitmap(src, opts) : await createImageBitmap(src); } catch { /* fall through */ }
+    if (src instanceof Blob) { const img = new Image(); img.src = URL.createObjectURL(src); await img.decode(); return img; }
+    const c = document.createElement('canvas'); c.width = opts.resizeWidth; c.height = opts.resizeHeight;
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  };
+  async function nightOf(e) {
+    performance.mark('nolli-night-start');
+    const w = e.bm.width, h = e.bm.height;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.drawImage(e.bm, 0, 0);
+    x.globalCompositeOperation = 'source-in';
+    x.fillStyle = '#FFE6BF';
+    x.fillRect(0, 0, w, h);
+    performance.measure('nolli-night', 'nolli-night-start');
+    return { bm: await bitmapOf(c), k: e.k };
+  }
+  const repaint = () => ATLASES.forEach((a) => a.paint());
+  function loadNolli() {
+    if (INK.ready) return INK.ready;
+    const url = wideMQ.matches ? NOL.files.full : NOL.files.half;
+    INK.ready = fetch(url)
+      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.blob(); })
+      .then((b) => bitmapOf(b))
+      .then((bm) => {
+        INK.day = [{ bm, k: NOL.w / bm.width }];
+        // The engraving comes in over 400 ms and the Tiber goes (at once with reduced motion).
+        if (reduced || !window.gsap) { INK.p = 1; repaint(); } else gsap.to(INK, { p: 1, duration: 0.4, ease: 'power1.out', onUpdate: repaint });
+        const nights = () => INK.day.forEach((e, i) => idle(() => nightOf(e).then((n) => { INK.night[i] = n; if (INK.dark && INK.night.filter(Boolean).length === INK.day.length) repaint(); }), 3000));
+        if (bm.width > 1200) idle(() => bitmapOf(bm, { resizeWidth: bm.width >> 1, resizeHeight: bm.height >> 1, resizeQuality: 'high' }).then((half) => { INK.day.push({ bm: half, k: NOL.w / half.width }); nights(); }), 2000);
+        else nights();
+      })
+      .catch(() => { INK.failed = true; });
+    return INK.ready;
+  }
+  // At dusk the engraving swaps to its lamplight copies: nothing is recoloured on the scroll path.
+  function setInkDark(dark) {
+    if (INK.dark === dark) return;
+    INK.dark = dark;
+    repaint();
   }
 
-  // Greedy label placement: crowded dots first, eight candidate spots each, scored by overlap with
-  // placed labels, other dots and the frame edge, and by whether another dot sits closer to the label
-  // than its own (a label must read as its dot's). A label's width comes from its own text (the
-  // condensed body face runs about 0.42 em a character, measured on the shots: "Maritozzo" is 46 px wide
-  // at 12.5 px).
-  const LABEL_EM = 0.42;
-  function placeLabels(svg, u) {
-    const [vx, vy, vw, vh] = MAP.viewBox;
-    const font = 12.5 * u, dotR = 4.5 * u;
-    const h = font * 0.95;
-    const gap = dotR + font * 0.35;
-    const cands = [
-      [gap, 0, 'start'], [-gap, 0, 'end'],
-      [0, -(gap + h / 2), 'middle'], [0, gap + h / 2, 'middle'],
-      [gap * 0.8, -(gap * 0.8 + h / 2), 'start'], [-gap * 0.8, -(gap * 0.8 + h / 2), 'end'],
-      [gap * 0.8, gap * 0.8 + h / 2, 'start'], [-gap * 0.8, gap * 0.8 + h / 2, 'end'],
-    ];
-    const overlap = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
-    const frame = [vx, vy, vx + vw, vy + vh];
-    const pts = mapPts.map((s) => ({ ...s, w: font * (LABEL_EM * Array.from(s.label).length + 0.2) }));
-    const dots = pts.map((s) => [s.x - dotR * 1.6, s.y - dotR * 1.6, s.x + dotR * 1.6, s.y + dotR * 1.6]);
-    const crowd = (s) => pts.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < s.w * 1.2).length;
-    const toBox = (b, x, y) => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
-    // Two dots about 18 px or less apart (the coffee by the Pantheon, 130 m): each label goes on the side
-    // away from the other dot, so neither reads as the other's (v8 fold-in, gate P6).
-    const twins = (s) => pts.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < 18 * u);
-    const placed = [];
-    [...pts].sort((a, b) => crowd(b) - crowd(a)).forEach((s) => {
-      const w = s.w;
-      const box = (x, y, anchor) => { const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2; return [x0, y - h / 2, x0 + w, y + h / 2]; };
-      const close = twins(s);
-      let best = null;
-      cands.forEach(([dx, dy, anchor], ci) => {
-        const b = box(s.x + dx, s.y + dy, anchor);
-        let score = ci * 0.01 * w * h;
-        const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
-        for (const n of close) if ((cx - s.x) * (n.x - s.x) + (cy - s.y) * (n.y - s.y) > 0) score += w * h * 3;
-        for (const p of placed) score += overlap(b, p) * 50;
-        const own = toBox(b, s.x, s.y);
-        dots.forEach((d, i) => { if (pts[i].id === s.id) return; score += overlap(b, d) * 30; if (toBox(b, pts[i].x, pts[i].y) < own + 6 * u) score += w * h * 1.5; });
-        score += (w * h - overlap(b, frame)) * 60;
-        if (!best || score < best.score) best = { score, b, x: s.x + dx, y: s.y + dy, anchor };
+  // One map: `page` (the laptop map), `pocket` (the bar, dots only) or `sheet` (the phone's whole map).
+  class Atlas {
+    constructor(host, kind) {
+      this.kind = kind;
+      const img = kind !== 'pocket' ? ` role="img" aria-label="${esc(U.mapLabel)}" aria-describedby="map-credit"` : ' aria-hidden="true"';
+      host.insertAdjacentHTML('beforeend', `<div class="atlas atlas--${kind}"${img}><canvas class="atlas-canvas"></canvas><svg class="atlas-marks" aria-hidden="true"></svg></div>`);
+      this.el = host.lastElementChild;
+      this.cv = $('canvas', this.el);
+      this.ctx = this.cv.getContext('2d');
+      this.svg = $('svg', this.el);
+      this.cam = { x: NOL.w / 2, y: NOL.h / 2, s: 0.3 };
+      this.goal = null;
+      this.marks = [];
+      this.byId = new Map();
+      this.cur = null;
+      this.tw = null;
+      this.vw = 0; this.vh = 0; this.dpr = 1;
+      this.k = kind === 'pocket' ? 0.7 : 1;
+      this.measure();
+      if ('ResizeObserver' in window) new ResizeObserver(() => { if (this.measure()) this.settle(); }).observe(this.el);
+      ATLASES.push(this);
+    }
+    measure() {
+      const w = this.el.clientWidth, h = this.el.clientHeight, d = Math.min(2, devicePixelRatio || 1);
+      if (w === this.vw && h === this.vh && d === this.dpr) return false;
+      this.vw = w; this.vh = h; this.dpr = d;
+      this.cv.width = Math.round(w * d); this.cv.height = Math.round(h * d);
+      return true;
+    }
+    // The engraving fills a canvas the size of the window onto it: one drawImage per frame of a camera move.
+    paint() {
+      if (this.vw <= 1) return;
+      const x = this.ctx, c = this.cam, d = this.dpr;
+      x.setTransform(1, 0, 0, 1, 0, 0);
+      x.clearRect(0, 0, this.cv.width, this.cv.height);
+      const tx = d * (this.vw / 2 - c.x * c.s), ty = d * (this.vh / 2 - c.y * c.s);
+      if (INK.p > 0 && INK.day.length) {
+        const night = INK.dark && INK.night.filter(Boolean).length === INK.day.length;
+        const set = night ? INK.night : INK.day;
+        // A far view, and every frame in flight, draws the half-size copy with the plain filter (dir-2's lowFlight,
+        // on by default); the frame the camera settles on gets the full sheet and the good filter.
+        const half = !!this.tw || c.s * d < 0.55;
+        const e = set.find((b) => (half ? b.k > 1 : b.k === 1)) || set[0];
+        x.imageSmoothingEnabled = true;
+        x.imageSmoothingQuality = this.tw ? 'low' : 'high';
+        x.setTransform(d * c.s * e.k, 0, 0, d * c.s * e.k, tx, ty);
+        x.globalAlpha = (night ? INKS.night : INKS.day) * INK.p;
+        x.drawImage(e.bm, 0, 0);
+      }
+      if (INK.p < 1) {
+        x.setTransform(d * c.s, 0, 0, d * c.s, tx, ty);
+        x.globalAlpha = 0.3 * (1 - INK.p);
+        x.strokeStyle = INK.dark ? '#FFE6BF' : '#1A1830';
+        x.lineWidth = 1.5 / c.s;
+        x.lineJoin = 'round'; x.lineCap = 'round';
+        x.beginPath();
+        for (const l of RIVER) l.forEach((q, i) => (i ? x.lineTo(q.x, q.y) : x.moveTo(q.x, q.y)));
+        x.stroke();
+      }
+      x.globalAlpha = 1;
+    }
+    scr(x, y, c = this.cam) { return [(x - c.x) * c.s + this.vw / 2, (y - c.y) * c.s + this.vh / 2]; }
+    apply() {
+      if (this.vw <= 1) return;
+      this.paint();
+      const k = this.k !== 1 ? ` scale(${this.k})` : '';
+      for (const m of this.marks) {
+        if (m.gone) continue;
+        const [X, Y] = this.scr(m.x, m.y);
+        m.g.setAttribute('transform', `translate(${X.toFixed(1)} ${Y.toFixed(1)})${k}`);
+        // A mark at or past the window's edge steps out (no half dots at the rim).
+        const off = X < 4 || X > this.vw - 4 || Y < 4 || Y > this.vh - 4;
+        if (off !== m.off) { m.off = off; m.g.classList.toggle('is-off', off); }
+      }
+    }
+    setMarks(list) {
+      this.tw?.kill(); this.tw = null;
+      this.svg.innerHTML = list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}"><circle class="mk-hit" r="22"/><circle class="mk-halo"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
+      const gs = [...this.svg.children];
+      this.marks = list.map((m, i) => ({ ...m, g: gs[i], dot: $('.mk-dot', gs[i]), halo: $('.mk-halo', gs[i]), ring: $('.mk-ring', gs[i]), text: $('.mk-label', gs[i]), state: '', gone: false }));
+      this.byId = new Map(this.marks.map((m) => [m.id, m]));
+      this.cur = null;
+    }
+    // States follow her day: the places behind the current entry lit, the current one ringed and named in the
+    // display face, the ones still to come hollow. While dinner is current the three pizza places show and her
+    // places step back.
+    focus(el, { jump = false, camera = true } = {}) {
+      const items = $$('#day .plan-item');
+      const ci = el ? items.indexOf(el) : -1;
+      const ord = new Map(items.map((li, i) => [li.dataset.key, i]));
+      const din = !!el && el.dataset.key === 'dinner' && this.kind !== 'pocket';
+      const curId = el && el.dataset.dot ? el.dataset.dot : null;
+      for (const m of this.marks) {
+        const i = ord.has(m.key) ? ord.get(m.key) : -1;
+        const idea = m.kind === 'idea';
+        const gone = idea ? !din || m.idea === dinner : false;
+        const state = idea ? 'idea' : m.id === curId ? 'current' : el && i >= 0 && i < ci ? 'past' : 'ahead';
+        const dim = din && !idea && state !== 'current';
+        if (state !== m.state || gone !== m.gone) {
+          m.g.classList.toggle('is-current', state === 'current');
+          m.g.classList.toggle('is-past', state === 'past');
+          m.g.classList.toggle('is-ahead', state === 'ahead');
+          m.g.classList.toggle('is-gone', gone);
+          const r = { current: 5.5, past: 3.5, ahead: 4, idea: 4 }[state] + (m.kind === 'edge' && state !== 'current' ? 1 : 0);
+          m.dot.setAttribute('r', r);
+          m.halo.setAttribute('r', state === 'current' ? 10 : r + 2.5);
+          if (state === 'current' && m.state !== 'current') {
+            this.svg.append(m.g); // paints on top
+            if (reduced || !window.gsap) m.ring.style.strokeDashoffset = '0';
+            else gsap.fromTo(m.ring, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'power2.inOut', overwrite: true });
+          } else if (state !== 'current' && m.state === 'current') {
+            if (window.gsap) gsap.killTweensOf(m.ring);
+            m.ring.style.strokeDashoffset = '1';
+          }
+          m.state = state; m.gone = gone;
+        }
+        m.g.classList.toggle('is-dim', dim);
+      }
+      this.cur = curId;
+      if (!camera) { this.name(); return; }
+      this.goal = this.target(el, din, curId && this.byId.get(curId), ci, ord);
+      this.goTo(this.goal, jump ? 0 : this.kind === 'pocket' ? 0.55 : 0.9);
+    }
+    // The camera for an entry. Laptop: a place close up, the three pizza places (and her pick) for dinner, else
+    // her whole day.
+    // Pocket: the current place (or the last one her day has passed) about 1,500 m across. Sheet: her whole day.
+    target(el, din, curM, ci, ord) {
+      const shown = this.marks.filter((m) => !m.gone);
+      const stops = shown.filter((m) => m.kind !== 'idea');
+      if (this.kind === 'pocket') {
+        let m = curM;
+        if (!m) m = [...stops].filter((s) => (ord.get(s.key) ?? -1) < ci).pop() || stops[0];
+        const s = this.vw / (1500 / NOL.mPerPx);
+        return m ? { x: m.x, y: m.y, s } : { x: PANTHEON.x, y: PANTHEON.y, s };
+      }
+      if (this.kind === 'sheet') return this.frame(shown, 40, 0.9);
+      if (din) return this.frame(shown.filter((m) => m.kind === 'idea' || m.id === 'dinner'), 110, 0.8);
+      if (curM) return { x: curM.x, y: curM.y, s: NOL.mPerPx / 2.5 };
+      return this.frame(stops, 90, 0.75);
+    }
+    frame(ms, pad, maxS) {
+      if (!ms.length) return { x: PANTHEON.x, y: PANTHEON.y + 300, s: 0 };
+      const xs = ms.map((m) => m.x), ys = ms.map((m) => m.y);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      const s = Math.min(maxS, (this.vw - 2 * pad) / Math.max(1, x1 - x0), (this.vh - 2 * pad) / Math.max(1, y1 - y0));
+      return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, s };
+    }
+    // The plan never shrinks to a stamp, and the window runs past the engraving's own edge by at most the width of
+    // its feather (9 % of the window), so the engraving never ends in a hard line.
+    cover(c) {
+      const min = Math.max(this.vw / NOL.w, this.vh / NOL.h) * 0.85;
+      const s = Math.max(c.s, min);
+      const hx = this.vw / 2 / s, hy = this.vh / 2 / s, mx = hx * 0.18, my = hy * 0.18;
+      const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, v)));
+      return { s, x: clamp(c.x, hx - mx, NOL.w - hx + mx), y: clamp(c.y, hy - my, NOL.h - hy + my) };
+    }
+    // A long move lifts off and sets down: the zoom dips mid-flight in proportion to the distance, so the old
+    // place and the new one are briefly on screen together. Names step back at take-off and find their places
+    // when the camera lands. Reduced motion: the camera jumps.
+    goTo(to, dur) {
+      if (this.vw <= 1) return;
+      this.tw?.kill(); this.tw = null;
+      to = this.cover(to);
+      if (reduced || !dur || !window.gsap) { Object.assign(this.cam, to); this.el.classList.remove('is-flying'); this.apply(); this.name(); return; }
+      const from = { ...this.cam }, st = { p: 0 };
+      const dist = Math.hypot(to.x - from.x, to.y - from.y) * from.s;
+      const dip = Math.min(0.4, Math.max(0, (dist - this.vw * 0.5) / (this.vw * 3)));
+      const minS = Math.max(this.vw / NOL.w, this.vh / NOL.h) * 0.85;
+      this.el.classList.add('is-flying');
+      this.tw = gsap.to(st, { p: 1, duration: dur, ease: 'power3.inOut', onUpdate: () => {
+        const p = st.p;
+        this.cam.x = from.x + (to.x - from.x) * p;
+        this.cam.y = from.y + (to.y - from.y) * p;
+        this.cam.s = Math.max(minS, (from.s + (to.s - from.s) * p) * (1 - dip * Math.sin(Math.PI * p)));
+        this.apply();
+      }, onComplete: () => { this.tw = null; this.paint(); this.name(); this.el.classList.remove('is-flying'); } });
+    }
+    // After a resize: the same goal, no flight.
+    settle() { if (this.goal) this.goTo(this.goal, 0); else this.apply(); }
+    // Names, placed when the camera lands (screen px): the current place first, in the display face, 6 px clear
+    // of its ring; then the rest, crowded marks first, each at the first of six spots that keeps clear of every
+    // name and dot and stays inside the window. A name that fits nowhere stays hidden (it shows under the pointer).
+    name() {
+      if (this.kind === 'pocket' || this.vw <= 1) return;
+      const pts = this.marks.filter((m) => !m.gone).map((m) => { const [x, y] = this.scr(m.x, m.y); return { m, x, y }; });
+      const inView = (p) => p.x > 8 && p.x < this.vw - 8 && p.y > 8 && p.y < this.vh - 8;
+      const M = 8;
+      const fits = (b) => b[0] >= M && b[2] <= this.vw - M && b[1] >= M && b[3] <= this.vh - M;
+      const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+      const dots = pts.map((p) => { const r = p.m.state === 'current' ? 12 : +p.m.dot.getAttribute('r') + 2; return [p.x - r, p.y - r, p.x + r, p.y + r]; });
+      const placed = [];
+      const box = (p, w, h, [dx, dy, a]) => { const x0 = a === 'start' ? p.x + dx : a === 'end' ? p.x + dx - w : p.x + dx - w / 2; return [x0 - 1, p.y + dy - h / 2, x0 + w + 1, p.y + dy + h / 2]; };
+      const clear = (p, b) => !placed.some((q) => hit(b, q)) && !dots.some((q, j) => pts[j] !== p && hit(b, q));
+      const put = (p, c) => { p.m.text.setAttribute('x', c[0]); p.m.text.setAttribute('y', c[1]); p.m.text.setAttribute('text-anchor', c[2]); };
+      // On a crowded day the current name may find no clear spot near its ring: it takes the spot that covers
+      // the fewest dots, and those dots step back under it (is-under) until the current entry changes.
+      pts.forEach((p) => p.m.g.classList.remove('is-under'));
+      const cur = pts.find((p) => p.m.state === 'current');
+      if (cur) {
+        const { w, h } = labelSize(cur.m.text);
+        const cands = [];
+        for (const d of [17, 30]) cands.push([d, 0, 'start'], [-d, 0, 'end'], [0, -(d + 8), 'middle'], [0, d + 8, 'middle'], [d - 4, -(d + 2), 'start'], [-(d - 4), d + 2, 'end'], [d - 4, d + 2, 'start'], [-(d - 4), -(d + 2), 'end']);
+        let c = cands.find((k) => { const b = box(cur, w, h, k); return fits(b) && clear(cur, b); });
+        if (!c) {
+          const under = (k) => { const b = box(cur, w, h, k); return pts.filter((q, j) => q !== cur && hit(b, dots[j])); };
+          c = cands.filter((k) => fits(box(cur, w, h, k))).sort((a, b) => under(a).length - under(b).length)[0] || cands[0];
+          under(c).forEach((q) => { q.m.g.classList.add('is-under'); q.m.g.classList.remove('is-named'); });
+        }
+        put(cur, c);
+        placed.push(box(cur, w, h, c));
+      }
+      const crowd = (p) => pts.filter((q) => q !== p && Math.hypot(q.x - p.x, q.y - p.y) < 90).length;
+      pts.filter((p) => p !== cur && !p.m.g.classList.contains('is-under')).sort((a, b) => crowd(b) - crowd(a)).forEach((p) => {
+        const { w, h } = labelSize(p.m.text), d = +p.m.dot.getAttribute('r') + 5;
+        const cands = [[d, 0, 'start'], [-d, 0, 'end'], [0, -(d + 5), 'middle'], [0, d + 5, 'middle'], [d - 2, -(d + 4), 'start'], [-(d - 2), d + 4, 'end']];
+        const c = inView(p) ? cands.find((k) => { const b = box(p, w, h, k); return fits(b) && clear(p, b); }) : null;
+        p.m.g.classList.toggle('is-named', !!c);
+        p.m.spot = c || cands.find((k) => fits(box(p, w, h, k))) || cands[0];
+        put(p, p.m.spot);
+        if (c) placed.push(box(p, w, h, c));
       });
-      placed.push(best.b);
-      const t = $(`.map-stop[data-id="${s.id}"] .map-label`, svg);
-      t.setAttribute('x', best.x);
-      t.setAttribute('y', best.y);
-      t.setAttribute('text-anchor', best.anchor);
+    }
+  }
+  // A name's box in its current face, measured once per text and face.
+  const LABEL_W = new Map();
+  function labelSize(t) {
+    const key = `${t.closest('.is-current') ? 'b' : 's'}|${t.textContent}`;
+    if (!LABEL_W.has(key)) { const b = t.getBBox(); LABEL_W.set(key, { w: b.width || t.textContent.length * 7, h: b.height || 16 }); }
+    return LABEL_W.get(key);
+  }
+  if (document.fonts) document.fonts.ready.then(() => { LABEL_W.clear(); ATLASES.forEach((a) => a.name()); });
+
+  let pageAtlas = null, pocketAtlas = null, sheetAtlas = null;
+  let mapKey;            // the entry the map follows (undefined: none yet)
+  let gliding = false;   // a programmatic glide: the map moves once, where it lands
+  const keyEl = (key) => (key ? $(`#day .plan-item[data-key="${CSS.escape(key)}"]`) : null);
+  // The laptop map and the pocket are made with her day, each only at its own width.
+  function ensureAtlases() {
+    if (!dayShown) return;
+    if (wideMQ.matches && !pageAtlas) {
+      pageAtlas = new Atlas(slot('day-map'), 'page');
+      slot('day-map').insertAdjacentHTML('beforeend', `<p class="map-note">${esc(U.mapNote)}</p>`);
+      bindPageMap();
+      syncMap(pageAtlas);
+    }
+    if (!wideMQ.matches && !pocketAtlas) {
+      pocketAtlas = new Atlas(slot('hud-map'), 'pocket');
+      syncMap(pocketAtlas);
+    }
+  }
+  function syncMap(only = null) {
+    const list = markList();
+    (only ? [only] : ATLASES).forEach((a) => {
+      a.setMarks(list);
+      a.focus(keyEl(mapKey), { jump: true });
     });
   }
+  function mapFollow(el) {
+    const key = el ? el.dataset.key : null;
+    if (gliding || key === mapKey) return;
+    mapKey = key;
+    ATLASES.forEach((a) => { if (a.kind !== 'sheet') a.focus(el); });
+  }
+  // A glide to an entry (C's goToEntry): its top lands at the middle of the screen, so it is the current entry;
+  // the map moves once, when the glide (and the sky's smoothing after it) has landed; then the entry lights up.
+  function goToEntry(key) {
+    const el = keyEl(key);
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + scrollY - innerHeight * 0.5 + 2;
+    scrollToY(y, Math.min(1.1, 0.45 + Math.abs(y - scrollY) / 4000), () => flash(el));
+  }
+  // Laptop: a mark names itself under the pointer, and a click glides to its entry.
+  function bindPageMap() {
+    const svg = pageAtlas.svg;
+    svg.addEventListener('pointerover', (e) => { const g = e.target.closest('.mk'); if (g && e.pointerType === 'mouse') g.classList.add('is-hover'); });
+    svg.addEventListener('pointerout', (e) => { const g = e.target.closest('.mk'); if (g) g.classList.remove('is-hover'); });
+    svg.addEventListener('click', (e) => { const g = e.target.closest('.mk'); if (g) goToEntry(pageAtlas.byId.get(g.dataset.id)?.key); });
+  }
 
-  // Below 1280 px the map has its own section; from 1280 px it sits sticky beside the plan.
-  const wideMQ = matchMedia('(min-width: 1280px)');
-  function placeMap() {
-    const host = wideMQ.matches ? slot('day-map') : slot('map-home');
-    if (mapFig.parentElement !== host) { host.append(mapFig); mapUnit = 0; }
+  // The phone's whole map: the pocket opens it as a sheet framed on her whole day. Dragging the map pans it;
+  // a tap on a mark makes it current, and 420 ms later the sheet closes and the page glides to its entry.
+  function openMapSheet() {
+    const dlg = slot('mapsheet');
+    if (dlg.open) return;
+    if (!sheetAtlas) {
+      dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
+        <div class="sheet-head mapsheet-head">
+          <div class="mapsheet-titles"><h2 id="ms-h" tabindex="-1">${esc(U.mapTitle)}</h2><p class="mapsheet-note">${esc(U.mapNote)}</p></div>
+          <button type="button" class="peek-x" data-action="map-close" aria-label="${esc(PK.close)}">${ICON.close}</button>
+        </div>
+        <div class="mapsheet-map"></div>`;
+      sheetAtlas = new Atlas($('.mapsheet-map', dlg), 'sheet');
+      bindSheetMap();
+    }
+    sheetAtlas.setMarks(markList());
+    root.classList.add('is-locked');
+    dlg.showModal();
+    $('#ms-h', dlg).focus({ preventScroll: true });
+    sheetAtlas.measure();
+    sheetAtlas.focus(keyEl(mapKey), { jump: true });
+    sheetIn(dlg);
+    loadNolli();
+  }
+  function closeMapSheet(fromY = 0) {
+    const dlg = slot('mapsheet');
+    if (!dlg.open || dlg.classList.contains('is-closing')) return;
+    sheetOut(dlg, fromY, () => dlg.close());
+  }
+  function bindSheetMap() {
+    const a = sheetAtlas, el = a.el;
+    let drag = null;
+    el.addEventListener('pointerdown', (e) => {
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, cx: a.cam.x, cy: a.cam.y, moved: false };
+      try { el.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+      drag.moved = true;
+      Object.assign(a.cam, a.cover({ x: drag.cx - dx / a.cam.s, y: drag.cy - dy / a.cam.s, s: a.cam.s }));
+      a.apply();
+    });
+    const end = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const was = drag;
+      drag = null;
+      if (was.moved) { a.name(); return; }
+      if (e.type !== 'pointerup') return;
+      const g = document.elementFromPoint(e.clientX, e.clientY)?.closest('.mk');
+      const m = g && a.byId.get(g.dataset.id);
+      if (!m) return;
+      const key = m.key;
+      a.focus(keyEl(key), { camera: false });
+      setTimeout(() => { closeMapSheet(); setTimeout(() => goToEntry(key), reduced ? 0 : 200); }, reduced ? 0 : 420);
+    };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+  }
+  function onMapSheetClick(e) {
+    const dlg = slot('mapsheet');
+    if (e.target === dlg || e.target.closest('[data-action="map-close"]')) closeMapSheet();
+  }
+  function onMapSheetClosed() {
+    const dlg = slot('mapsheet');
+    dlg.getAnimations().forEach((x) => x.cancel());
+    dlg.classList.remove('is-closing');
+    dlg.style.transform = '';
+    root.classList.remove('is-locked');
+    slot('hud-map').focus({ preventScroll: true });
   }
 
   /* ------------------------------------------------------------------ */
@@ -2116,11 +2476,11 @@
     skyHex = hex;
     skyBg.style.backgroundColor = hex;
     hud.style.backgroundColor = hex; // opaque: nothing reads through the bar
-    mapFig.style.setProperty('--sky', hex);
+    ATLASES.forEach((a) => { if (a.kind !== 'sheet') a.el.style.setProperty('--sky', hex); });
     stageHost.style.setProperty('--sky', hex);
     const Y = relLum(rgb);
     const dark = contrast(Y, Y_LAMP) > contrast(Y, Y_INK); // flip at the luminance crossover
-    if (dark !== isDark) { isDark = dark; root.toggleAttribute('data-dark', dark); syncSkyVar(); return; }
+    if (dark !== isDark) { isDark = dark; root.toggleAttribute('data-dark', dark); setInkDark(dark); syncSkyVar(); return; }
     if (!varHex) { syncSkyVar(); return; }
     clearTimeout(varTimer);
     varTimer = setTimeout(syncSkyVar, 200);
@@ -2157,9 +2517,10 @@
   let reduced = reduceMotion();
   let lastY = 0;
 
+  let maxY = Infinity;
   function measure() {
-    layoutMap();
     itemEls = $$('.plan-item');
+    maxY = ScrollTrigger.maxScroll(window);
     const mid = innerHeight / 2;
     const top = (el) => el.getBoundingClientRect().top + scrollY;
     anchors = [{ y: 0, t: START_MIN }];
@@ -2179,15 +2540,22 @@
   }
 
   const hudPlace = $('[data-slot="hud-place"]');
-  let hudPlaceText = '', mapCurrent = null;
+  let hudPlaceText = '';
   const minToHHMM = (m) => P.hhmm(m);
 
-  function render(y) {
-    lastY = y;
+  // The entry at a page position. At the very bottom the last entry is current, however little page there is
+  // below it, so Early night and the night map always come (dir-2's last-entry fix, b2.5).
+  function itemAt(y) {
     let idx = -1;
     for (let i = 1; i < anchors.length; i++) if (y >= anchors[i].y) idx = i - 1;
     const el = idx >= 0 ? anchors[idx + 1].el : null;
-    applySky(reduced ? (el ? +el.dataset.min : START_MIN) : timeAt(y));
+    return dayShown && itemEls.length && y > 0 && y >= maxY - 2 ? itemEls[itemEls.length - 1] : el;
+  }
+  function render(y) {
+    lastY = y;
+    const el = itemAt(y);
+    const end = !!el && el === itemEls[itemEls.length - 1] && y >= maxY - 2;
+    applySky(reduced || end ? (el ? +el.dataset.min : START_MIN) : timeAt(y));
 
     let sec = null;
     for (const s of sectionMarks) if (y >= s.y) sec = s;
@@ -2196,9 +2564,8 @@
     const place = inDay ? el.dataset.hudTitle : sec ? sec.name : '';
     if (place !== hudPlaceText) { hudPlaceText = place; hudPlace.textContent = place; }
 
-    // Sticky desktop map: mark the current item's dot.
-    const cur = el && el.dataset.dot ? $(`.map-stop[data-id="${el.dataset.dot}"]`, mapFig) : null;
-    if (cur !== mapCurrent) { mapCurrent?.classList.remove('is-current'); cur?.classList.add('is-current'); mapCurrent = cur; }
+    // The map follows the entry she is on (the laptop map and the pocket).
+    mapFollow(el);
   }
 
   /* ------------------------------------------------------------------ */
@@ -2311,7 +2678,7 @@
     renderDepNote();
     renderDay();
     syncCatalogue();
-    renderMapPlan();
+    syncMap();
     syncChips();
     if (booted) {
       syncDepBoard();
@@ -2346,7 +2713,6 @@
       if (reduced) {
         heroFinal();
         finishBoard();
-        mapRevealed = true;
         ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (self) => render(self.scroll()) });
         render(scrollY);
         return;
@@ -2374,16 +2740,6 @@
       // The board's triggers come with the board (showDay adds them to this context later).
       motionCtx = ctx;
       if (DEP.board) depTriggers();
-
-      // Map: the first time it scrolls in, the dots pop in day order (0.35 s each, 0.08 s apart).
-      revealMap = () => {
-        if (mapRevealed) return;
-        mapRevealed = true;
-        const svg = $('svg', mapFig);
-        const tl = gsap.timeline();
-        $$('.map-stop', svg).forEach((g, i) => tl.to(g, { scale: 1, autoAlpha: 1, duration: 0.35, ease: 'back.out(2.4)' }, i * 0.08));
-      };
-      ScrollTrigger.create({ trigger: mapFig, start: 'top 75%', once: true, onEnter: () => revealMap() });
     });
 
     // The HUD stays off the hero and the questions: it appears from DEPARTURES onward (and never
@@ -2409,8 +2765,6 @@
   renderStatic();
   renderStage();
   renderCatalogue();
-  renderMapFrame();
-  placeMap();
   loadState();
   // A visitor who has planned (or opened a link) lands on her Friday; the stage waits closed.
   if (answers || picks.length) showDay();
@@ -2452,7 +2806,15 @@
   slot('board').addEventListener('click', onHeroClick);
   slot('send').addEventListener('click', send);
   nowBtns.forEach((b) => b.addEventListener('click', jumpToNow));
-  wideMQ.addEventListener('change', () => { placeMap(); renderMapPlan(); ScrollTrigger.refresh(); });
+  wideMQ.addEventListener('change', () => { ensureAtlases(); ScrollTrigger.refresh(); });
+  slot('hud-map').addEventListener('click', openMapSheet);
+  slot('mapsheet').addEventListener('click', onMapSheetClick);
+  slot('mapsheet').addEventListener('cancel', (e) => { e.preventDefault(); closeMapSheet(); });
+  slot('mapsheet').addEventListener('close', onMapSheetClosed);
+  bindDrag(slot('mapsheet'), closeMapSheet);
+  // The engraving loads after her first tile tap or Show me Friday; a visit that already has a day loads it once
+  // the page has loaded and the browser is idle. Never on a fresh first screen.
+  if (dayShown) { const later = () => idle(loadNolli, 2000); if (document.readyState === 'complete') later(); else addEventListener('load', later, { once: true }); }
 
   measure();
   setupMotion();
@@ -2466,6 +2828,11 @@
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
     shareText: () => shareText(), dinner: () => dinner,
+    // The map, for the checks: whether the engraving is in, each atlas's marks in screen px, and a way to put
+    // the map on an entry directly (reduced motion, so the camera jumps).
+    mapReady: () => INK.day.length > 0 && INK.p === 1,
+    mapState: (kind) => { const a = ATLASES.find((x) => x.kind === kind); if (!a) return null; const box = (el) => { const r = el.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; }; return { kind, key: mapKey, cam: { ...a.cam }, vw: a.vw, vh: a.vh, rect: box(a.el), dark: INK.dark, night: INK.night.filter(Boolean).length, flying: !!a.tw, marks: a.marks.map((m) => ({ id: m.id, key: m.key, kind: m.kind, x: m.x, y: m.y, label: m.text.textContent, state: m.state, gone: m.gone, cls: m.g.getAttribute('class'), op: +getComputedStyle(m.g).opacity, named: m.g.classList.contains('is-named') || m.state === 'current', labelOpacity: +getComputedStyle(m.text).opacity, dot: box(m.dot), labelBox: box(m.text), fill: getComputedStyle(m.dot).fill, ring: String(parseFloat(getComputedStyle(m.ring).strokeDashoffset)) })) }; },
+    mapFocus: (key, jump = true) => { const el = keyEl(key); ATLASES.forEach((a) => a.focus(el, { jump, camera: a.kind !== 'sheet' })); mapKey = el ? key : null; },
   };
 
   if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());

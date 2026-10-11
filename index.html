@@ -40,6 +40,7 @@
     <div class="hud-clock" aria-hidden="true"></div>
     <p class="hud-place"><span class="sr-only" data-slot="hud-time"></span><span data-slot="hud-place"></span></p>
     <button class="btn btn--small hud-now" type="button" hidden><span class="now-long" data-slot="now-long"></span><span class="now-short" data-slot="now-short"></span></button>
+    <button class="hud-map" type="button" data-slot="hud-map" aria-haspopup="dialog" hidden></button>
   </div>
 </aside>
 
@@ -61,7 +62,7 @@
     <div class="stage" data-slot="stage"></div>
   </section>
 
-  <!-- The board, the day, send and the map stay hidden (and the board unbuilt) until she has planned. -->
+  <!-- The board, the day and send stay hidden (and the board unbuilt) until she has planned. -->
   <section class="section section--dep" id="dep" aria-labelledby="dep-h" hidden>
     <h2 id="dep-h" class="sr-only" data-slot="dep-title"></h2>
     <div data-slot="dep-note"></div>
@@ -76,6 +77,7 @@
     </div>
     <div class="day-lines" data-slot="day-lines" hidden></div>
     <div class="day-map" data-slot="day-map"></div>
+    <p id="map-credit" class="sr-only" data-slot="map-credit"></p>
     <div class="day-body" data-slot="day-body"></div>
     <dialog class="sheet catalogue" data-slot="catalogue" aria-labelledby="cat-h"></dialog>
   </section>
@@ -88,17 +90,14 @@
     </div>
   </section>
 
-  <section class="section" id="map" aria-labelledby="map-h" hidden>
-    <h2 id="map-h" data-slot="map-title"></h2>
-    <div data-slot="map-home"></div>
-  </section>
-
 </main>
 
 <div class="footer"></div>
 
 <!-- The peek: what's in a choice, in photos (one dialog for every use). -->
 <dialog class="sheet peek" data-slot="peek" aria-labelledby="peek-h"></dialog>
+<!-- The whole map on a phone: the pocket map in the bar opens it. -->
+<dialog class="sheet mapsheet" data-slot="mapsheet" aria-labelledby="ms-h"></dialog>
 
 <script src="data.js"></script>
 <script src="plan.js"></script>

@@ -156,7 +156,7 @@ svg { display: block; }
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-.tnum, time, .countdown, .map-label, .plan-time {
+.tnum, time, .countdown, .plan-time {
   font-variant-numeric: tabular-nums;
 }
 
@@ -454,38 +454,75 @@ svg { display: block; }
 .note-sign { margin-top: 2px; }
 
 
-/* ---------- Map ---------- */
+/* ---------- Map: Nolli's Rome in 1748 (design-v9 amendments b2) ---------- */
 
-.map { margin: 0 auto; }
-.map svg {
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  max-height: calc(100vh - var(--hud-h) - 96px);
-  max-height: calc(100svh - var(--hud-h) - 96px);
-  margin: 0 auto;
-  overflow: hidden;
+/* One atlas: the engraving on a canvas, feathered into the page at its edges (no box), and her marks on top,
+   crisp. --mk-bg is what a mark is cut out of: the sky, or the sheet's surface. */
+.atlas { position: relative; overflow: hidden; --mk-bg: var(--sky); }
+.atlas-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+  mask-composite: intersect;
 }
-/* app.js writes --sky on the map every frame (on :root only once the sky is still), so the river
-   resolves against the map's own --sky. */
-.map { --river: color-mix(in oklch, var(--sky), oklch(0.35 0.08 250) 16%); }
-:root[data-dark] .map { --river: color-mix(in oklch, var(--sky), white 10%); }
-.map-river { fill: none; stroke: var(--river); stroke-linecap: round; stroke-linejoin: round; }
-.map-dot { fill: var(--accent); stroke: var(--sky); }
-.map-halo { fill: none; stroke: var(--accent); opacity: 0; transition: opacity 200ms ease-out; }
-.map-stop.is-current .map-halo { opacity: 1; }
-.map-stop.is-current .map-label { font-weight: 800; }
-.map-label {
-  fill: var(--ink);
-  stroke: var(--sky);
-  paint-order: stroke;
-  stroke-linejoin: round;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-stretch: 75%;
+.atlas-marks { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.mk { pointer-events: auto; cursor: pointer; transition: opacity 300ms var(--ease-out); }
+.mk.is-gone { display: none; }
+.mk.is-dim { opacity: 0.32; }
+.mk.is-under, .mk.is-off { opacity: 0; pointer-events: none; }
+.mk-hit { fill: transparent; }
+.mk-halo { fill: var(--mk-bg); }
+/* Past: lit, a filled accent dot. Ahead: hollow, ink at 60 %. Current: a larger dot inside the pen ring. */
+.mk-dot { fill: var(--accent); stroke: none; transition: fill 240ms ease-out; }
+.mk.is-ahead .mk-dot { fill: var(--mk-bg); stroke: color-mix(in oklch, var(--ink) 60%, transparent); stroke-width: 1.5; }
+.mk-ring { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; visibility: hidden; }
+.mk.is-current .mk-ring { visibility: visible; }
+.mk.is-current .mk-halo { fill: none; stroke: var(--mk-bg); stroke-width: 5; }
+/* A place off the engraving: a ring on its edge, in the same states. The three pizza places (only while
+   dinner is the current entry): hollow, in the accent. */
+.mk.is-edge .mk-dot, .mk.is-idea .mk-dot { fill: var(--mk-bg); stroke: var(--accent); stroke-width: 1.75; }
+.mk.is-edge.is-ahead .mk-dot { stroke: color-mix(in oklch, var(--ink) 60%, transparent); }
+.mk.is-edge.is-current .mk-dot { fill: var(--accent); stroke: none; }
+/* Names: the current place in the display face; the others small, muted, cut out of the engraving by a halo,
+   shown where they fit (and under the pointer). They step back while the camera flies. */
+.mk-label {
+  font-family: var(--font-body); font-size: 12.5px; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.01em;
+  fill: var(--ink-muted); stroke: var(--mk-bg); stroke-width: 3.5px; stroke-linejoin: round; paint-order: stroke;
+  pointer-events: none; opacity: 0; transition: opacity 200ms ease-out;
+  /* Unhinted, fractional advances: Chromium otherwise rounds each glyph to a whole pixel here ("Mar itozzo"). */
+  text-rendering: geometricPrecision;
 }
-.map figcaption { margin-top: 10px; font-size: 0.75rem; }
+.mk.is-named .mk-label, .mk.is-hover .mk-label, .mk.is-current .mk-label { opacity: 1; }
+.mk.is-hover .mk-label { fill: var(--ink); }
+.mk.is-current .mk-label { font-family: var(--font-display); font-size: 17px; font-weight: 700; font-stretch: normal; letter-spacing: 0; fill: var(--ink); }
+.atlas.is-flying .mk .mk-label { opacity: 0; transition-duration: 120ms; }
 
+/* Below 1280 px: the pocket map at the bar's right end (dots only); it opens the whole map. */
+.hud-map {
+  position: relative; flex: none; width: 56px; height: 44px; padding: 0; border: 0; border-radius: 10px;
+  background: none; overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: scale 150ms ease-out;
+}
+.hud-map::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--hairline); pointer-events: none; }
+.hud-map:active { scale: 0.96; }
+.hud-map .atlas { position: absolute; inset: 0; }
+.hud-map .atlas-canvas { -webkit-mask-image: none; mask-image: none; }
+.atlas--pocket .mk { pointer-events: none; }
+.atlas--pocket .mk-ring, .atlas--pocket .mk-label, .atlas--pocket .mk-hit { display: none; }
+
+/* The whole map as a sheet: its title, "Rome in 1748", the map filling the rest. The map pans under a finger;
+   the handle and the head still drag the sheet. */
+.mapsheet { height: 92vh; height: 92svh; }
+.sheet-head.mapsheet-head { align-items: flex-start; padding-bottom: var(--s2); box-shadow: none; }
+.mapsheet-titles { display: grid; gap: 2px; padding-top: 6px; }
+.mapsheet-note { font-size: 0.8125rem; color: var(--ink-muted); }
+.mapsheet-map { position: relative; flex: 1 1 auto; min-height: 0; }
+.mapsheet-map .atlas { position: absolute; inset: 0; touch-action: none; --mk-bg: var(--surface); }
+
+/* The laptop map lives beside the day (from 1280 px, below); "Rome in 1748" at its foot. */
+.day-map { display: none; }
+.map-note { flex: none; font-size: 0.8125rem; color: var(--ink-muted); text-align: center; }
 
 /* ---------- Footer ---------- */
 
@@ -1311,6 +1348,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 @media (min-width: 768px) {
   .sheet { max-width: 640px; max-height: 84vh; margin: auto; border-radius: var(--r-card); }
+  .mapsheet { height: 84vh; height: 84svh; }
   .sheet-grab { display: none; }
   .sheet-head, .peek-head { touch-action: auto; padding-top: var(--s5); }
 }
@@ -1391,10 +1429,10 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .tiles--one { --ar: 16 / 9; }
 }
 
-/* From 1280 px the day is two columns: the map sticks on the left, the plan runs on the right,
-   and the separate map section steps aside so the map never shows twice. */
+/* From 1280 px the day is two columns: the map sticks on the left, unboxed, the plan runs on the right
+   (design-v9 amendments b2); the pocket map steps aside. */
 @media (min-width: 1280px) {
-  #map { display: none; }
+  .hud-map { display: none; }
   /* Send sits in the day's column (design-v9 4.7), so the page keeps one left edge to the end. */
   .section--send { display: grid; grid-template-columns: 440px minmax(0, 760px); justify-content: center; column-gap: var(--s7); }
   .section--send > .send { grid-column: 2; max-width: none; margin-left: 0; margin-right: 0; }
@@ -1409,20 +1447,24 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   /* The day takes its whole 760 px column (the time gutter, then a 640 px entry, design-v9 amendments b1.3). */
   .section--day > .day-head, .section--day > .day-lines, .section--day > .day-body { width: 100%; max-width: none; margin-left: 0; margin-right: 0; }
   .section--day > .day-map {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
     grid-column: 1;
     grid-row: 1 / span 4;
     position: sticky;
     top: var(--anchor-gap);
+    /* The cap bounds the canvas's backing store (2000 device px at DPR 2). */
+    height: min(calc(100vh - var(--anchor-gap) - 12px), 1000px);
+    height: min(calc(100svh - var(--anchor-gap) - 12px), 1000px);
     max-width: none;
     margin: 0;
-    padding-top: 18px;
   }
-  .day-map figcaption { text-align: center; }
-  .day-map .map svg { max-height: calc(100vh - var(--anchor-gap) - 72px); max-height: calc(100svh - var(--anchor-gap) - 72px); }
+  .day-map .atlas { flex: 1 1 auto; min-height: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-halo, .plan-item, .stop-card, .tile, .tile-img, .tile-img img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
+  .mk, .mk-dot, .mk-label, .hud-map, .plan-item, .stop-card, .tile, .tile-img, .tile-img img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
   .tile-more, .tile-more .i, .tbtn, .room-photo, .room-photo img, .cat-photo, .cat-photo img, .stop-title, .plan-title, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
   .picked-ph, .sheet::backdrop { animation: none; }
   .note-en.is-on { animation: none; }
