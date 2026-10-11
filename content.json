@@ -2860,6 +2860,10 @@
     "sunday": {
       "time": "SUN",
       "to": "HALF MARATHON",
+      "today": "TODAY",
+      "done": "HALF MARATHON DONE",
+      "todayFrom": "2026-10-18T00:00:00+02:00",
+      "doneFrom": "2026-10-18T18:00:00+02:00",
       "egg": {
         "to": "HALBMARATHON",
         "en": "(half marathon)"

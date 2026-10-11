@@ -916,10 +916,18 @@
   // Before her picks land, the board shows the day's frame: the bags, dinner, the early night.
   const skeletonRows = () => [bagsRow(P.build(C, []).items.find((it) => it.id === 'bags')), dinnerRow(), anchorRow('end', { target: 'end', label: C.anchors.end.title })];
   // SUN HALF MARATHON; the tap egg flips the TO text to HALBMARATHON with "(half marathon)" under it.
+  // The Sunday row knows the day (b3.8): SUN HALF MARATHON until Sunday, TODAY HALF MARATHON from Sunday 00:00
+  // Rome time, TODAY HALF MARATHON DONE from 18:00 (any finish and the lunch after are long past by then), SUN
+  // HALF MARATHON DONE from Monday. `?at=2026-10-18T09:00` and `?at=2026-10-18T18:30` preview it. The egg is as before.
+  const sundayState = () => {
+    const S = DEPC.sunday, t = nowMs(), from = Date.parse(S.todayFrom);
+    return { today: t >= from && t < from + 864e5, done: t >= Date.parse(S.doneFrom) };
+  };
   const sundayRow = (egg) => {
-    const S = DEPC.sunday;
-    const to = egg ? S.egg.to : S.to;
-    return { key: 'sunday', time: S.time, to, kind: 'sun', en: S.egg.en, enOn: !!egg, target: 'sunday', hitLabel: `${S.time}, ${to}` };
+    const S = DEPC.sunday, st = sundayState();
+    const time = st.today ? S.today : S.time;
+    const to = egg ? S.egg.to : st.done ? S.done : S.to;
+    return { key: 'sunday', time, to, kind: 'sun', en: S.egg.en, enOn: !!egg, target: 'sunday', hitLabel: `${time}, ${to}` };
   };
 
   // Her free text as a TBC row: her words on the board, cut at the last space that fits. Emoji and other
@@ -2890,6 +2898,9 @@
     const r = romeNow();
     const today = r.date === C.meta.date;
     if (HERO && HERO.rows[0].data) heroTick();
+    // The Sunday row turns to TODAY at midnight and to DONE at 18:00, with one quiet flip (b3.8).
+    const sun = DEP.board && DEP.board.sun;
+    if (sun && sun.data && !DEP.replay) { const d = sundayRow(DEP.sunEgg); if (d.time !== sun.data.time || d.to !== sun.data.to) flipRowNow(sun, d); }
     const items = $$('.plan-item');
     let nowEl = null;
     jumpEl = null;
