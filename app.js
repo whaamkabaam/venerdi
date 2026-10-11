@@ -1461,16 +1461,22 @@
     gsap.to([$('.stop-card', li), $('.swap', li)], { opacity: 0, duration: 0.14, ease: 'power1.in', onComplete: land });
   }
   // Remove: the card collapses (opacity first, then height over 220 ms); "Undo" holds its place for 6 s.
-  function removeStop(btn) {
+  // While one card collapses, and for half a second after the tap, no other Remove acts: a double
+  // click's second click lands on the next card's Remove as it slides up (v8 mechanics review F1).
+  let removing = false, removedAt = -Infinity;
+  function removeStop(btn, ev) {
     const li = btn.closest('.stop');
     // A second tap while the card collapses would remove the next stop too (mechanics F1).
-    if (li.dataset.out) return;
+    if (li.dataset.out || removing || (ev && ev.detail > 1) || performance.now() - removedAt < 500) return;
     const id = li.dataset.key;
     if (!picks.some((p) => p.id === id)) return;
     li.dataset.out = '1';
+    removing = true;
+    removedAt = performance.now();
     let prev = li.previousElementSibling;
     while (prev && !prev.matches('.plan-item')) prev = prev.previousElementSibling;
     const go = () => {
+      removing = false;
       const i = picks.findIndex((p) => p.id === id);
       if (i < 0) return;
       undoDrop();
@@ -1544,7 +1550,7 @@
     if (a === 'photos') openPeek(b, 'one', { id: b.dataset.id });
     else if (a === 'swap') toggleSwap(b);
     else if (a === 'use') useAlternative(b);
-    else if (a === 'remove') removeStop(b);
+    else if (a === 'remove') removeStop(b, e);
     else if (a === 'undo') undoRemove();
     else if (a === 'add') addPick(b.dataset.id, b.dataset.reason);
     else if (a === 'dinner') setDinner(b.dataset.id);
