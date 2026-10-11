@@ -2360,7 +2360,7 @@
           if (state === 'current' && m.state !== 'current') {
             this.svg.append(m.g); // paints on top
             if (reduced || !window.gsap) m.ring.style.strokeDashoffset = '0';
-            else gsap.fromTo(m.ring, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'power2.inOut', overwrite: true });
+            else gsap.fromTo(m.ring, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'power2.inOut', overwrite: true, autoRound: false }); // drawn, not snapped at its midpoint (B2 round 2)
           } else if (state !== 'current' && m.state === 'current') {
             if (window.gsap) gsap.killTweensOf(m.ring);
             m.ring.style.strokeDashoffset = '1';
