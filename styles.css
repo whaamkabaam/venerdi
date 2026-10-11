@@ -518,6 +518,8 @@ svg { display: block; }
 .hud-map .atlas-canvas { -webkit-mask-image: none; mask-image: none; }
 .atlas--pocket .mk { pointer-events: none; }
 .atlas--pocket .mk-ring, .atlas--pocket .mk-label, .atlas--pocket .mk-hit { display: none; }
+/* No pen ring in the pocket, so the current place sits on a small clear disc instead of a ring of sky (round 2). */
+.atlas--pocket .mk.is-current .mk-halo { fill: var(--mk-bg); stroke: none; }
 
 /* The whole map as a sheet: its title, "Rome in 1748", the map filling the rest. The map pans under a finger;
    the handle and the head still drag the sheet. */

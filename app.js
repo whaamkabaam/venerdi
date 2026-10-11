@@ -2010,6 +2010,24 @@
     performance.measure('nolli-night', 'nolli-night-start');
     return { bm: await bitmapOf(c), k: e.k };
   }
+  // The engraving's own edges dissolve over 90 px (170 m), once, as it arrives: a far view of a wide day shows the
+  // plan as a print fading into the sky, never a hard cut through the city (round 2: a day from the Gianicolo to
+  // Termini did not fit the laptop's column without zooming out past the engraving's edges).
+  const FEATHER = 90;
+  function featherOf(bm) {
+    performance.mark('nolli-feather-start');
+    const w = bm.width, h = bm.height, fx = (FEATHER * w) / NOL.w / w, fy = (FEATHER * w) / NOL.w / h;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.drawImage(bm, 0, 0);
+    x.globalCompositeOperation = 'destination-in';
+    const fade = (g, f) => { g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(f, '#000'); g.addColorStop(1 - f, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)'); return g; };
+    x.fillStyle = fade(x.createLinearGradient(0, 0, w, 0), fx); x.fillRect(0, 0, w, h);
+    x.fillStyle = fade(x.createLinearGradient(0, 0, 0, h), fy); x.fillRect(0, 0, w, h);
+    performance.measure('nolli-feather', 'nolli-feather-start');
+    bm.close?.();
+    return bitmapOf(c);
+  }
   const repaint = () => ATLASES.forEach((a) => a.paint());
   function loadNolli() {
     if (INK.ready) return INK.ready;
@@ -2017,6 +2035,7 @@
     INK.ready = fetch(url)
       .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.blob(); })
       .then((b) => bitmapOf(b))
+      .then(featherOf)
       .then((bm) => {
         INK.day = [{ bm, k: NOL.w / bm.width }];
         // The engraving comes in over 400 ms and the Tiber goes (at once with reduced motion).
@@ -2056,6 +2075,9 @@
       this.tw = null;
       this.vw = 0; this.vh = 0; this.dpr = 1;
       this.k = kind === 'pocket' ? 0.7 : 1;
+      // How far out the camera may go, as a share of the zoom at which the engraving covers the window: the laptop's
+      // tall column and the phone's sheet go furthest, so a day from St Peter's to Coppedè fits them whole.
+      this.coverK = { page: 0.55, sheet: 0.75, pocket: 0.85 }[kind];
       this.measure();
       if ('ResizeObserver' in window) new ResizeObserver(() => { if (this.measure()) this.settle(); }).observe(this.el);
       ATLASES.push(this);
@@ -2186,12 +2208,11 @@
       const s = Math.min(maxS, (this.vw - 2 * pad) / Math.max(1, x1 - x0), (this.vh - 2 * pad) / Math.max(1, y1 - y0));
       return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, s };
     }
-    // The plan never shrinks to a stamp, and the window runs past the engraving's own edge by at most the width of
-    // its feather (9 % of the window), so the engraving never ends in a hard line.
+    // The plan never shrinks to a stamp (coverK), and the window runs a little past the engraving's dissolving edge.
     cover(c) {
-      const min = Math.max(this.vw / NOL.w, this.vh / NOL.h) * 0.85;
+      const min = Math.max(this.vw / NOL.w, this.vh / NOL.h) * this.coverK;
       const s = Math.max(c.s, min);
-      const hx = this.vw / 2 / s, hy = this.vh / 2 / s, mx = hx * 0.18, my = hy * 0.18;
+      const hx = this.vw / 2 / s, hy = this.vh / 2 / s, mx = hx * 0.4, my = hy * 0.4;
       const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, v)));
       return { s, x: clamp(c.x, hx - mx, NOL.w - hx + mx), y: clamp(c.y, hy - my, NOL.h - hy + my) };
     }
@@ -2206,7 +2227,7 @@
       const from = { ...this.cam }, st = { p: 0 };
       const dist = Math.hypot(to.x - from.x, to.y - from.y) * from.s;
       const dip = Math.min(0.4, Math.max(0, (dist - this.vw * 0.5) / (this.vw * 3)));
-      const minS = Math.max(this.vw / NOL.w, this.vh / NOL.h) * 0.85;
+      const minS = Math.max(this.vw / NOL.w, this.vh / NOL.h) * this.coverK;
       this.el.classList.add('is-flying');
       this.tw = gsap.to(st, { p: 1, duration: dur, ease: 'power3.inOut', onUpdate: () => {
         const p = st.p;
