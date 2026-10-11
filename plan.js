@@ -1,7 +1,8 @@
 /* Venerdì day builder (v8): the loose sketch. Her picks go on the day in a rough order with rough
    times (always on :00 or :30), inside opening hours, sessions and fixed times, the bags block around
    15:00 and dinner around 19:00. Nothing is refused: what the plain timeline cannot hold is squeezed
-   in at a time it can happen, and the day then says it is full. Only something that cannot happen on
+   in at a time it can happen, and the day then says what overlaps (or, past six things, that it is
+   full). Only something that cannot happen on
    Friday at all (`fridayNo`) stays off the day. Her four answers (and the things she named) become
    picks with no caps and no fit test. Pure and deterministic; all copy comes from content.json.
    Loads in the page and in Node.
@@ -418,13 +419,24 @@
     const cardsOn = items.filter((it) => it.kind === 'option');
     const things = cardsOn.filter((it) => !it.option.lunch && !it.asLunch).length;
     const squeezed = cardsOn.filter((it) => it.squeezed).map((it) => it.id);
+    // The cards whose times overlap because one of them was squeezed in (v8 fold-in, gate F1): each
+    // squeezed card against the other cards, the plain lunch line and the bags block. Lunch ideas take
+    // no time. A squeeze that clashes with nothing (a snack a little soon after lunch) is not an overlap.
+    const timed = items.filter((it) => (it.kind === 'option' && !it.lunchIdea) || it.kind === 'lunch-filler' || it.id === 'bags');
+    const clash = new Set();
+    for (const q of timed) {
+      if (!q.squeezed) continue;
+      for (const o of timed) if (o !== q && q.start < o.end && o.start < q.end) { clash.add(q); clash.add(o); }
+    }
+    const overlaps = timed.filter((it) => clash.has(it)).map((it) => it.id || 'lunch');
     return {
       items,
       options: cardsOn.map((it) => it.option),
       didntFit: cant.map((o) => ({ option: o, code: 'fridayNo', why: o.fridayNo, reason: o.fridayNo })),
       squeezed,
       loose: cardsOn.filter((it) => it.loose).map((it) => it.id),
-      crowded: things > F.CROWDED || squeezed.length > 0,
+      crowded: things > F.CROWDED,
+      overlaps,
       things,
       lunchIdeas: cardsOn.filter((it) => it.lunchIdea).map((it) => it.id),
       picked,

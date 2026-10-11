@@ -321,6 +321,10 @@
   "day": {
     "title": "Your Friday",
     "crowded": "That's a full Friday, so we'll pick on the day.",
+    "overlap": {
+      "two": "Two of these overlap, so we'll pick on the day.",
+      "some": "Some of these overlap, so we'll pick on the day."
+    },
     "lunchChoice": "We'll only have one of these.",
     "cant": "{title}: {why}.",
     "changeAnswers": "Change answers",

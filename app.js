@@ -1380,9 +1380,12 @@
     const D = C.day;
     const body = slot('day-body');
     slot('change-answers').hidden = !answers;
-    // Under "Your Friday": the full-day line, and one line per pick that can't happen on Friday.
+    // Under "Your Friday": the full-day line (more than six things), else a line when cards overlap in
+    // time ("Two of these overlap", or "Some" for three or more), and one line per pick that can't
+    // happen on Friday.
     const lines = [];
     if (plan.crowded) lines.push(`<p class="day-crowded">${esc(D.crowded)}</p>`);
+    else if (plan.overlaps.length) lines.push(`<p class="day-crowded day-overlap">${esc(plan.overlaps.length === 2 ? D.overlap.two : D.overlap.some)}</p>`);
     plan.didntFit.forEach((d) => lines.push(`<p class="day-cant">${esc(fmt(D.cant, { title: d.option.title, why: d.why }))}</p>`));
     slot('day-lines').innerHTML = lines.join('');
     slot('day-lines').hidden = !lines.length;
