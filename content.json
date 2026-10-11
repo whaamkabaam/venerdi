@@ -62,7 +62,11 @@
             "from": "2026-10-16T08:10:00+02:00",
             "text": "LANDED"
           }
-        ]
+        ],
+        "tap": {
+          "remark": "SUNRISE 07:22",
+          "en": "sun's on the left"
+        }
       }
     ],
     "title": "Friday",
