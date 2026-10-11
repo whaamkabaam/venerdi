@@ -1918,5 +1918,84 @@
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sistine_Chapel_ceiling_03.jpg"
   }
+ },
+ "roscioli-counter": {
+  "src800": "img/roscioli-counter-800.webp",
+  "src1600": "img/roscioli-counter-1600.webp",
+  "w": 1600,
+  "h": 1525,
+  "alt": "The bread counter at Antico Forno Roscioli: shelves stacked with loaves and sweet breads, handwritten yellow price cards, and two bakers in white caps restocking from behind the glass",
+  "focal": "45% 50%",
+  "color": "#7c6037",
+  "credit": {
+   "title": "We tried our first pizza bianca at Antico Forno Marco Roscioli",
+   "author": "MollySVH",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/18472724@N00/5271055641"
+  }
+ },
+ "campo-market": {
+  "src800": "img/campo-market-800.webp",
+  "src1600": "img/campo-market-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "A fruit and vegetable stall at the Campo de' Fiori market: crates of lemons, artichokes, tomatoes and lettuces under the awnings, a stallholder in the middle and shoppers and café tables behind",
+  "focal": "45% 50%",
+  "color": "#7b6941",
+  "credit": {
+   "title": "Market scene - Campo de' Fiori - Rome, Italy - DSC01657",
+   "author": "Daderot",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Market_scene_-_Campo_de%27_Fiori_-_Rome,_Italy_-_DSC01657.jpg"
+  }
+ },
+ "pasta-class": {
+  "src800": "img/pasta-class-800.webp",
+  "src1600": "img/pasta-class-1600.webp",
+  "w": 1600,
+  "h": 900,
+  "alt": "A pasta class around a marble table: two eggs cracked into a well of flour, hands resting on the table edge from every side, waiting to start",
+  "focal": "45% 50%",
+  "color": "#a69e91",
+  "credit": {
+   "title": "Cooking Classes in Rome",
+   "author": "leighklotz",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/7417392@N05/41092382544"
+  }
+ },
+ "sant-eustachio-night": {
+  "src800": "img/sant-eustachio-night-800.webp",
+  "src1600": "img/sant-eustachio-night-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Sant'Eustachio at night: the blue neon script sign over the open front, a big wall clock inside, and a crowd standing at the counter",
+  "focal": "50% 60%",
+  "color": "#383a3b",
+  "credit": {
+   "title": "Caffè Sant Eustacchio",
+   "author": "Jerry Michalski",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Caff%C3%A8_Sant_Eustacchio.jpg"
+  }
+ },
+ "roman-bar-counter": {
+  "src800": "img/roman-bar-counter-800.webp",
+  "src1600": "img/roman-bar-counter-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The counter of a Roman coffee bar: a chrome three-handle espresso machine with cups stacked on top to warm and a grinder full of beans beside it",
+  "color": "#776a60",
+  "credit": {
+   "title": "Espresso machine and counter of a coffee bar in Rome",
+   "author": "Wilfredor",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Espresso_machine_and_counter_of_a_coffee_bar_in_Rome.jpg"
+  }
  }
 }

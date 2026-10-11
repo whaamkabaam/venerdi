@@ -138,13 +138,13 @@
             "id": "pastry",
             "label": "Pastries and coffee",
             "sub": "A maritozzo, the Ghetto bakery, coffee by the Pantheon",
-            "photoOf": "maritozzo"
+            "photo": "roscioli-counter"
           },
           {
             "id": "street",
             "label": "Street food",
             "sub": "Supplì, a food market, gelato that isn't too sweet",
-            "photoOf": "suppli"
+            "photo": "campo-market"
           },
           {
             "id": "lunch",
@@ -1620,8 +1620,8 @@
         "to": "MARITOZZO"
       },
       "photos": [
-        "maritozzo",
-        "maritozzo-3"
+        "roman-bar-counter",
+        "maritozzo"
       ],
       "area": "esquilino",
       "lat": 41.89486,
@@ -1662,8 +1662,8 @@
         "to": "SANT'EUSTACHIO"
       },
       "photos": [
-        "coffee-1",
-        "sant-eustachio"
+        "sant-eustachio-night",
+        "coffee-1"
       ],
       "area": "centro",
       "lat": 41.89825,
@@ -1703,8 +1703,8 @@
         "to": "BOCCIONE"
       },
       "photos": [
-        "boccione-1",
-        "boccione-2"
+        "boccione-2",
+        "boccione-1"
       ],
       "area": "centro",
       "lat": 41.89323,
@@ -1744,8 +1744,8 @@
         "to": "INNOCENTI"
       },
       "photos": [
-        "innocenti-1",
-        "innocenti-2"
+        "innocenti-2",
+        "innocenti-1"
       ],
       "area": "trastevere",
       "lat": 41.88856,
@@ -1832,8 +1832,8 @@
         "to": "SUPPLI"
       },
       "photos": [
-        "suppli-1",
-        "suppli-2"
+        "suppli-2",
+        "suppli-1"
       ],
       "area": "centro",
       "lat": 41.89745,
@@ -1879,8 +1879,8 @@
         "to": "TRAPIZZINO"
       },
       "photos": [
-        "trapizzino",
-        "trapizzino-2"
+        "trapizzino-2",
+        "trapizzino"
       ],
       "area": "trastevere",
       "lat": 41.89146,
@@ -2067,8 +2067,8 @@
         "to": "PASTA CLASS"
       },
       "photos": [
-        "pasta",
-        "pasta-2"
+        "pasta-class",
+        "pasta"
       ],
       "area": "centro",
       "lat": 41.90092,
