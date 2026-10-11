@@ -1,7 +1,8 @@
-/* Venerdì v7: four photo questions compose a calm Friday inside the day's frame (the bags, the flat,
-   dinner at 19:00), played back on a DEPARTURES board, then shown as story cards she can swap,
-   remove and add to. Behind every choice, one tap away, a peek: the things in it, in photos, and a
-   toggle to ask for one by name (the first one she names is the one the day is planned around).
+/* Venerdì v8: Friday ideas, not a plan. Four photo questions turn into a loose sketch of her day
+   (everything she picks goes on it at a rough time, inside the frame: the bags around 3, dinner
+   around 7), played back on a DEPARTURES board (times and places only), then shown as story cards
+   she can swap, remove and add to, with three dinner ideas on the evening card. Behind every choice,
+   one tap away, a peek: the things in it, in photos, and a toggle to ask for one by name.
    Renders from window.SITE (data.js) and plan.js (the composer and the day builder), then wires the
    boards, the sky, HUD, map, persistence and sharing. Every visible string comes from content.json. */
 (() => {
@@ -18,17 +19,26 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const slot = (name) => $(`[data-slot="${name}"]`);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const KEY = 'venerdi:v7:';
+  const KEY = 'venerdi:v8:';
   const store = {
     get(k, d) { try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
     set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch { /* private mode */ } },
   };
-  // A v6 visitor's answers are read once (nothing else): her day is composed again from them, because
-  // a v6 day was built for a busier Friday (spec 4.5).
+  // Once (spec 9.4, AM18): a v7 visitor's answers and note come over (a v6 visitor's answers when there
+  // are no v7 ones), and her day is composed again, because a v7 day was cut by the calmer caps. The
+  // things she added from the catalogue in v7 are kept here and go back on after the compose.
+  let carried = [];
   try {
     if (localStorage.getItem(KEY + 'migrated') === null) {
-      const old = localStorage.getItem('venerdi:v6:answers');
-      if (old !== null && localStorage.getItem(KEY + 'answers') === null) localStorage.setItem(KEY + 'answers', old);
+      const v7 = localStorage.getItem('venerdi:v7:answers');
+      const old = v7 !== null && v7 !== 'null' ? v7 : localStorage.getItem('venerdi:v6:answers');
+      if (old !== null && localStorage.getItem(KEY + 'answers') === null) {
+        localStorage.setItem(KEY + 'answers', old);
+        const note = localStorage.getItem('venerdi:v7:note');
+        if (v7 !== null && note !== null) localStorage.setItem(KEY + 'note', note);
+        const v7picks = v7 !== null ? JSON.parse(localStorage.getItem('venerdi:v7:picks') || 'null') : null;
+        carried = (Array.isArray(v7picks) ? v7picks : []).filter((p) => p && p.reason === 'added').map((p) => p.id);
+      }
       localStorage.setItem(KEY + 'migrated', '1');
     }
   } catch { /* private mode */ }
@@ -37,6 +47,9 @@
   const WHY = C.pickReasons;
   const PK = C.peek;
   const reasonLabel = (r) => (WHY[r] || WHY.added).label;
+  // The three dinner ideas (spec 4): she picks one, or none.
+  const IDEAS = C.dinners.ideas;
+  const IDEA = Object.fromEntries(IDEAS.map((d) => [d.id, d]));
   // Haptics (web-haptics): a tick on a tile or a toggle, a firmer one on Show me Friday. Called inside the tap.
   const haptics = window.WebHaptics ? new window.WebHaptics() : null;
   const buzz = (p) => { try { haptics?.trigger(p)?.catch?.(() => {}); } catch { /* no haptics here */ } };
@@ -77,8 +90,6 @@
   /* ------------------------------------------------------------------ */
 
   const newTab = `<span class="sr-only"> (${esc(U.newTab)})</span>`;
-  const linkBtn = (href, label, ctx, cls = 'btn btn--small') =>
-    `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)}${ctx ? `<span class="sr-only">: ${esc(ctx)}</span>` : ''}${newTab}${ICON.out}</a>`;
   // Photos are decorative unless `alt` is set (the title next to them says what they are).
   // Missing photos keep a quiet colour block.
   function thumbHTML(key, cls, sizes, extra = '', { alt = false, loading = 'lazy' } = {}) {
@@ -136,34 +147,36 @@
   /* Boards: ARRIVALS (hero) and DEPARTURES share one row model          */
   /* ------------------------------------------------------------------ */
 
-  // A row's data: { time, to, remark, kind, key, target, label, en }. Columns: time | to (who) | remark.
-  const KINDS = ['is-pick', 'is-drop', 'is-anchor', 'is-tbc', 'is-sun', 'is-you', 'is-live'];
+  // A row's data: { time, to, remark, kind, key, target, label, en }. ARRIVALS has three columns
+  // (time | who | status); DEPARTURES has two (time | to), its egg caption under the TO cells.
+  const KINDS = ['is-pick', 'is-anchor', 'is-tbc', 'is-sun', 'is-you'];
+  const cellHTML = (cls, n, en = '') => `<span class="c c--${cls}" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(n)}</span>${en}</span>`;
+  const EN = '<span class="note-en" aria-hidden="true"></span>';
   const rowHTML = (w) => `<div class="board-row" role="row">
-      <span class="c c--time" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(w[0])}</span></span>
-      <span class="c c--who" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(w[1])}</span></span>
-      <span class="c c--note" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(w[2])}</span><span class="note-en" aria-hidden="true"></span></span>
+      ${cellHTML('time', w[0])}${w.length > 2 ? cellHTML('who', w[1]) + cellHTML('note', w[2], EN) : cellHTML('who', w[1], EN)}
       <button type="button" class="board-hit" hidden></button>
     </div>`;
   function rowModel(el, widths) {
     return {
       el, widths,
       cols: $$('.cells', el).map((c) => [...c.children].map(flapOf)),
-      srs: [...el.children].slice(0, 3).map((c) => c.firstElementChild),
+      srs: [...el.children].slice(0, widths.length).map((c) => c.firstElementChild),
       en: $('.note-en', el),
       hit: $('.board-hit', el),
-      shown: ['', '', ''],
+      shown: widths.map(() => ''),
       data: null,
       tls: [],
     };
   }
   function makeBoard(host, { title, sub, label, columns, widths, rows, sun = false }) {
     const cls = ['time', 'who', 'note'];
+    const two = widths.length === 2;
     host.innerHTML = `<div class="board">
       <div class="board-head"><p class="board-title">${esc(title)}</p><p class="board-sub label">${esc(sub)}</p></div>
-      <div class="board-grid" role="table" aria-label="${esc(label)}" style="--n1:${widths[0]};--n2:${widths[1]};--n3:${widths[2]};--nw:${Math.max(widths[1], widths[2])}">
+      <div class="board-grid${two ? ' board-grid--two' : ''}" role="table" aria-label="${esc(label)}" style="--n1:${widths[0]};--n2:${widths[1]};--n3:${widths[2] || 0};--nw:${Math.max(widths[1], widths[2] || 0)}">
         <div class="board-colheads" role="row">${columns.map((c, i) => `<span class="ch c--${cls[i]} label" role="columnheader">${esc(c)}</span>`).join('')}</div>
         <div class="board-rows" role="rowgroup"></div>
-        ${sun ? `<div class="dep-gap" aria-hidden="true"></div><div class="board-sun" role="rowgroup">${rowHTML(widths)}</div><div class="board-parked" role="rowgroup"></div>` : ''}
+        ${sun ? `<div class="dep-gap" aria-hidden="true"></div><div class="board-sun" role="rowgroup">${rowHTML(widths)}</div>` : ''}
       </div>
     </div>`;
     const B = { host, widths, rows: [], rowsEl: $('.board-rows', host) };
@@ -171,32 +184,23 @@
       while (B.rows.length < n) { B.rowsEl.insertAdjacentHTML('beforeend', rowHTML(widths)); B.rows.push(rowModel(B.rowsEl.lastElementChild, widths)); }
       while (B.rows.length > n) { const r = B.rows.pop(); r.tls.forEach((t) => t.kill()); r.el.remove(); }
     };
-    if (sun) {
-      B.sun = rowModel($('.board-sun .board-row', host), widths);
-      // Under the Sunday row: one dim row per answer that did not fit (at most three).
-      B.parked = [];
-      const parkedEl = $('.board-parked', host);
-      B.ensureParked = (n) => {
-        while (B.parked.length < n) { parkedEl.insertAdjacentHTML('beforeend', rowHTML(widths)); B.parked.push(rowModel(parkedEl.lastElementChild, widths)); }
-        while (B.parked.length > n) { const r = B.parked.pop(); r.tls.forEach((t) => t.kill()); r.el.remove(); }
-      };
-    }
+    if (sun) B.sun = rowModel($('.board-sun .board-row', host), widths);
     B.ensure(rows);
     return B;
   }
-  const rowTexts = (d, w) => (d ? [d.time, d.to, d.remark] : ['', '', '']).map((t, c) => boardText(t, w[c]));
+  const rowTexts = (d, w) => w.map((n, c) => boardText(d ? [d.time, d.to, d.remark][c] : '', n));
   // Classes, screen-reader text, the tap target and the caption follow the row's data.
   function applyRowMeta(row, d) {
     row.data = d;
     KINDS.forEach((k) => row.el.classList.remove(k));
     if (d && d.kind) row.el.classList.add('is-' + d.kind);
-    if (d && d.live) row.el.classList.add('is-live');
     // A row with nothing on it (the spare one kept for her TBC line): the board shows plain black there.
     row.el.classList.toggle('is-empty', !d);
     const t = rowTexts(d, row.widths);
+    const caption = d && d.en && d.enOn ? ` ${d.en}` : '';
     row.srs[0].textContent = d ? (d.srTime ?? d.time ?? '') : '';
-    row.srs[1].textContent = d ? (d.label || d.to || '') : '';
-    row.srs[2].textContent = d ? (d.srRemark || d.remark || '') + (d.en && d.enOn ? ` ${d.en}` : '') : '';
+    row.srs[1].textContent = d ? (d.label || d.to || '') + (row.srs.length > 2 ? '' : caption) : '';
+    if (row.srs[2]) row.srs[2].textContent = d ? (d.remark || '') + caption : '';
     row.en.textContent = d && d.en ? d.en : '';
     row.en.classList.toggle('is-on', !!(d && d.enOn));
     const hasTarget = !!(d && d.target);
@@ -227,7 +231,7 @@
       row.shown[c] = next;
     });
   }
-  // A single quiet flip of one row, outside any replay (live statuses, eggs, chips of thought).
+  // A single quiet flip of one row, outside any replay (live statuses, eggs).
   function flipRowNow(row, d, opts = { scramble: 0, D: 0.07, stagger: 0.02 }) {
     if (reduced) { setRowNow(row, d); return; }
     const tl = gsap.timeline({ onComplete: () => { row.tls = row.tls.filter((x) => x !== tl); } });
@@ -236,7 +240,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* ARRIVALS: live statuses and the SUNRISE egg                         */
+  /* ARRIVALS: live statuses (a row's tap egg, if content gives it one)  */
   /* ------------------------------------------------------------------ */
 
   const H = C.hero;
@@ -403,9 +407,6 @@
     c.wantFrom = Object.fromEntries(Object.entries(c.wantFrom || {}).filter(([id, r]) => c.want.includes(id) && vibesOf(c).includes(r) && serves(OPT[id], r)));
     return c;
   };
-  // The must-do (spec 3.1): the first thing she named. Every build, Swap and Room offer keeps it.
-  const keepOf = () => (answers ? P.mustOf(C, answers) : null);
-
   // `draft` is what the open stage shows; `answers` (below) only changes on Show me Friday.
   const stage = { step: 0, open: true, draft: emptyAnswers(), tl: null, count: [], busy: false };
 
@@ -654,14 +655,15 @@
 
   let answers = null;      // her answers as of the last Show me Friday (null until then)
   let picks = [];          // [{ id, reason }]: the order the board fills in; the replay and the link keep it
+  let dinner = null;       // the dinner idea she picked (an id of C.dinners.ideas), or null for none
   let freeText = '';
   let fromLink = false;
   let plan = null;
   let hasBackup = false;
   const pickIds = () => picks.map((p) => p.id);
   const cleanPicks = (list) => (Array.isArray(list) ? list : []).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
-  // What the answers compose to (kept while the answers stay the same): the build a full replay
-  // shows, and the answers that went to extras.
+  const cleanDinner = (id) => (typeof id === 'string' && IDEA[id] ? id : null);
+  // What the answers compose to (kept while the answers stay the same): the build a full replay shows.
   let composedMemo = { key: null, res: null };
   const composed = () => {
     const key = JSON.stringify(answers);
@@ -669,18 +671,8 @@
     return composedMemo.res;
   };
   const composedIds = () => composed().picks.map((p) => p.id);
-  // "Room for one more?" as it stands (worked out once per update).
+  // "More ideas" as it stands (worked out once per update).
   let roomNow = [];
-  // Answers that went to extras and still have no stop of their own, in the order she answered. A
-  // thing she named counts as parked until that thing itself is on the day.
-  function parkedNow() {
-    if (!answers) return [];
-    const at = (e) => { for (const [i, s] of STEPS.entries()) { const k = s.multi ? chosen(answers, s).indexOf(e.reason) : s.id === e.reason ? 0 : -1; if (k >= 0) return i * 10 + k; } return 99; };
-    return composed().extras.filter((e) => !picks.some((p) => p.id === e.id || (!e.want && p.reason === e.reason))).sort((a, b) => at(a) - at(b));
-  }
-  // "Also on your list: The weird stuff, Bone crypt, Noon cannon.": a parked sight or food by its label; a
-  // named thing, her area and her wild card by the place's title, as the board's dim rows name them.
-  const parkedLabels = () => parkedNow().map((e) => (e.want || e.reason === 'wander' || e.reason === 'wild' ? OPT[e.id].title : reasonLabel(e.reason))).join(U.listJoin);
 
   // Her answers in the link: one group per step, joined by "-": the pick-any steps as their
   // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped. A
@@ -689,8 +681,8 @@
   // (an id with no letter, as in links from before, goes to the first answer it serves).
   const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (s.multi ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-')
     + (a.want?.length ? `-${a.want.map((id) => (WHY[P.wantReason(OPT[id], a)]?.code || '') + id).join('.')}` : '');
-  // A link without `v=7` is from v6: its pick-one steps hold positions in v6's tile lists, read through
-  // these frozen tables. A v6 tile that is gone (the Appian Way, the film fest, the Domus) reads as none.
+  // A link without `v=7` or `v=8` is from v6: its pick-one steps hold positions in v6's tile lists, read
+  // through these frozen tables (v7 and v8 share their tile lists, so they decode the same way). A v6 tile that is gone (the Appian Way, the film fest, the Domus) reads as none.
   const V6_TILES = {
     wander: ['trastevere', 'centre', 'aventine', 'appia', 'acquedotti', 'coppede', 'monti', 'ghetto'],
     wild: ['circovr', 'filmfest', 'domus', 'cannon', 'circusjog', 'coronati'],
@@ -738,7 +730,7 @@
     if (q.has('p') || q.has('a')) {
       const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
       const codes = Array.from(q.get('r') || '');
-      let linkAnswers = q.has('a') ? decodeAnswers(q.get('a'), { v6: q.get('v') !== '7' }) : null;
+      let linkAnswers = q.has('a') ? decodeAnswers(q.get('a'), { v6: !['7', '8'].includes(q.get('v')) }) : null;
       // A link with answers but no picks composes them here, and so does a link whose picks name a
       // place this page no longer has (a v6 link with the Colosseum, say): its day comes from its answers.
       const linkIds = q.has('p') ? q.get('p').split(',').map((s) => s.trim()) : [];
@@ -749,19 +741,21 @@
         linkPicks = cleanPicks(P.compose(C, linkAnswers).picks);
       }
       const linkNote = q.get('n') || '';
-      // Keep her own day before adopting the link's, so "Back to my picks" can restore it.
-      const saved = store.get('picks', null), savedNote = store.get('note', '');
+      const linkDinner = cleanDinner(q.get('d'));
+      // Keep her own day (and her dinner pick) before adopting the link's, so "Back to my picks" can restore it.
+      const saved = store.get('picks', null), savedNote = store.get('note', ''), savedDinner = cleanDinner(store.get('dinner', null));
       const ids = (list) => list.map((p) => p.id).sort().join();
-      const same = Array.isArray(saved) && ids(saved) === ids(linkPicks) && savedNote === linkNote;
+      const same = Array.isArray(saved) && ids(saved) === ids(linkPicks) && savedNote === linkNote && savedDinner === linkDinner;
       // The same link opened again (from the chat a second time): the day kept from the first time stays.
       if (same && store.get('fromLink', false)) hasBackup = !!store.get('before-link', null);
       else {
         hasBackup = Array.isArray(saved) && !same;
-        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null) } : null);
+        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null), dinner: savedDinner } : null);
       }
       picks = linkPicks;
       answers = linkAnswers || answersFrom(linkPicks);
       freeText = linkNote;
+      dinner = linkDinner;
       fromLink = true;
       saveState();
       // A link always replays its build in order, whatever this phone has seen before.
@@ -775,13 +769,18 @@
     answers = store.get('answers', null);
     if (answers) answers = cleanAnswers(answers);
     freeText = store.get('note', '');
+    dinner = cleanDinner(store.get('dinner', null));
     // Someone's link, opened earlier: the note and "Back to my picks" stay until the day changes.
     fromLink = !!store.get('fromLink', false);
     hasBackup = fromLink && !!store.get('before-link', null);
-    // Answers with no day yet (read over from v6): compose it.
-    if (answers && store.get('picks', null) === null) { picks = cleanPicks(P.compose(C, answers).picks); saveState(); }
+    // Answers with no day yet (read over from v7 or v6): compose it, then put back what she added in v7.
+    if (answers && store.get('picks', null) === null) {
+      picks = cleanPicks(P.compose(C, answers).picks);
+      carried.forEach((id) => { if (OPT[id] && !OPT[id].fridayNo && !picks.some((p) => p.id === id)) picks.push({ id, reason: 'added' }); });
+      saveState();
+    }
   }
-  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('fromLink', fromLink); }
+  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('fromLink', fromLink); }
 
   function backToMine() {
     const b = store.get('before-link', null);
@@ -789,6 +788,7 @@
     picks = cleanPicks(b.picks);
     answers = b.answers ? cleanAnswers(b.answers) : null;
     freeText = b.note || '';
+    dinner = cleanDinner(b.dinner);
     slot('free-text').value = freeText;
     fromLink = false;
     hasBackup = false;
@@ -800,8 +800,9 @@
   }
 
   // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids, in board
-  // order) last, and ! ' ( ) * . are encoded too. `r` has one letter per pick: the answer it came from.
-  // The link carries a capped copy of the note.
+  // order) last, and ! ' ( ) * . are encoded too. `r` has one letter per pick: the answer it came from;
+  // `d` is her dinner pick (absent for none), before `p` so a cut never loses it. The link carries a
+  // capped copy of the note.
   const NOTE_LINK_MAX = 1000;
   const encodeNote = (s) => encodeURIComponent(s).replace(/[!'()*.]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
   function linkURL() {
@@ -809,17 +810,17 @@
     const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
     const a = answers ? encodeAnswers(answers) : null;
     const r = picks.map((p) => (WHY[p.reason] || WHY.added).code).join('');
-    return `${base}?v=7&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}p=${pickIds().join(',')}`;
+    return `${base}?v=8&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
   }
-  // A mini timetable: "10:00 Maritozzo" per stop, what did not fit, then her line, then the link.
+  // A mini timetable: "10:00 Maritozzo" per card on her day (at its rough time), her dinner pick, then
+  // her line, then the link. No prices. Something that can't happen on Friday has no card, so no line.
   function shareText() {
     const stops = plan.items.filter((it) => it.kind === 'option').map((it) => `${it.rough} ${it.option.title}`);
     const note = freeText.trim();
     // Only a note: send the note and the link, without the timetable frame.
     if (!stops.length) return [note, linkURL()].filter(Boolean).join('\n');
     const lines = [C.send.shareIntro, ...stops];
-    const parked = parkedLabels();
-    if (parked) lines.push(fmt(C.send.shareParked, { list: parked }));
+    if (dinner) lines.push(fmt(C.send.shareDinner, { time: C.anchors.dinner.time, title: IDEA[dinner].title }));
     if (note) lines.push(`${C.send.shareExtra} ${note}`);
     lines.push(linkURL());
     return lines.join('\n');
@@ -847,95 +848,102 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* DEPARTURES: rows, the replay, live remarks, eggs                    */
+  /* DEPARTURES: rows (times and places only), the replay, the eggs     */
   /* ------------------------------------------------------------------ */
 
-  const DW = [5, 20, 20];
+  // Two columns, TIME and TO (spec 6.2). TO gets 20 cells while the board is phone-narrow and 30 once
+  // its grid is 560 px or wider (the container breakpoint the CSS uses), so the flaps stay about 10.7 px
+  // on a phone and about 21 px on a laptop. `DW` follows the board's width (renderDepBoard, resizes).
+  const DEP_WIDE = 560;
+  let DW = [5, 20];
   const R = DEPC.rows;
-  const anchorRow = (key, extra = {}) => ({ key, time: R[key].time, to: R[key].to, remark: R[key].remark, kind: 'anchor', ...extra });
-  // The bags row: the time comes from the plan (around when we get the bags from the hostel).
-  const bagsRow = (it) => ({ key: 'bags', time: it.rough, to: R.bags.to, remark: R.bags.remark, kind: 'anchor', target: 'bags', label: C.anchors.bags.title });
-  // Before her picks land, the board shows the day's frame: coffee, the bags, dinner, the early night.
-  const skeletonRows = () => [anchorRow('coffee'), bagsRow(P.build(C, []).items.find((it) => it.id === 'bags')), anchorRow('dinner'), anchorRow('end')];
+  const anchorRow = (key, extra = {}) => ({ key, time: R[key].time, to: R[key].to, kind: 'anchor', ...extra });
+  // The bags row: the time comes from the plan.
+  const bagsRow = (it) => ({ key: 'bags', time: it.rough, to: R.bags.to, kind: 'anchor', target: 'bags', label: C.anchors.bags.title });
+  // 19:00 DINNER, or the idea she picked (LI RIONI, DA REMO, DA IVO).
+  const dinnerRow = () => anchorRow('dinner', { to: dinner ? IDEA[dinner].board : R.dinner.to, target: 'dinner', label: dinner ? IDEA[dinner].title : C.anchors.dinner.title });
+  // Before her picks land, the board shows the day's frame: the bags, dinner, the early night.
+  const skeletonRows = () => [bagsRow(P.build(C, []).items.find((it) => it.id === 'bags')), dinnerRow(), anchorRow('end', { target: 'end', label: C.anchors.end.title })];
+  // SUN HALF MARATHON; the tap egg flips the TO text to HALBMARATHON with "(half marathon)" under it.
   const sundayRow = (egg) => {
     const S = DEPC.sunday;
-    return { key: 'sunday', time: S.time, to: S.to, remark: egg ? S.egg.remark : S.remark, kind: 'sun', en: S.egg.en, enOn: !!egg, target: 'sunday', hitLabel: `${S.to}, ${egg ? S.egg.remark : S.remark}` };
+    const to = egg ? S.egg.to : S.to;
+    return { key: 'sunday', time: S.time, to, kind: 'sun', en: S.egg.en, enOn: !!egg, target: 'sunday', hitLabel: `${S.time}, ${to}` };
   };
-  const dropRemark = (d) => fmt(DEPC.drop.reasons[d.code] || '', d.vars || {});
 
-  // Whole-word, case-insensitive keyword match ("nap" matches "a nap", not "napoli").
-  const escRe = (w) => w.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
-  const wordRe = (w) => new RegExp('(^|[^\\p{L}])' + escRe(w.toLowerCase()) + '($|[^\\p{L}])', 'u');
-  // Her free text as a TBC row: her words on the board, and a dry answer when a keyword matches.
+  // Her free text as a TBC row: her words on the board, cut at the last space that fits. Emoji and other
+  // glyphs a flap lacks drop out and the spaces around them collapse (a single long word is cut hard).
   function tbcRow() {
     const text = freeText.trim();
     if (!text) return null;
-    const lower = text.toLowerCase();
-    // Emoji and other glyphs a flap lacks drop out and the spaces around them collapse. A long line
-    // breaks at the last space that fits (a single long word is cut hard).
     const all = boardText(text, text.length).replace(/ +/g, ' ').trim();
     let to = all;
     if (all.length > DW[1]) { const cut = all.lastIndexOf(' ', DW[1]); to = cut > 0 ? all.slice(0, cut) : all.slice(0, DW[1]); }
-    // Every keyword in her line, by where it stands: one the board shows wins, else the earliest.
-    const found = [];
-    DEPC.tbc.keywords.forEach((k) => k.words.forEach((w) => { const m = wordRe(w).exec(lower); if (m) found.push({ k, w, at: m.index }); }));
-    found.sort((a, b) => a.at - b.at);
-    const best = found.find((f) => wordRe(f.w).test(to.toLowerCase())) || found[0];
-    const hit = best ? best.k : null, word = best ? best.w : null;
-    // The reply answers a word: if that word is past what the board shows, the word itself goes up.
-    if (hit && !wordRe(word).test(to.toLowerCase())) to = boardText(word, DW[1]);
-    return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.blank, remark: hit ? hit.remark : DEPC.tbc.remark, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
+    return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.blank, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
   }
 
-  // The board for a plan: coffee, the daytime stops, the bags, the evening stops, her TBC line,
-  // dinner, the early night, then what didn't fit.
-  function depRows(pl, { tbc = tbcRow(), live = true } = {}) {
-    const rows = [anchorRow('coffee', { target: 'arrival', label: R.coffee.to })];
+  // The board for a plan: every card of the day in display order (the plain lunch line as LUNCH), the
+  // bags, her TBC line, dinner, the early night. Something that can't happen on Friday gets no row.
+  function depRows(pl, { tbc = tbcRow() } = {}) {
+    const rows = [];
     for (const it of pl.items) {
-      if (it.kind === 'lunch-filler') rows.push({ key: 'lunch', time: it.rough, to: R.lunch.to, remark: R.lunch.remark, kind: 'anchor', target: 'lunch', label: C.day.noLunch });
+      if (it.kind === 'lunch-filler') rows.push({ key: 'lunch', time: it.rough, to: R.lunch.to, kind: 'anchor', target: 'lunch', label: C.day.noLunch });
       else if (it.kind === 'anchor' && it.id === 'bags') rows.push(bagsRow(it));
-      else if (it.kind === 'option') rows.push({ key: it.id, time: it.rough, to: it.option.board.to, remark: it.secondBreakfast ? DEPC.secondBreakfast : it.option.board.remark, kind: 'pick', target: it.id, label: it.option.title });
+      // SECOND BREAKFAST keeps the option's title as its label, so the row's tap label names the place (AM19).
+      else if (it.kind === 'option') rows.push({ key: it.id, time: it.rough, to: it.secondBreakfast ? DEPC.secondBreakfast : it.option.board.to, kind: 'pick', target: it.id, label: it.option.title });
       else if (it.kind === 'anchor' && it.id === 'dinner') {
         if (tbc) rows.push(tbc);
-        rows.push(anchorRow('dinner', { target: 'dinner', label: C.anchors.dinner.title }));
+        rows.push(dinnerRow());
       } else if (it.kind === 'anchor' && it.id === 'end') {
         rows.push(anchorRow('end', { target: 'end', label: C.anchors.end.title }));
       }
     }
-    for (const d of pl.didntFit) rows.push({ key: 'x-' + d.option.id, time: DEPC.drop.time, to: d.option.board.to, remark: dropRemark(d), kind: 'drop', label: d.option.title, srTime: '', srRemark: d.reason });
-    // On the day, remarks become status by the clock: DEPARTED for past rows, BOARDING for the current one.
-    if (live && isToday()) {
-      const now = romeNow().min;
-      const timed = rows.filter((r) => /^\d\d:\d\d$/.test(r.time) && r.kind !== 'drop');
-      let current = null;
-      timed.forEach((r) => { if (toMin(r.time) <= now) current = r; });
-      timed.forEach((r) => {
-        if (!current) return;
-        if (r === current) Object.assign(r, { remark: DEPC.live.boarding, live: true });
-        else if (toMin(r.time) < toMin(current.time) || (toMin(r.time) === toMin(current.time) && timed.indexOf(r) < timed.indexOf(current))) Object.assign(r, { remark: DEPC.live.departed, live: true });
-      });
-    }
     return rows;
   }
 
-  // Her parked answers on the board, in the drop-row grammar: STANDBY when "Room for one more?"
-  // offers it back now, ANOTHER DAY when it does not fit the day as it stands.
-  const parkedRows = () => parkedNow().slice(0, 3).map((e) => {
-    const o = OPT[e.id];
-    const remark = roomNow.some((s) => s.id === e.id) ? DEPC.drop.reasons.standby : DEPC.drop.reasons.parked;
-    return { key: 'p-' + e.id, time: DEPC.drop.time, to: o.board.to, remark, kind: 'drop', label: o.title, srTime: '' };
-  });
   const DEP = { board: null, replay: null, seen: store.get('depSeen', null), sunEgg: false, shown: [], pending: false, sunPending: false, stats: null };
-  const depSig = () => `${pickIds().join(',')}|${freeText.trim()}`;
-  const plainRows = (rows) => rows.map((r) => (r ? { time: r.time, to: r.to, remark: r.remark, kind: r.kind } : null));
+  const depSig = () => `${pickIds().join(',')}|${dinner || ''}|${freeText.trim()}`;
+  const plainRows = (rows) => rows.map((r) => (r ? { time: r.time, to: r.to, kind: r.kind } : null));
   const sameRows = (a, b) => JSON.stringify(plainRows(a)) === JSON.stringify(plainRows(b));
   const gapEl = () => $('.dep-gap', DEP.board.host);
 
+  // The TO width the board wants at its current size (the grid's own width, as the container query reads it).
+  const depCells = () => {
+    const grid = DEP.board && $('.board-grid', DEP.board.host);
+    return grid && grid.clientWidth >= DEP_WIDE ? 30 : 20;
+  };
   function renderDepBoard() {
-    DEP.board = makeBoard(slot('dep-board'), {
-      title: DEPC.title, sub: DEPC.sub, label: `${DEPC.title}, ${DEPC.sub}`,
-      columns: DEPC.columns, widths: DW, rows: 0, sun: true,
-    });
+    const build = () => {
+      DEP.board = makeBoard(slot('dep-board'), {
+        title: DEPC.title, sub: DEPC.sub, label: `${DEPC.title}, ${DEPC.sub}`,
+        columns: DEPC.columns, widths: DW, rows: 0, sun: true,
+      });
+    };
+    build();
+    const want = depCells();
+    if (want !== DW[1]) { DW = [5, want]; build(); }
+  }
+  // When the board crosses the breakpoint (a rotated phone, a resized window), it is built again with
+  // the other cell count and shows its final rows at once (no replay).
+  function resizeDepBoard() {
+    if (!DEP.board) return;
+    const want = depCells();
+    if (want === DW[1]) return;
+    const r = DEP.replay;
+    stopReplay();
+    const n = DEP.board.rows.length;
+    DW = [5, want];
+    renderDepBoard();
+    if (r && r.done) r.done();
+    if (!plan) return;
+    const finalRows = depRows(plan);
+    DEP.board.ensure(Math.max(n, finalRows.length + spare()));
+    setBoardNow(finalRows);
+    setSunNow(true);
+    DEP.sunPending = false;
+    DEP.pending = false;
+    markSeen(r && r.fullPicks);
+    refreshSoon();
   }
   // Before she plans, the page is the Arrivals board, the note and the questions. Her first Show me
   // Friday (or a link, or a day kept from an earlier visit) shows the rest and builds the board.
@@ -946,11 +954,15 @@
     dayShown = true;
     ['dep', 'day', 'send', 'map'].forEach((id) => { document.getElementById(id).hidden = false; });
     renderDepBoard();
+    // Only a change of width matters; the rebuild waits for the next frame, so the observer never sees
+    // a size change made inside its own callback.
+    let seenW = 0;
+    if ('ResizeObserver' in window) new ResizeObserver((es) => { const w = Math.round(es[0].contentRect.width); if (w === seenW) return; seenW = w; requestAnimationFrame(resizeDepBoard); }).observe(slot('dep-board'));
     if (motionCtx) motionCtx.add(depTriggers);
   }
   // GSAP's first tween on a leaf reads its computed style, so prime every leaf on the board before the
   // replay instead of in the middle of it (in Chrome the transform it writes is dropped at once).
-  const boardLeaves = () => [...DEP.board.rows, DEP.board.sun, ...DEP.board.parked].flatMap((row) => row.cols.flat()).flatMap((f) => [f.ltEl, f.lbEl]);
+  const boardLeaves = () => [...DEP.board.rows, DEP.board.sun].flatMap((row) => row.cols.flat()).flatMap((f) => [f.ltEl, f.lbEl]);
   function warmBoard() {
     const leaves = boardLeaves().filter((el) => !el._warm);
     leaves.forEach((el) => { el._warm = true; });
@@ -960,13 +972,10 @@
     DEP.board.rows.forEach((row, i) => setRowNow(row, rows[i] || null));
     DEP.shown = rows;
   }
-  // The Sunday row and the parked rows under it land together (blank, at their final count, before).
+  // The Sunday row (blank before it lands).
   function setSunNow(on = true) {
     setRowNow(DEP.board.sun, on ? sundayRow(DEP.sunEgg) : null);
     gsap.set(gapEl(), { scaleX: on ? 1 : 0 });
-    const pk = parkedRows();
-    DEP.board.ensureParked(pk.length);
-    DEP.board.parked.forEach((row, k) => setRowNow(row, on ? pk[k] : null));
   }
   // A spare row while her note is empty, so her TBC line takes it and the page never moves.
   const spare = () => (freeText.trim() ? 0 : 1);
@@ -977,8 +986,8 @@
     DEP.seen = { sig: depSig(), rows: plainRows(DEP.shown), picks: pickIds(), fullPicks: fullPicks || DEP.seen?.fullPicks || null };
     store.set('depSeen', DEP.seen);
   }
-  // A new composition (Plan Friday, or a link) replays in full; a swap, a removal, an addition or
-  // her note plays one diff wave. Before she plans, the board only ever diffs.
+  // A new composition (Plan Friday, or a link) replays in full; a swap, a removal, an addition, a
+  // dinner pick or her note plays one diff wave. Before she plans, the board only ever diffs.
   function needsFull() {
     const s = DEP.seen;
     if (!s) return true;
@@ -993,13 +1002,12 @@
     DEP.sunPending = false;
     return states;
   }
-  // The replay: one state per pick, in board order, each wave re-sorting the board as the day re-plans itself.
+  // The replay: one state per pick, in board order, each wave re-sorting the board as the day takes shape.
   function replayStates() {
     const order = pickIds();
     const finalRows = depRows(plan);
     if (!order.length) return [skeletonRows(), finalRows];
-    const keep = keepOf();
-    return [skeletonRows(), ...order.map((_, i) => (i === order.length - 1 ? finalRows : depRows(P.build(C, order.slice(0, i + 1), { keep }), { tbc: null })))];
+    return [skeletonRows(), ...order.map((_, i) => (i === order.length - 1 ? finalRows : depRows(P.build(C, order.slice(0, i + 1)), { tbc: null })))];
   }
   function stopReplay() {
     const r = DEP.replay;
@@ -1055,10 +1063,6 @@
     r.tls.push(tl);
     tl.fromTo(gapEl(), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: 'power2.out', immediateRender: false }, pause);
     flipRow(tl, DEP.board.sun, sundayRow(DEP.sunEgg), pause + 0.3, { scramble: 4, D: 0.06, stagger: 0.012 });
-    // Then what did not fit, one dim row after another.
-    const pk = parkedRows();
-    DEP.board.ensureParked(pk.length);
-    DEP.board.parked.forEach((row, k) => flipRow(tl, row, pk[k], pause + 1.4 + k * 0.18, { scramble: 1 }));
     tl.call(() => { r.done(); DEP.replay = null; markSeen(r.fullPicks); });
   }
   // Waves `from`.. of the replay on one timeline, built before it plays. Row models track the
@@ -1071,12 +1075,6 @@
     for (let s = from; s <= waves; s++) {
       const at = startAt + (s - from) * wave;
       DEP.board.rows.forEach((row, j) => flipRow(tl, row, states[s][j] || null, at + j * 0.05, { scramble }));
-    }
-    // A diff wave also brings the parked rows up to date (a full replay lands them after Sunday).
-    if (!full && !DEP.sunPending) {
-      const pk = parkedRows();
-      DEP.board.ensureParked(pk.length);
-      DEP.board.parked.forEach((row, k) => flipRow(tl, row, pk[k], startAt + (DEP.board.rows.length + k) * 0.05, { scramble }));
     }
     tl.call(() => {
       markSeen(r.stopping ? null : r.fullPicks);
@@ -1136,7 +1134,8 @@
   }
   const boardInView = () => { const b = DEP.board.host.getBoundingClientRect(); return b.top < innerHeight * 0.85 && b.bottom > 80; };
   let depTimer = 0;
-  // After picks or her line change: settle the board now if she is looking at it, else on the next visit.
+  // After picks, her dinner pick or her line change: settle the board now if she is looking at it, else
+  // on the next visit.
   function syncDepBoard({ initial = false } = {}) {
     if (!DEP.board) return;
     const finalRows = depRows(plan);
@@ -1176,19 +1175,8 @@
     clearTimeout(depTimer);
     depTimer = setTimeout(() => { if (boardInView()) maybePlay(); }, 250);
   }
-  // On the day, the minute tick flips only the remarks that changed.
-  function depTick() {
-    if (DEP.replay || DEP.pending || !plan) return;
-    const finalRows = depRows(plan);
-    DEP.board.rows.forEach((row, i) => {
-      const d = finalRows[i] || null;
-      if (JSON.stringify(plainRows([row.data])) !== JSON.stringify(plainRows([d]))) flipRowNow(row, d);
-    });
-    DEP.shown = finalRows;
-    markSeen();
-  }
 
-  // Board taps: finish a running replay; the Sunday and SASHA eggs; otherwise go to the stop in Details.
+  // Board taps: finish a running replay; the Sunday egg; her TBC line; otherwise go to the card.
   function onBoardClick(e) {
     if (DEP.replay) { e.preventDefault(); finishBoard(); return; }
     const hit = e.target.closest('.board-hit');
@@ -1229,7 +1217,7 @@
     $$('.stop').forEach((li) => {
       const id = li.dataset.key;
       const it = plan.items.find((x) => x.kind === 'option' && x.id === id);
-      const text = it ? it.rough : DEPC.drop.time;
+      const text = it ? it.rough : '';
       const fl = $$('.chip .flap', li).map(flapOf);
       const prev = chipSeen[id];
       chipSeen[id] = text;
@@ -1241,30 +1229,33 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Your Friday: story cards, Swap, Remove, Room for one more           */
+  /* Your Friday: story cards, Swap, Remove, More ideas, dinner ideas    */
   /* ------------------------------------------------------------------ */
 
-  const placeOf = (it) => (it.kind === 'option' ? it.option : it.kind === 'anchor' && typeof it.anchor.lat === 'number' ? it.anchor : null);
+  // Only the cards of her day have a place on the map (the bags and the arrival never do); dinner's dot
+  // is the idea she picked, drawn separately.
+  const placeOf = (it) => (it.kind === 'option' && typeof it.option.lat === 'number' ? it.option : null);
   let undo = null;         // { pick, index, after, title, timer } while "Undo" is on screen
 
+  // Over the board, a link's note and "Back to my picks". Nothing renders under Send (AM7).
   function renderDepNote() {
     const D = C.day;
     const back = hasBackup ? ` <button class="btn btn--small" type="button" data-action="back-to-mine">${esc(D.backToMine)}</button>` : '';
     slot('dep-note').innerHTML = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
-    const books = plan.options.filter((o) => o.book).map((o) => o.book).concat(U.bookDinner);
-    const list = books.length > 1 ? books.slice(0, -1).join(U.listJoin) + U.listJoinLast + books[books.length - 1] : books.join('');
-    slot('send-after').innerHTML = `<p>${esc(fmt(D.willBook, { list }))}</p>`;
   }
 
-  // "About 55 min · €12 · I'll book it · Outdoors, rain cancels": duration, price, booking (in her
-  // name for the named tickets), instruction.
-  function factsOf(o) {
+  // "About 1h 30 · €18 each · Needs booking · Shoulders and knees covered": duration, the price each
+  // (or Free), "Needs booking" where it has to be booked, and an instruction tag.
+  function factList(o) {
     const F = C.day.facts;
     const h = Math.floor(o.minutes / 60), m = o.minutes % 60;
     const d = h ? (m ? fmt(F.hm, { h, m: String(m).padStart(2, '0') }) : fmt(F.h, { h })) : fmt(F.m, { m });
     const price = typeof o.price === 'number' ? (o.price ? fmt(F.price, { n: o.price }) : F.free) : o.price || '';
-    return [fmt(F.about, { d }), price, o.book ? (o.named ? F.bookNamed : F.book) : '', o.tag || ''].filter(Boolean).join(F.join);
+    return [fmt(F.about, { d }), price, o.booking === 'required' ? F.needsBooking : '', o.tag || ''].filter(Boolean);
   }
+  // As HTML: each fact (with the dot after it) never breaks inside, so a line can't end on "around" and
+  // start the next on "€15 each", or start on a dot. The text reads the same as the facts joined.
+  const factsHTML = (list) => { const J = C.day.facts.join, dot = J.trimEnd(); return list.map((f, i) => `<span class="fact">${esc(f)}${i < list.length - 1 ? esc(dot) : ''}</span>`).join(esc(J.slice(dot.length))); };
   const groupLabel = (o) => (C.catalogue.groups.find((g) => g.id === o.group) || {}).label || '';
   const nowTag = `<span class="tag tag--now">${esc(U.nowTag)}</span>`;
   const mapLink = (o) => (o.links?.[0] ? `<a class="stop-map" href="${esc(o.links[0].url)}" target="_blank" rel="noopener">${esc(o.links[0].label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>` : '');
@@ -1292,29 +1283,14 @@
   }
   const photosPill = (o, cls) => `<button type="button" class="pill ${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog">${ICON.photos}${esc(PK.openPhotos)}<span class="sr-only">: ${esc(o.title)}</span></button>`;
   const tipHTML = (o, cls) => (o.friendTip ? `<p class="${cls}">${esc(PK.tip)}</p>` : '');
-  // The rain line (spec 3.4, 13.7): on an outdoor stop with a rain plan, only when Friday's forecast
-  // says 50 % or more. Its own words name what we do instead; when that is already on the day, or
-  // there is nothing to swap to, we skip it.
-  // plan.js picks the words (mechanics F3): the plan B only when it is open then and no other card
-  // has promised it.
-  let rainProb = null, rainNow = {};
-  const rainy = () => typeof rainProb === 'number' && rainProb >= 50;
-  function rainHTML(o) {
-    if (!('rainPlan' in o)) return '';
-    const text = (rainNow[o.id] || {}).text || C.day.rainSkip;
-    return `<p class="stop-rain"${rainy() ? '' : ' hidden'}>${esc(text)}</p>`;
-  }
-  function syncRain() {
-    $$('.stop-rain', slot('day-body')).forEach((el) => { el.hidden = !rainy(); });
-    refreshSoon();
-  }
   // One story card: time chip and the answer it came from, the photos, title, line, facts, actions.
-  // On a laptop the card is a row: the photos on the left, the rest on the right.
+  // On a laptop the card is a row: the photos on the left, the rest on the right. Every card with
+  // something to swap to has Swap.
   function stopHTML(it, time, attrs) {
     const o = it.option, D = C.day;
     const i = picks.findIndex((p) => p.id === o.id);
     const reason = i >= 0 ? picks[i].reason : 'added';
-    const alts = i >= 0 ? P.alternatives(C, picks, i, { keep: keepOf(), want: answers?.want || [] }) : [];
+    const alts = i >= 0 ? P.alternatives(C, picks, i, { want: answers?.want || [] }) : [];
     const id = esc(o.id);
     return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
         <article class="stop-card" aria-labelledby="st-${id}">
@@ -1323,8 +1299,7 @@
           <div class="stop-text">
             <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>
             <p class="stop-line">${esc(o.line)}</p>
-            <p class="stop-facts">${esc(factsOf(o))}</p>
-            ${rainHTML(o)}
+            <p class="stop-facts">${factsHTML(factList(o))}</p>
             ${tipHTML(o, 'stop-tip')}
             <div class="stop-actions">${alts.length ? `<button type="button" class="btn btn--small" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>` : ''}<button type="button" class="btn btn--small" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>${mapLink(o)}</div>
           </div>
@@ -1332,21 +1307,18 @@
         ${alts.length ? swapHTML(o.id, alts) : ''}
       </li>`;
   }
-  // "Room for one more?" (hidden when nothing fits) and "See everything": after the last stop and its
-  // walk to dinner, so the walk stays attached to the card it leaves from.
+  // "More ideas" (hidden when there is nothing to offer) and "See everything", before dinner. A tile is
+  // the photo, the answer it serves, the title and Add: no time, no price (AM12). Adding always works.
   function roomHTML() {
     const D = C.day;
     const sugg = roomNow;
     const tiles = sugg.map((x) => {
       const o = OPT[x.id];
       const label = x.reason === 'added' ? groupLabel(o) : reasonLabel(x.reason);
-      // Where build() would put it: "around 16:30".
-      const lands = P.build(C, [...pickIds(), x.id], { keep: keepOf() }).items.find((it) => it.kind === 'option' && it.id === x.id);
       return `<li class="room-tile">
           ${thumbHTML(o.photos?.[0], 'room-photo', '(min-width: 768px) 200px, 30vw')}
           <span class="room-why label">${esc(label)}</span>
           <span class="room-name">${esc(o.title)}</span>
-          ${lands ? `<span class="room-at">${esc(lands.exact ? lands.rough : fmt(U.around, { time: lands.rough }))}</span>` : ''}
           <button type="button" class="btn btn--small room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>
         </li>`;
     }).join('');
@@ -1357,41 +1329,86 @@
   }
   const undoHTML = () => `<li class="plan-undo"><button type="button" class="undo-btn" data-action="undo">${esc(C.day.undo)}<span class="sr-only">: ${esc(undo.title)}</span></button></li>`;
 
+  // The dinner card (spec 4.2, AM2): "around 19:00", "Dinner", one line, then the three ideas. Each idea:
+  // its name, its line, "{area} · {booking} · {price}", the friend's tip, Map, and "This one". Tapping
+  // "This one" picks it (and lets go of the others); tapping it again goes back to none.
+  const dinnerBody = () => (dinner ? fmt(C.anchors.dinner.bodyPicked, { title: IDEA[dinner].title }) : C.anchors.dinner.bodyNone);
+  function dinnerHTML(time, attrs, timeRow) {
+    const A = C.anchors.dinner;
+    const ideas = IDEAS.map((d) => `<li class="dinner-idea">
+          <div class="dinner-text">
+            <p class="dinner-name">${esc(d.title)}</p>
+            <p class="dinner-line">${esc(d.line)}</p>
+            <p class="dinner-facts">${factsHTML([d.area, d.booking, d.price].filter(Boolean))}</p>
+            ${tipHTML(d, 'stop-tip')}
+          </div>
+          <div class="dinner-acts">
+            <button type="button" class="peek-toggle dinner-toggle" aria-pressed="${dinner === d.id}" data-action="dinner" data-id="${esc(d.id)}"><span class="peek-toggle-in">${ICON.tick}${esc(PK.pick)}</span><span class="sr-only">: ${esc(d.title)}</span></button>
+            ${mapLink(d)}
+          </div>
+        </li>`).join('');
+    return `<li class="plan-item plan-item--text plan-dinner" ${attrs} data-dot="${dinner ? 'dinner' : ''}" data-hud-title="${esc(A.hud || A.title)}">
+        <div class="plan-text">${timeRow}<h4 class="plan-title" id="dinner-h"><span class="sr-only">${esc(time)}, </span>${esc(A.title)}</h4><p class="plan-line dinner-body">${esc(dinnerBody())}</p></div>
+        <ul class="dinner-ideas" aria-labelledby="dinner-h">${ideas}</ul>
+      </li>`;
+  }
+  // A dinner pick changes the card in place (so the toggle keeps focus and its transition), the
+  // board's 19:00 row (one diff wave), the map's dinner dot and the share text. The plan does not
+  // depend on dinner, so the day is not built again.
+  function setDinner(id) {
+    buzz('selection');
+    dinner = dinner === id ? null : cleanDinner(id);
+    fromLink = false;
+    saveState();
+    const li = $('.plan-dinner', slot('day-body'));
+    if (li) {
+      $$('.dinner-toggle', li).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === dinner)));
+      $('.dinner-body', li).textContent = dinnerBody();
+      li.dataset.dot = dinner ? 'dinner' : '';
+    }
+    renderDepNote();
+    renderMapPlan();
+    syncDepBoard();
+    refreshSoon();
+  }
+
   function renderDay() {
     const D = C.day;
     const body = slot('day-body');
     slot('change-answers').hidden = !answers;
-    const parked = parkedLabels();
-    slot('day-parked').textContent = parked ? fmt(D.parked, { list: parked }) : '';
-    slot('day-parked').hidden = !parked;
+    // Under "Your Friday": the full-day line, and one line per pick that can't happen on Friday.
+    const lines = [];
+    if (plan.crowded) lines.push(`<p class="day-crowded">${esc(D.crowded)}</p>`);
+    plan.didntFit.forEach((d) => lines.push(`<p class="day-cant">${esc(fmt(D.cant, { title: d.option.title, why: d.why }))}</p>`));
+    slot('day-lines').innerHTML = lines.join('');
+    slot('day-lines').hidden = !lines.length;
     if (!picks.length && !answers) { body.innerHTML = `<p class="day-empty">${esc(D.empty)}</p>`; return; }
-    rainNow = P.rainLines(C, plan);
-    let html = '', group = '', walked = 0, undoShown = false;
+    let html = '', group = '', undoShown = false;
     plan.items.forEach((it) => {
       if (it.kind === 'anchor' && it.id === 'dinner') html += roomHTML();
-      if (it.kind === 'transfer') { walked += it.transfer.m; html += `<li class="plan-transfer"><p>${esc(it.transfer.text)}</p></li>`; return; }
-      if (it.kind === 'free') { html += `<li class="plan-free"><p>${esc(D.freeTime)}</p></li>`; return; }
-      if (it.slot !== group) { group = it.slot; html += `<li class="plan-group"><h3 class="label">${esc(D.slots[group])}</h3></li>`; }
+      if (it.slot !== group) {
+        group = it.slot;
+        html += `<li class="plan-group"><h3 class="label">${esc(D.slots[group])}</h3></li>`;
+        // Two or more lunch cards: "We'll only have one of these." right under the Lunch heading.
+        if (group === 'lunch' && plan.lunchIdeas.length) html += `<li class="plan-choice"><p>${esc(D.lunchChoice)}</p></li>`;
+      }
       const time = it.exact ? it.rough : fmt(U.around, { time: it.rough });
       const key = it.kind === 'lunch-filler' ? 'lunch' : it.id;
-      const attrs = `data-min="${toMin(it.rough)}" data-km="${walked}" data-key="${esc(key)}"`;
+      const attrs = `data-min="${toMin(it.rough)}" data-key="${esc(key)}"`;
       const timeRow = `<p class="plan-time"><span aria-hidden="true">${esc(time)}</span> ${nowTag}</p>`;
       if (it.kind === 'option') html += stopHTML(it, time, attrs);
       else if (it.kind === 'lunch-filler') html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
+      else if (it.id === 'dinner') html += dinnerHTML(time, attrs, timeRow);
       else {
         const a = it.anchor;
-        html += `<li class="plan-item plan-item--text" ${attrs} data-dot="${placeOf(it) ? esc(it.id) : ''}" data-hud-title="${esc(a.hud || a.title)}">
-          <div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(a.title)}</h4>${a.body ? `<p class="plan-line">${esc(a.body)}</p>` : ''}${a.links?.[0] ? `<div class="plan-meta">${linkBtn(a.links[0].url, a.links[0].label, a.title)}</div>` : ''}</div>
+        html += `<li class="plan-item plan-item--text" ${attrs} data-dot="" data-hud-title="${esc(a.hud || a.title)}">
+          <div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(a.title)}</h4>${a.body ? `<p class="plan-line">${esc(a.body)}</p>` : ''}</div>
         </li>`;
       }
       if (undo && !undoShown && key === undo.after) { html += undoHTML(); undoShown = true; }
     });
     if (undo && !undoShown) html = undoHTML() + html;
-    // What didn't fit is on the board as dim rows; screen readers get the reasons here.
-    const didnt = plan.didntFit.length
-      ? `<div class="sr-only"><h3>${esc(D.didntFitTitle)}</h3><ul>${plan.didntFit.map((d) => `<li>${esc(d.option.title)}: ${esc(d.reason)}</li>`).join('')}</ul></div>`
-      : '';
-    body.innerHTML = `<ol class="plan">${html}</ol>${didnt}`;
+    body.innerHTML = `<ol class="plan">${html}</ol>`;
   }
 
   const stopEl = (id) => $(`.stop[data-key="${CSS.escape(id)}"]`, slot('day-body'));
@@ -1479,7 +1496,7 @@
     if (!reduced) gsap.from(nl, { opacity: 0, duration: 0.22, ease: 'power1.out', clearProps: 'opacity' });
     $('[data-action="remove"]', nl).focus({ preventScroll: true });
   }
-  // Add (Room for one more?, the catalogue): the new card lights up briefly where it lands.
+  // Add (More ideas, the catalogue): the new card lights up briefly where it lands.
   function addPick(id, reason) {
     if (!OPT[id] || picks.some((p) => p.id === id)) return;
     setPicks([...picks, { id, reason }]);
@@ -1520,6 +1537,7 @@
     else if (a === 'remove') removeStop(b);
     else if (a === 'undo') undoRemove();
     else if (a === 'add') addPick(b.dataset.id, b.dataset.reason);
+    else if (a === 'dinner') setDinner(b.dataset.id);
     else if (a === 'catalogue') openCatalogue();
   }
 
@@ -1537,38 +1555,30 @@
         // A tile per option, as on the questions: the photo, the text under it, then Add and Photos.
         return `<section class="cat-group" aria-labelledby="cg-${esc(g.id)}"><h3 class="label" id="cg-${esc(g.id)}">${esc(g.label)}</h3><ul class="cat-list">${opts.map((o) => `<li class="cat-row">
             ${thumbHTML(o.photos?.[0], 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw')}
-            <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span><span class="cat-why" id="cw-${esc(o.id)}" hidden></span></span>
+            <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span></span>
             <span class="cat-acts">
-            <button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button>
+            <button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button><span class="cat-no" id="cw-${esc(o.id)}" hidden></span>
             <button type="button" class="tile-more" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog">${esc(PK.openPhotos)}<span class="sr-only">: ${esc(o.title)}</span></button></span>
           </li>`).join('')}</ul></section>`;
       }).join('')}</div>`;
   }
-  // Each row: the check if it is on her day, else Add, or a disabled "Doesn't fit" with the short
-  // reason (plan.js catalogueAdd, fold-in A3). When only my picks are in its way, Add works and the
-  // row says which of mine makes way ("Instead of Vittoriano roof"); when something of hers is, the
-  // refusal names it ("Only if we skip Monti").
-  let catNow = {};
+  // Each row: the check if it is on her day, else Add. Every Add works, except for something that can't
+  // happen on Friday at all (plan.js catalogueAdd): its reason ("Sold out for Friday") shows in place of
+  // the button, which stays for screen readers, disabled and described by the reason.
   function syncCatalogue() {
-    const K = C.catalogue;
     const ids = pickIds();
-    catNow = {};
     $$('.cat-add', slot('catalogue')).forEach((b) => {
       const id = b.dataset.id;
       const on = ids.includes(id);
-      let why = '', note = '';
-      if (!on) {
-        const res = catNow[id] = P.catalogueAdd(C, picks, id, { keep: keepOf(), answers: answers || {} });
-        if (!res.ok) why = fmt(K.reasons[res.code] || K.reasons.noTime, res.vars || {});
-        else if (res.yields.length) note = fmt(K.instead, { title: res.yields.map((y) => OPT[y].title).join(U.listJoin) });
-      }
+      const res = on ? null : P.catalogueAdd(C, picks, id);
+      const why = res && !res.ok ? res.vars.why : '';
       b.setAttribute('aria-pressed', String(on));
       b.disabled = !!why;
-      $('.cat-add-label', b).textContent = why ? K.noFit : C.day.add;
+      b.classList.toggle('is-no', !!why);
       const line = $(`#cw-${CSS.escape(id)}`, slot('catalogue'));
-      line.textContent = why || note;
-      line.hidden = !(why || note);
-      if (why || note) b.setAttribute('aria-describedby', line.id); else b.removeAttribute('aria-describedby');
+      line.textContent = why;
+      line.hidden = !why;
+      if (why) b.setAttribute('aria-describedby', line.id); else b.removeAttribute('aria-describedby');
     });
   }
   function openCatalogue() {
@@ -1595,9 +1605,6 @@
     if (!b) return;
     const id = b.dataset.id;
     if (picks.some((p) => p.id === id)) { setPicks(picks.filter((p) => p.id !== id)); return; }
-    // My picks in its way make way first (fold-in A3).
-    const yields = (catNow[id] && catNow[id].ok && catNow[id].yields) || [];
-    if (yields.length) picks = picks.filter((p) => !yields.includes(p.id));
     addPick(id, 'added');
   }
 
@@ -1610,11 +1617,13 @@
   // "This one"), and `one` (Photos on a story card or in the catalogue: the place, no toggle). A
   // bottom sheet on a phone, a centred panel on a laptop.
   const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false };
-  const toggleHTML = (o, action) => `<button type="button" class="peek-toggle" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`;
+  // "This one". For something that can't happen on Friday, its reason shows in place of the toggle (the
+  // toggle stays for screen readers, disabled and described by the reason).
+  const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`;
   const peekTextHTML = (o) => `<div class="peek-text">
           <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
           <p class="peek-line">${esc(o.line)}</p>
-          <p class="peek-facts">${esc(factsOf(o))}</p>
+          <p class="peek-facts">${factsHTML(factList(o))}</p>
           ${tipHTML(o, 'peek-tip')}
         </div>`;
   // A row: thumbnail, title, line, facts, the friend's line and "This one". The thumbnail opens the
@@ -1656,7 +1665,7 @@
         <button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>
       </div>
       <div class="peek-body">${body}</div>
-      <div class="peek-foot">${kind === 'vibe' ? `<p class="peek-fits" hidden></p>` : ''}<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button></div>`;
+      <div class="peek-foot"><button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button></div>`;
     syncPeek();
     root.classList.add('is-locked');
     dlg.showModal();
@@ -1675,13 +1684,6 @@
       const on = b.dataset.action === 'want' ? wantedHere(b.dataset.id) : d[STEPS[peek.step].id] === peek.value;
       b.setAttribute('aria-pressed', String(on));
     });
-    // From two named things: we won't get to all of them, and the day is planned around the first.
-    const fits = $('.peek-fits', dlg);
-    if (fits) {
-      const first = d.want.length >= 2 ? P.mustOf(C, d) : null;
-      fits.hidden = !first;
-      if (first) fits.textContent = fmt(PK.fits, { first: OPT[first].title });
-    }
   }
   // Named under the sight or food this peek is for (not just named somewhere).
   const wantedHere = (id) => stage.draft.want.includes(id) && P.wantReason(OPT[id], stage.draft) === peek.value;
@@ -1772,29 +1774,24 @@
       </linearGradient>
       <mask id="${id}" maskUnits="userSpaceOnUse" x="${vx}" y="${vy}" width="${vw}" height="${vh}"><rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="url(#${id}g)"/></mask>`;
     mapFig.innerHTML = `<svg viewBox="${vx} ${vy} ${vw} ${vh}" role="img" aria-label="${esc(U.mapLabel)}">
-        <defs>${fade('mapFadeX', vx + vw, vy)}${fade('mapFadeY', vx, vy + vh)}<g class="map-masks"></g></defs>
+        <defs>${fade('mapFadeX', vx + vw, vy)}${fade('mapFadeY', vx, vy + vh)}</defs>
         <g mask="url(#mapFadeY)"><path class="map-river" d="${MAP.river}" mask="url(#mapFadeX)"/></g>
         <g class="map-plan"></g>
       </svg>
       <figcaption class="label">${esc(U.mapCredit)}</figcaption>`;
   }
 
-  // The plan's stops as dots, joined in plan order by straight dashed lines. Labels are rough times.
+  // Her day's cards as dots with their short names (spec 7.2), plus her dinner pick. No lines, no times.
+  // A place outside the frame (the aqueduct park, far to the south-east) sits on the frame's edge.
   function renderMapPlan() {
     const svg = $('svg', mapFig);
     const [vx, vy, vw, vh] = MAP.viewBox;
-    mapPts = (picks.length ? plan.items : []).filter(placeOf).map((it) => {
-      const p = placeOf(it);
-      const [x, y] = project(p.lat, p.lon);
-      return { id: it.id, x: Math.round(x), y: Math.round(y), label: it.rough };
-    });
-    const lines = mapPts.slice(1).map((b, i) => ({ a: mapPts[i], b }));
-    $('.map-masks', svg).innerHTML = lines
-      .map((l, i) => `<mask id="mk${i}" maskUnits="userSpaceOnUse" x="${vx - 500}" y="${vy - 500}" width="${vw + 1000}" height="${vh + 1000}"><path class="leg-mask" data-i="${i}" d="M${l.a.x} ${l.a.y}L${l.b.x} ${l.b.y}" fill="none" stroke="#fff" stroke-linecap="round"/></mask>`)
-      .join('');
-    $('.map-plan', svg).innerHTML = lines
-      .map((l, i) => `<path class="leg leg--dash" d="M${l.a.x} ${l.a.y}L${l.b.x} ${l.b.y}" mask="url(#mk${i})"/>`)
-      .join('') + mapPts
+    const pin = (v, lo, span) => Math.min(lo + span * 0.97, Math.max(lo + span * 0.03, v));
+    const point = (id, lat, lon, label) => { const [x, y] = project(lat, lon); return { id, x: Math.round(pin(x, vx, vw)), y: Math.round(pin(y, vy, vh)), label }; };
+    mapPts = (picks.length ? plan.items : []).filter(placeOf).map((it) => { const o = placeOf(it); return point(it.id, o.lat, o.lon, o.hud || o.title); });
+    const din = dinner && IDEA[dinner];
+    if (din && picks.length) mapPts.push(point('dinner', din.lat, din.lon, din.title));
+    $('.map-plan', svg).innerHTML = mapPts
       .map((p) => `<g class="map-stop" data-id="${esc(p.id)}" data-o="${p.x} ${p.y}">
         <circle class="map-halo" cx="${p.x}" cy="${p.y}"/>
         <circle class="map-dot" cx="${p.x}" cy="${p.y}"/>
@@ -1804,13 +1801,10 @@
     mapUnit = 0;
     mapCurrent = null;
     layoutMap();
-    if (!mapRevealed && !reduced && window.gsap) {
-      $$('.leg-mask', svg).forEach((el) => gsap.set(el, { drawSVG: '0%' }));
-      $$('.map-stop', svg).forEach((g) => gsap.set(g, { scale: 0, autoAlpha: 0, svgOrigin: g.dataset.o }));
-    }
+    if (!mapRevealed && !reduced && window.gsap) $$('.map-stop', svg).forEach((g) => gsap.set(g, { scale: 0, autoAlpha: 0, svgOrigin: g.dataset.o }));
   }
 
-  // Sizes in the SVG follow the rendered width so lines, dots and labels keep a fixed on-screen size
+  // Sizes in the SVG follow the rendered width so dots and labels keep a fixed on-screen size
   // (labels 12.5 px) whether the map is 250 px wide on a phone or sticky on desktop.
   let mapUnit = 0;
   function layoutMap() {
@@ -1822,20 +1816,22 @@
     mapUnit = u;
     const set = (sel, attrs) => $$(sel, svg).forEach((el) => Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v)));
     set('.map-river', { 'stroke-width': 80 });
-    set('.leg--dash', { 'stroke-width': 2.25 * u, 'stroke-dasharray': `${6 * u} ${5 * u}` });
-    set('.leg-mask', { 'stroke-width': 10 * u });
     set('.map-dot', { r: 4.5 * u, 'stroke-width': 1.75 * u });
     set('.map-halo', { r: 9.5 * u, 'stroke-width': 2 * u });
     set('.map-label', { 'font-size': 12.5 * u, 'stroke-width': 3.5 * u });
     placeLabels(svg, u);
   }
 
-  // Greedy label placement: crowded dots first, eight candidate spots each, scored by overlap
-  // with placed labels, other dots, the lines and the frame edge.
+  // Greedy label placement: crowded dots first, eight candidate spots each, scored by overlap with
+  // placed labels, other dots and the frame edge, and by whether another dot sits closer to the label
+  // than its own (a label must read as its dot's). A label's width comes from its own text (the
+  // condensed body face runs about 0.42 em a character, measured on the shots: "Maritozzo" is 46 px wide
+  // at 12.5 px).
+  const LABEL_EM = 0.42;
   function placeLabels(svg, u) {
     const [vx, vy, vw, vh] = MAP.viewBox;
     const font = 12.5 * u, dotR = 4.5 * u;
-    const w = font * 2.45, h = font * 0.95;
+    const h = font * 0.95;
     const gap = dotR + font * 0.35;
     const cands = [
       [gap, 0, 'start'], [-gap, 0, 'end'],
@@ -1843,23 +1839,23 @@
       [gap * 0.8, -(gap * 0.8 + h / 2), 'start'], [-gap * 0.8, -(gap * 0.8 + h / 2), 'end'],
       [gap * 0.8, gap * 0.8 + h / 2, 'start'], [-gap * 0.8, gap * 0.8 + h / 2, 'end'],
     ];
-    const box = (x, y, anchor) => { const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2; return [x0, y - h / 2, x0 + w, y + h / 2]; };
     const overlap = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
-    const frame = [vx + 2 * u, vy + 2 * u, vx + vw - 2 * u, vy + vh - 2 * u];
-    const pts = mapPts;
-    const linePts = [];
-    pts.slice(1).forEach((b, i) => { const a = pts[i]; for (let k = 1; k < 12; k++) linePts.push([a.x + ((b.x - a.x) * k) / 12, a.y + ((b.y - a.y) * k) / 12]); });
+    const frame = [vx, vy, vx + vw, vy + vh];
+    const pts = mapPts.map((s) => ({ ...s, w: font * (LABEL_EM * Array.from(s.label).length + 0.2) }));
     const dots = pts.map((s) => [s.x - dotR * 1.6, s.y - dotR * 1.6, s.x + dotR * 1.6, s.y + dotR * 1.6]);
-    const crowd = (s) => pts.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < w * 1.6).length;
+    const crowd = (s) => pts.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < s.w * 1.2).length;
+    const toBox = (b, x, y) => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
     const placed = [];
     [...pts].sort((a, b) => crowd(b) - crowd(a)).forEach((s) => {
+      const w = s.w;
+      const box = (x, y, anchor) => { const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2; return [x0, y - h / 2, x0 + w, y + h / 2]; };
       let best = null;
       cands.forEach(([dx, dy, anchor], ci) => {
         const b = box(s.x + dx, s.y + dy, anchor);
         let score = ci * 0.01 * w * h;
         for (const p of placed) score += overlap(b, p) * 50;
-        dots.forEach((d, i) => { if (pts[i] !== s) score += overlap(b, d) * 30; });
-        for (const [px, py] of linePts) if (px > b[0] && px < b[2] && py > b[1] && py < b[3]) score += w * h * 0.05;
+        const own = toBox(b, s.x, s.y);
+        dots.forEach((d, i) => { if (pts[i].id === s.id) return; score += overlap(b, d) * 30; if (toBox(b, pts[i].x, pts[i].y) < own + 6 * u) score += w * h * 1.5; });
         score += (w * h - overlap(b, frame)) * 60;
         if (!best || score < best.score) best = { score, b, x: s.x + dx, y: s.y + dy, anchor };
       });
@@ -1997,7 +1993,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Scroll model: page position -> time of day, current item, km       */
+  /* Scroll model: page position -> time of day, current item           */
   /* ------------------------------------------------------------------ */
 
   const START = C.meta.startsAt.slice(11, 16);
@@ -2030,8 +2026,7 @@
   }
 
   const hudPlace = $('[data-slot="hud-place"]');
-  const hudKm = $('[data-slot="hud-km"]');
-  let hudPlaceText = '', hudKmText = '', mapCurrent = null;
+  let hudPlaceText = '', mapCurrent = null;
   const minToHHMM = (m) => P.hhmm(m);
 
   function render(y) {
@@ -2051,18 +2046,10 @@
     // Sticky desktop map: mark the current item's dot.
     const cur = el && el.dataset.dot ? $(`.map-stop[data-id="${el.dataset.dot}"]`, mapFig) : null;
     if (cur !== mapCurrent) { mapCurrent?.classList.remove('is-current'); cur?.classList.add('is-current'); mapCurrent = cur; }
-
-    const m = el ? +el.dataset.km : 0;
-    const km = (m / 1000).toFixed(1);
-    if (km !== hudKmText) {
-      hudKmText = km;
-      hudKm.innerHTML = `<span aria-hidden="true">${esc(fmt(U.km, { km }))}</span><span class="sr-only">${esc(fmt(U.kmSr, { km }))}</span>`;
-      hud.style.setProperty('--legs', Math.min(1, m / (C.meta.walkCapKm * 1000)).toFixed(3));
-    }
   }
 
   /* ------------------------------------------------------------------ */
-  /* Time: the minute tick (live boards, "now" in Details and the HUD)   */
+  /* Time: the minute tick (the ARRIVALS statuses, "now" on the day)     */
   /* ------------------------------------------------------------------ */
 
   const nowBtns = $$('.hud-now');
@@ -2071,7 +2058,6 @@
     const r = romeNow();
     const today = r.date === C.meta.date;
     if (HERO && HERO.rows[0].data) heroTick();
-    if (DEP.board) depTick();
     const items = $$('.plan-item');
     let nowEl = null;
     jumpEl = null;
@@ -2138,9 +2124,7 @@
       if (!html) return false;
       el.innerHTML = html;
       el.hidden = false;
-      const prob = data.daily.precipitation_probability_max?.[0];
-      rainProb = typeof prob === 'number' ? prob : null;
-      syncRain();
+      refreshSoon();
       return true;
     };
     el.hidden = true;
@@ -2168,9 +2152,8 @@
   function syncSend() { slot('send').disabled = !picks.length && !freeText.trim(); }
 
   function update() {
-    const keep = keepOf();
-    plan = P.build(C, pickIds(), { keep });
-    roomNow = picks.length || answers ? P.suggestions(C, picks, answers || {}, { keep }) : [];
+    plan = P.build(C, pickIds());
+    roomNow = picks.length || answers ? P.suggestions(C, picks, answers || {}) : [];
     syncSend();
     renderDepNote();
     renderDay();
@@ -2191,10 +2174,12 @@
 
   // DEPARTURES: her build replays when the board comes into view; a replay under way waits while the
   // board is off screen; a long board's Sunday row waits for its own trigger. Made with the board.
+  // The triggers watch the board's host, which stays put when the board is rebuilt at its breakpoint.
   function depTriggers() {
-    ScrollTrigger.create({ trigger: '#dep .board', start: 'top 45%', onEnter: maybePlay, onEnterBack: maybePlay });
-    ScrollTrigger.create({ trigger: '#dep .board', start: 'top bottom', end: 'bottom top+=64', onLeave: pauseReplay, onLeaveBack: pauseReplay, onEnter: resumeReplay, onEnterBack: resumeReplay });
-    ScrollTrigger.create({ trigger: '#dep .board-sun', start: 'bottom bottom', onEnter: maybeSun });
+    const host = slot('dep-board');
+    ScrollTrigger.create({ trigger: host, start: 'top 45%', onEnter: maybePlay, onEnterBack: maybePlay });
+    ScrollTrigger.create({ trigger: host, start: 'top bottom', end: 'bottom top+=64', onLeave: pauseReplay, onLeaveBack: pauseReplay, onEnter: resumeReplay, onEnterBack: resumeReplay });
+    ScrollTrigger.create({ trigger: host, start: 'bottom bottom', onEnter: maybeSun });
   }
 
   function setupMotion() {
@@ -2237,19 +2222,13 @@
       motionCtx = ctx;
       if (DEP.board) depTriggers();
 
-      // Map: the first time it scrolls in, the lines draw and the dots pop in plan order.
+      // Map: the first time it scrolls in, the dots pop in day order (0.35 s each, 0.08 s apart).
       revealMap = () => {
         if (mapRevealed) return;
         mapRevealed = true;
         const svg = $('svg', mapFig);
         const tl = gsap.timeline();
-        let at = 0;
-        $$('.map-stop', svg).forEach((g, i) => {
-          tl.to(g, { scale: 1, autoAlpha: 1, duration: 0.35, ease: 'back.out(2.4)' }, at);
-          const line = $(`.leg-mask[data-i="${i}"]`, svg);
-          if (line) { tl.to(line, { drawSVG: '100%', duration: 0.3, ease: 'power1.inOut' }, at + 0.1); at += 0.3; }
-          at += 0.08;
-        });
+        $$('.map-stop', svg).forEach((g, i) => tl.to(g, { scale: 1, autoAlpha: 1, duration: 0.35, ease: 'back.out(2.4)' }, i * 0.08));
       };
       ScrollTrigger.create({ trigger: mapFig, start: 'top 75%', once: true, onEnter: () => revealMap() });
     });
@@ -2272,7 +2251,7 @@
   /* Boot                                                                */
   /* ------------------------------------------------------------------ */
 
-  gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin);
+  gsap.registerPlugin(ScrollTrigger);
   renderHero();
   renderStatic();
   renderStage();
@@ -2330,8 +2309,7 @@
     finishBoard, depRows: () => depRows(plan), boardRows: () => (DEP.board ? DEP.board.rows.map((r) => r.shown) : []), replayStats: () => DEP.stats, plan: () => plan,
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
-    parked: () => parkedNow().map((e) => ({ ...e })), parkedRows: () => parkedRows().map((r) => [r.time, r.to, r.remark]),
-    shareText: () => shareText(), keep: () => keepOf(), rain: () => rainProb,
+    shareText: () => shareText(), dinner: () => dinner,
   };
 
   if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());

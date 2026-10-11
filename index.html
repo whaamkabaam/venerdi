@@ -39,10 +39,6 @@
   <div class="hud-inner">
     <div class="hud-clock" aria-hidden="true"></div>
     <p class="hud-place"><span class="sr-only" data-slot="hud-time"></span><span data-slot="hud-place"></span></p>
-    <div class="hud-legs">
-      <p class="hud-km" data-slot="hud-km"></p>
-      <span class="hud-bar" aria-hidden="true"><span class="hud-fill"></span></span>
-    </div>
     <button class="btn btn--small hud-now" type="button" hidden><span class="now-long" data-slot="now-long"></span><span class="now-short" data-slot="now-short"></span></button>
   </div>
 </aside>
@@ -76,7 +72,7 @@
       <h2 id="day-h" data-slot="day-title"></h2>
       <button class="day-change" type="button" data-slot="change-answers"></button>
     </div>
-    <p class="day-parked" data-slot="day-parked" hidden></p>
+    <div class="day-lines" data-slot="day-lines" hidden></div>
     <p class="day-weather" data-slot="weather" hidden></p>
     <div class="day-map" data-slot="day-map"></div>
     <div class="day-body" data-slot="day-body"></div>
@@ -88,7 +84,6 @@
       <label class="send-label" id="free-label" for="free-text" data-slot="free-label"></label>
       <textarea id="free-text" class="send-text" rows="2" maxlength="1000" data-slot="free-text"></textarea>
       <button class="btn btn--primary send-btn" type="button" data-slot="send"></button>
-      <div class="send-after" data-slot="send-after"></div>
     </div>
   </section>
 
@@ -110,7 +105,6 @@
 <script src="plan.js"></script>
 <script src="vendor/gsap.min.js"></script>
 <script src="vendor/ScrollTrigger.min.js"></script>
-<script src="vendor/DrawSVGPlugin.min.js"></script>
 <script src="vendor/web-haptics.js"></script>
 <script src="app.js"></script>
 </body>
