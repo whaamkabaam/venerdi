@@ -2029,6 +2029,11 @@
   // Borghese, St Peter's, the Sistine Chapel, the aqueducts, Coppedè). Each is a ring on the plan's edge, where
   // the line from the Pantheon towards it crosses the plan inset by 60 px.
   const PANTHEON = toMap(41.8986, 12.4768);
+  // The keyhole's sight line (b3.7, dir-2 SIGHT.keyhole): from her Aventine stop to St Peter's dome, about 2.9 km,
+  // the view the keyhole frames. A look from one place, so never drawn when St Peter's itself is on her day (it
+  // would join two of her stops, and the map draws no route).
+  const DOME = toMap(41.9022, 12.4533);
+  const sightOK = () => !!plan && plan.items.some((it) => it.id === 'keyhole') && !plan.items.some((it) => it.id === 'stpeters');
   const EDGE = { x0: 60, y0: 60, x1: NOL.w - 60, y1: NOL.h - 60 };
   const offSheet = (p) => p.x < 110 || p.y < 110 || p.x > NOL.w - 110 || p.y > NOL.h - 110;
   function edgePoint(p) {
@@ -2221,11 +2226,62 @@
         const off = X < 4 || X > this.vw - 4 || Y < 4 || Y > this.vh - 4;
         if (off !== m.off) { m.off = off; m.g.classList.toggle('is-off', off); }
       }
+      if (this.sight) this.drawSight();
+    }
+    // The sight line in screen px: from 15 px outside her ring to 10 px short of the dome glyph, `p` of the way;
+    // the glyph's name keeps inside the window.
+    drawSight() {
+      const sg = this.sight, [x1, y1] = this.scr(sg.a.x, sg.a.y), [x2, y2] = this.scr(DOME.x, DOME.y);
+      const len = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+      const xs = x1 + ux * 15, ys = y1 + uy * 15, xt = x2 - ux * 10, yt = y2 - uy * 10;
+      const xe = xs + (xt - xs) * sg.p, ye = ys + (yt - ys) * sg.p;
+      sg.lines.forEach((l) => { l.setAttribute('x1', xs.toFixed(1)); l.setAttribute('y1', ys.toFixed(1)); l.setAttribute('x2', xe.toFixed(1)); l.setAttribute('y2', ye.toFixed(1)); });
+      sg.end.setAttribute('transform', `translate(${x2.toFixed(1)} ${y2.toFixed(1)})`);
+      const half = (sg.w || 90) / 2 + 4, lab = sg.label;
+      const a = x2 - half < 8 ? 'start' : x2 + half > this.vw - 8 ? 'end' : 'middle';
+      if (a !== sg.anchor) { sg.anchor = a; lab.setAttribute('text-anchor', a); lab.setAttribute('x', a === 'start' ? -8 : a === 'end' ? 8 : 0); }
+      // The name sits on the far side of the glyph from the line, so the line never runs through it (round 1).
+      const above = y1 > y2 + 4;
+      if (above !== sg.above) { sg.above = above; lab.setAttribute('y', above ? -10 : 17); }
+    }
+    // On (the laptop map while the keyhole is hers, walked in once; the phone's sheet whenever the keyhole is on her
+    // day, drawn complete) or off (it fades in 250 ms). Her other places step back while it shows on the laptop.
+    setSight(show, animate = false) {
+      if (!show) { this.clearSight(); return; }
+      const a = this.byId.get('keyhole');
+      if (this.sight || !a) return;
+      const g = $('.sights', this.svg);
+      if (window.gsap) gsap.killTweensOf(g);
+      g.style.opacity = '';
+      g.innerHTML = `<line class="sight-halo"/><line class="sight"/><g class="sight-end"><path class="sight-dome" d="M-7 4h14M-5.5 4a5.5 5.5 0 0 1 11 0M0 -1.5v-3"/><text class="sight-label" y="17" text-anchor="middle">${esc(U.mapSightDome)}</text></g>`;
+      const sg = { a, p: animate && !reduced ? 0 : 1, lines: $$('line', g), end: $('.sight-end', g), g, anchor: 'middle' };
+      sg.label = $('text', sg.end);
+      try { sg.w = sg.label.getBBox().width; } catch { sg.w = 0; }
+      this.sight = sg;
+      const back = this.kind === 'page';
+      this.drawSight();
+      if (!animate || reduced || !window.gsap) { if (back) this.marks.forEach((m) => m.g.classList.toggle('is-back', m.id !== 'keyhole')); return; }
+      sg.end.style.opacity = '0';
+      sg.tl = gsap.timeline()
+        .to(sg, { p: 1, duration: 1.1, ease: 'power2.inOut', onUpdate: () => { if (this.sight === sg) this.drawSight(); } }, 0.55)
+        .to(sg.end, { opacity: 1, duration: 0.3, ease: 'power1.out' }, 1.5)
+        .call(() => { if (this.sight === sg && back) this.marks.forEach((m) => m.g.classList.toggle('is-back', m.id !== 'keyhole')); }, null, 1.5);
+    }
+    clearSight() {
+      const sg = this.sight;
+      if (!sg) return;
+      this.sight = null;
+      sg.tl?.kill();
+      this.marks.forEach((m) => m.g.classList.remove('is-back'));
+      if (reduced || !window.gsap) { sg.g.innerHTML = ''; return; }
+      gsap.to(sg.g, { opacity: 0, duration: 0.25, ease: 'power1.out', onComplete: () => { if (!this.sight) { sg.g.innerHTML = ''; sg.g.style.opacity = ''; } } });
     }
     setMarks(list) {
       this.tw?.kill(); this.tw = null;
-      this.svg.innerHTML = list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}">${m.id === 'cannon' ? '<circle class="boom" r="8"/>' : ''}<circle class="mk-hit" r="22"/><circle class="mk-halo"/><circle class="mk-glow"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
-      const gs = [...this.svg.children];
+      this.sight?.tl?.kill();
+      this.sight = null;
+      this.svg.innerHTML = '<g class="sights"></g>' + list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}">${m.id === 'cannon' ? '<circle class="boom" r="8"/>' : ''}<circle class="mk-hit" r="22"/><circle class="mk-halo"/><circle class="mk-glow"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
+      const gs = $$(':scope > g.mk', this.svg);
       this.marks = list.map((m, i) => ({ ...m, g: gs[i], dot: $('.mk-dot', gs[i]), halo: $('.mk-halo', gs[i]), glow: $('.mk-glow', gs[i]), ring: $('.mk-ring', gs[i]), text: $('.mk-label', gs[i]), state: '', gone: false }));
       this.byId = new Map(this.marks.map((m) => [m.id, m]));
       this.cur = null;
@@ -2267,9 +2323,12 @@
         m.g.classList.toggle('is-dim', dim);
       }
       this.cur = curId;
-      if (!camera) { this.name(); return; }
+      const sight = this.kind === 'page' ? curId === 'keyhole' && sightOK() : this.kind === 'sheet' && sightOK();
+      if (!sight) this.clearSight();
+      if (!camera) { this.name(); if (sight) this.setSight(true, false); return; }
       this.goal = this.target(el, din, curId && this.byId.get(curId), ci, ord);
-      this.goTo(this.goal, jump ? 0 : this.kind === 'pocket' ? 0.55 : 0.9);
+      this.goTo(this.goal, jump ? 0 : this.kind === 'pocket' ? 0.55 : sight && this.kind === 'page' ? 1.0 : 0.9);
+      if (sight) this.setSight(true, !jump && this.kind === 'page');
     }
     // The camera for an entry. Laptop: a place close up, the three pizza places (and her pick) for dinner, else
     // her whole day.
@@ -2283,7 +2342,10 @@
         const s = this.vw / (1500 / NOL.mPerPx);
         return m ? { x: m.x, y: m.y, s } : { x: PANTHEON.x, y: PANTHEON.y, s };
       }
-      if (this.kind === 'sheet') return this.frame(shown, 40, 0.9);
+      // The phone's sheet: her whole day, and the dome too when the sight line is drawn.
+      if (this.kind === 'sheet') return this.frame(sightOK() ? [...shown, DOME] : shown, 40, 0.9);
+      // The keyhole on the laptop: the Aventine and the dome together, so the line has room to walk.
+      if (curM && curM.id === 'keyhole' && sightOK()) return this.frame([curM, DOME], 110, 0.8);
       if (din) return this.frame(shown.filter((m) => m.kind === 'idea' || m.id === 'dinner'), 110, 0.8);
       if (curM) return { x: curM.x, y: curM.y, s: NOL.mPerPx / 2.5 };
       return this.frame(stops, 90, 0.75);

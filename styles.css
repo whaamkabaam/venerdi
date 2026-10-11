@@ -538,6 +538,19 @@ button.hud-clock:active { scale: 0.96; }
 .atlas-marks { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .mk { pointer-events: auto; cursor: pointer; transition: opacity 300ms var(--ease-out); }
 .mk.is-gone { display: none; }
+/* The keyhole's sight line (v9b B2f, b3.7): a dotted survey line from her ring to a small dome glyph, with a sky halo;
+   her other places step back while it shows on the laptop map. */
+.mk.is-back { opacity: 0.32; }
+.sight { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 0.5 5; }
+.sight-halo { fill: none; stroke: var(--mk-bg); stroke-width: 4; stroke-linecap: round; opacity: 0.7; }
+.sight-dome { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.sight-label {
+  font-family: var(--font-body); font-size: 12.5px; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.01em;
+  fill: var(--accent); stroke: var(--mk-bg); stroke-width: 3.5px; stroke-linejoin: round; paint-order: stroke;
+  text-rendering: geometricPrecision;
+}
+.atlas.is-flying .sight-label { opacity: 0; transition: opacity 120ms ease-out; }
+.sights { pointer-events: none; }
 /* Noon (v9b B2e, b3.6): one ring leaves the cannon on the map, a hairline however wide it grows. */
 .boom { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: 0; vector-effect: non-scaling-stroke; pointer-events: none; }
 .mk.is-dim { opacity: 0.32; }
