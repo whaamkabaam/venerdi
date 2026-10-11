@@ -541,6 +541,22 @@ button.hud-clock:active { scale: 0.96; }
 /* The keyhole's sight line (v9b B2f, b3.7): a dotted survey line from her ring to a small dome glyph, with a sky halo;
    her other places step back while it shows on the laptop map. */
 .mk.is-back { opacity: 0.32; }
+/* The race tracks (v9b B2h, b3.9): a running lane, 3 px at 70 % with a 1 px line of sky along its middle, no fill,
+   under her stop's mark; lit (accent) with its stop, hollow (muted ink) ahead, sodium after dark. */
+.track { opacity: 0; transition: opacity 200ms ease-out; pointer-events: none; }
+.track.is-shown { opacity: 1; }
+.track.is-shown.is-dim { opacity: 0.32; }
+.track path { fill: none; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.track-lane { stroke: var(--ink-mark); stroke-width: 3; }
+.track.is-lit .track-lane { stroke: color-mix(in oklch, var(--accent) 70%, transparent); }
+.track-mid { stroke: var(--mk-bg); stroke-width: 1; }
+.mk-sub {
+  font-family: var(--font-body); font-size: 12px; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.01em;
+  fill: var(--ink-muted); stroke: var(--mk-bg); stroke-width: 3.5px; stroke-linejoin: round; paint-order: stroke;
+  pointer-events: none; opacity: 0; transition: opacity 200ms ease-out; text-rendering: geometricPrecision;
+}
+.mk.is-current .mk-sub, .mk.is-hover .mk-sub { opacity: 1; }
+.atlas.is-flying .mk .mk-sub { opacity: 0; transition-duration: 120ms; }
 .sight { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 0.5 5; }
 .sight-halo { fill: none; stroke: var(--mk-bg); stroke-width: 4; stroke-linecap: round; opacity: 0.7; }
 .sight-dome { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }

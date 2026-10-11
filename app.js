@@ -2042,6 +2042,17 @@
   // would join two of her stops, and the map draws no route).
   const DOME = toMap(41.9022, 12.4533);
   const sightOK = () => !!plan && plan.items.some((it) => it.id === 'keyhole') && !plan.items.some((it) => it.id === 'stpeters');
+  // The two race tracks (b3.9): Piazza Navona keeps the shape of Domitian's stadium, the Circus Maximus was the
+  // chariot track. Each outline (OpenStreetMap, map.json `tracks`) shows when one of its stops is on her day, on the
+  // laptop map and the phone's sheet, as a running lane under that stop's mark, while it is at least 24 px long.
+  const TRACKS = Object.entries({ navona: ['centre'], circus: ['circovr', 'circusjog'] })
+    .filter(([id]) => Array.isArray(MAP.tracks?.[id]))
+    .map(([id, stops]) => {
+      const pts = MAP.tracks[id].map(([la, lo]) => toMap(la, lo));
+      const xs = pts.map((q) => q.x), ys = pts.map((q) => q.y);
+      return { id, stops, pts, long: Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) };
+    });
+  const trackOf = (stopId) => TRACKS.find((t) => t.stops.includes(stopId));
   const EDGE = { x0: 60, y0: 60, x1: NOL.w - 60, y1: NOL.h - 60 };
   const offSheet = (p) => p.x < 110 || p.y < 110 || p.x > NOL.w - 110 || p.y > NOL.h - 110;
   function edgePoint(p) {
@@ -2171,6 +2182,8 @@
       this.goal = null;
       this.marks = [];
       this.byId = new Map();
+      this.tracks = [];
+      this.lapped = new Set(); // the tracks already drawn in as a lap here (once per page load)
       this.cur = null;
       this.tw = null;
       this.vw = 0; this.vh = 0; this.dpr = 1;
@@ -2235,6 +2248,26 @@
         if (off !== m.off) { m.off = off; m.g.classList.toggle('is-off', off); }
       }
       if (this.sight) this.drawSight();
+      if (this.tracks.length) this.drawTracks();
+    }
+    // A lane in screen px, shown while its outline's long side is at least 24 px; the first time it shows in this
+    // map it is drawn in as one lap (0.7 s). It is lit with its stop (past or current), hollow ahead, a lamp at night.
+    drawTracks() {
+      const s = this.cam.s;
+      for (const t of this.tracks) {
+        const show = t.long * s >= 24;
+        if (show !== t.shown) {
+          t.shown = show;
+          t.g.classList.toggle('is-shown', show);
+          if (show && !this.lapped.has(t.id)) {
+            this.lapped.add(t.id);
+            if (!reduced && window.gsap) gsap.fromTo(t.paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: 'power1.inOut', overwrite: true });
+          }
+        }
+        if (!show) continue;
+        const d = 'M' + t.pts.map((q) => this.scr(q.x, q.y).map((v) => v.toFixed(1)).join(' ')).join('L') + 'Z';
+        t.paths.forEach((p) => p.setAttribute('d', d));
+      }
     }
     // The sight line in screen px: from 15 px outside her ring to 10 px short of the dome glyph, `p` of the way;
     // the glyph's name keeps inside the window.
@@ -2288,9 +2321,12 @@
       this.tw?.kill(); this.tw = null;
       this.sight?.tl?.kill();
       this.sight = null;
-      this.svg.innerHTML = '<g class="sights"></g>' + list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}">${m.id === 'cannon' ? '<circle class="boom" r="8"/>' : ''}<circle class="mk-hit" r="22"/><circle class="mk-halo"/><circle class="mk-glow"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
+      const onDay = new Set(list.map((m) => m.id));
+      this.tracks = this.kind === 'pocket' ? [] : TRACKS.filter((t) => t.stops.some((id) => onDay.has(id)));
+      this.svg.innerHTML = `<g class="tracks">${this.tracks.map((t) => `<g class="track" data-track="${t.id}"><path class="track-lane" pathLength="1"/><path class="track-mid" pathLength="1"/></g>`).join('')}</g><g class="sights"></g>` + list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}">${m.id === 'cannon' ? '<circle class="boom" r="8"/>' : ''}<circle class="mk-hit" r="22"/><circle class="mk-halo"/><circle class="mk-glow"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text>${trackOf(m.id) && this.kind !== 'pocket' ? `<text class="mk-sub" dominant-baseline="central">${esc(U.mapTrack[trackOf(m.id).id])}</text>` : ''}</g>`).join('');
       const gs = $$(':scope > g.mk', this.svg);
-      this.marks = list.map((m, i) => ({ ...m, g: gs[i], dot: $('.mk-dot', gs[i]), halo: $('.mk-halo', gs[i]), glow: $('.mk-glow', gs[i]), ring: $('.mk-ring', gs[i]), text: $('.mk-label', gs[i]), state: '', gone: false }));
+      this.marks = list.map((m, i) => ({ ...m, g: gs[i], dot: $('.mk-dot', gs[i]), halo: $('.mk-halo', gs[i]), glow: $('.mk-glow', gs[i]), ring: $('.mk-ring', gs[i]), text: $('.mk-label', gs[i]), sub: $('.mk-sub', gs[i]), state: '', gone: false }));
+      this.tracks.forEach((t) => { t.g = $(`.track[data-track="${t.id}"]`, this.svg); t.paths = $$('path', t.g); t.shown = false; });
       this.byId = new Map(this.marks.map((m) => [m.id, m]));
       this.cur = null;
     }
@@ -2331,6 +2367,11 @@
         m.g.classList.toggle('is-dim', dim);
       }
       this.cur = curId;
+      for (const t of this.tracks) {
+        const st = this.marks.filter((m) => t.stops.includes(m.id)).map((m) => m.state);
+        t.g.classList.toggle('is-lit', st.includes('current') || st.includes('past'));
+        t.g.classList.toggle('is-dim', din);
+      }
       const sight = this.kind === 'page' ? curId === 'keyhole' && sightOK() : this.kind === 'sheet' && sightOK();
       if (!sight) this.clearSight();
       if (!camera) { this.name(); if (sight) this.setSight(true, false); return; }
@@ -2426,13 +2467,19 @@
       const placed = [];
       const box = (p, w, h, [dx, dy, a]) => { const x0 = a === 'start' ? p.x + dx : a === 'end' ? p.x + dx - w : p.x + dx - w / 2; return [x0 - 1, p.y + dy - h / 2, x0 + w + 1, p.y + dy + h / 2]; };
       const clear = (p, b) => !placed.some((q) => hit(b, q)) && !dots.some((q, j) => pts[j] !== p && hit(b, q));
-      const put = (p, c) => { p.m.text.setAttribute('x', c[0]); p.m.text.setAttribute('y', c[1]); p.m.text.setAttribute('text-anchor', c[2]); };
+      // A track stop's name has a second line ("Once a running track"), shown while it is current or hovered: the
+      // pair is placed as one box, the name above, the line under it.
+      const put = (p, c) => {
+        const sub = p.m.sub, two = sub && p.m.state === 'current';
+        p.m.text.setAttribute('x', c[0]); p.m.text.setAttribute('y', two ? c[1] - 8 : c[1]); p.m.text.setAttribute('text-anchor', c[2]);
+        if (sub) { sub.setAttribute('x', c[0]); sub.setAttribute('y', two ? c[1] + 9 : c[1] + 14); sub.setAttribute('text-anchor', c[2]); }
+      };
       // On a crowded day the current name may find no clear spot near its ring: it takes the spot that covers
       // the fewest dots, and those dots step back under it (is-under) until the current entry changes.
       pts.forEach((p) => p.m.g.classList.remove('is-under'));
       const cur = pts.find((p) => p.m.state === 'current');
       if (cur) {
-        const { w, h } = labelSize(cur.m.text);
+        const { w, h } = markSize(cur.m);
         const cands = [];
         for (const d of [17, 30]) cands.push([d, 0, 'start'], [-d, 0, 'end'], [0, -(d + 8), 'middle'], [0, d + 8, 'middle'], [d - 4, -(d + 2), 'start'], [-(d - 4), d + 2, 'end'], [d - 4, d + 2, 'start'], [-(d - 4), -(d + 2), 'end']);
         let c = cands.find((k) => { const b = box(cur, w, h, k); return fits(b) && clear(cur, b); });
@@ -2458,6 +2505,13 @@
   }
   // A name's box in its current face, measured once per text and face.
   const LABEL_W = new Map();
+  // The current name's box, with its track line under it when it has one.
+  function markSize(m) {
+    const a = labelSize(m.text);
+    if (!m.sub) return a;
+    const b = labelSize(m.sub);
+    return { w: Math.max(a.w, b.w), h: a.h + 17 };
+  }
   function labelSize(t) {
     const key = `${t.closest('.is-current') ? 'b' : 's'}|${t.textContent}`;
     if (!LABEL_W.has(key)) { const b = t.getBBox(); LABEL_W.set(key, { w: b.width || t.textContent.length * 7, h: b.height || 16 }); }
