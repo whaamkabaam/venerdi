@@ -557,7 +557,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   --ar: 4 / 5;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 12px;
+  gap: var(--s5) var(--s3);
 }
 .tiles--one { --ar: 1; }
 .tile-cell { position: relative; display: grid; align-content: start; justify-items: start; min-width: 0; }
@@ -577,28 +577,38 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .tile:active { scale: 0.96; }
 .tile:focus-visible { outline: none; }
 .tile:focus-visible .tile-photo { outline: 2px solid var(--ink); outline-offset: 4px; }
+/* v9 (dir-3, design-v9 amendments b1.1): the photo is a layer over an ink mat. Picked, it steps in 6 px
+   and its corners stay concentric (18 outside = 12 inside + 6). Nothing outside the tile moves. */
 .tile-photo {
   position: relative;
   display: block;
   aspect-ratio: var(--ar);
-  border-radius: 18px;
+  border-radius: var(--r-tile);
   overflow: hidden;
+  background-color: var(--ink);
+}
+.tile-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: var(--r-tile);
   background-color: var(--ph, #6b665e);
-  transition: box-shadow 180ms var(--ease-out);
+  clip-path: inset(0 round var(--r-tile));
+  transition: clip-path 220ms var(--ease-out);
 }
-.tile-photo::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.1); pointer-events: none; }
-.tile-photo img { width: 100%; height: 100%; object-fit: cover; transition: scale 300ms var(--ease-out); }
+.tile-img::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--img-outline); pointer-events: none; }
+.tile-img img { width: 100%; height: 100%; object-fit: cover; transition: scale 300ms var(--ease-out); }
 @media (hover: hover) and (pointer: fine) {
-  .tile:hover .tile-photo img { scale: 1.03; }
+  .tile:hover .tile-img img { scale: 1.03; }
 }
-.tile[aria-pressed="true"] .tile-photo, .tile[aria-checked="true"] .tile-photo { box-shadow: 0 0 0 3px var(--ink); }
+.tile[aria-pressed="true"] .tile-img, .tile[aria-checked="true"] .tile-img { clip-path: inset(6px round 12px); }
 .tile-check {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   z-index: 1;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   opacity: 0;
   scale: 0.25;
   filter: blur(4px) drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
@@ -609,7 +619,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .tile-check svg { width: 100%; height: 100%; color: #fff; }
 .tile-check .mark-on .tick { stroke: var(--inchiostro); } /* ink on the white badge, over any photo */
 .tile[aria-pressed="true"] .tile-check, .tile[aria-checked="true"] .tile-check { opacity: 1; scale: 1; filter: blur(0) drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); }
-.tile-label { display: block; margin-top: 10px; font-size: 1rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+.tile-label { display: block; margin-top: var(--s3); font-size: 1rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
 /* Four lines at most: every tile's own sub fits a phone column whole (v8's Rome from above names the
    Spanish Steps last); only a long "You picked: ..." list is cut. */
 .tile-sub {
@@ -618,36 +628,37 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   -webkit-line-clamp: 4;
   line-clamp: 4;
   overflow: hidden;
-  margin-top: 2px;
-  font-size: 0.84375rem;
+  margin-top: var(--s1);
+  font-size: 0.875rem;
   line-height: 1.4;
   color: var(--ink-muted);
   text-wrap: pretty;
 }
-/* "See all 8" / "Photos": words under the sub. The hit area grows to 44 px, mostly downward into the
-   gap, so it does not eat the tile above it. */
+/* "See all 8" / "Have a look": words under the sub with a small chevron, a door into the sheet (dir-3).
+   The hit area grows to 44 px, mostly downward into the gap, so it does not eat the tile above it. */
 .tile-more {
   position: relative;
-  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: var(--s1);
   padding: 0;
   border: 0;
   background: none;
   color: inherit;
-  font-size: 0.84375rem;
+  font-size: 0.875rem;
   line-height: 1.4;
   font-weight: 600;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklch, currentColor 30%, transparent);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: text-decoration-color 150ms ease-out;
+  transition: scale 150ms ease-out;
 }
 .tile-more::after { content: ""; position: absolute; inset: -7px -10px -20px; }
-@media (hover: hover) {
-  .tile-more:hover { text-decoration-color: currentColor; }
+.tile-more:active { scale: 0.96; }
+.tile-more .i { width: 14px; height: 14px; flex: none; transition: translate 200ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .tile-more:hover .i { translate: 2px 0; }
 }
 /* No need / No thanks: under the grid on a phone (full width); on a laptop the last cell. */
 .step-none {
@@ -657,7 +668,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   min-height: 48px;
   margin-top: 2px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-btn);
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--hairline);
   font-weight: 500;
@@ -679,11 +690,22 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 20px;
-  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  gap: var(--s3);
+  margin-top: var(--s5);
+  padding: var(--s3) 0 calc(var(--s3) + env(safe-area-inset-bottom));
   background-color: var(--sky);
 }
+/* What she picked on this step, as small photos beside Next (dir-3; design-v9 amendments b1.1): 30 px
+   squares, a 2 px sky ring, overlapping by 8 px; the newest pops in. Decorative (aria-hidden). */
+.picked { display: flex; align-items: center; margin-left: auto; padding-right: var(--s1); }
+.picked-ph {
+  display: block; flex: none; width: 30px; height: 30px; margin-left: -8px; border-radius: 8px; overflow: hidden;
+  background-color: var(--ph, #6b665e); box-shadow: 0 0 0 2px var(--sky);
+  animation: pop-in 220ms var(--ease-out) both;
+}
+.picked-ph:first-child { margin-left: 0; }
+.picked-ph img { width: 100%; height: 100%; object-fit: cover; }
+@keyframes pop-in { from { opacity: 0; scale: 0.25; filter: blur(4px); } }
 /* Hidden (not removed, so nothing moves) until the first step's tiles are in view. */
 .stage-foot { visibility: hidden; opacity: 0; transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms; }
 .stage.is-foot .stage-foot { visibility: visible; opacity: 1; transition: opacity 200ms var(--ease-out), visibility 0s linear 0s; }
@@ -692,7 +714,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stage-back .i { width: 16px; height: 16px; }
 /* Next and Show me Friday in the primary style; Skip quiet, with a hairline ring. */
 .stage-next {
-  margin-left: auto;
+  margin-left: 0;
   min-width: 136px;
   min-height: 52px;
   padding: 0 22px;
@@ -873,20 +895,22 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 .stop-photo { display: block; aspect-ratio: 4 / 3; scroll-snap-align: start; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
 .stop-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
-.stop-dots { display: flex; justify-content: center; }
+/* Which photo: short bars, not dots (dir-3; design-v9 amendments b1.3): 16 x 2 px, the current one in
+   ink, the other at 30 %; each a 44 x 44 target. In a sheet the first bar starts on the content's edge. */
+.stop-dots { display: flex; justify-content: center; margin-top: var(--s1); }
+.peek-thing .stop-dots { justify-content: flex-start; }
 .stop-dot { position: relative; width: 44px; height: 24px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .stop-dot::before {
   content: "";
   position: absolute;
-  left: 50%; top: 50%;
-  width: 7px; height: 7px;
-  margin: -3.5px 0 0 -3.5px;
-  border-radius: 50%;
+  left: 14px; right: 14px; top: 11px;
+  height: 2px;
+  border-radius: 1px;
   background: currentColor;
-  opacity: 0.28;
-  transition: opacity 150ms ease-out;
+  opacity: 0.3;
+  transition: opacity 200ms var(--ease-out);
 }
-.stop-dot[aria-current="true"]::before { opacity: 0.9; }
+.stop-dot[aria-current="true"]::before { opacity: 1; }
 .stop-dot::after { content: ""; position: absolute; inset: -10px 0; }
 .stop-text { display: grid; gap: 6px; padding: 12px 6px 4px; }
 .stop-dots + .stop-text, .stop-photos:has(.stop-dots) + .stop-text { padding-top: 4px; }
@@ -894,7 +918,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stop-line { max-width: 62ch; text-wrap: pretty; }
 .fact { white-space: nowrap; }
 .stop-facts { font-size: 0.875rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
-.stop-tip, .peek-tip { font-size: 0.78125rem; line-height: 1.35; font-weight: 600; color: var(--accent); }
+.stop-tip, .peek-tip { font-size: 0.8125rem; line-height: 1.35; font-weight: 600; color: var(--accent); }
 .stop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
 .stop-actions .btn--small { min-height: 40px; }
 .stop-map {
@@ -989,31 +1013,39 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .sheet {
   width: 100%;
   max-width: 100%;
-  max-height: 88vh;
-  max-height: 88svh;
+  max-height: 92vh;
+  max-height: 92svh;
   margin: auto 0 0;
   padding: 0;
   border: 0;
-  border-radius: 20px 20px 0 0;
+  border-radius: var(--r-card) var(--r-card) 0 0;
   background-color: var(--surface);
   color: var(--ink);
   box-shadow: 0 -12px 40px -16px rgb(10 12 40 / 0.4);
   overscroll-behavior: contain;
+  overflow: hidden;
 }
 .sheet[open] { display: flex; flex-direction: column; }
-.sheet::backdrop { background: rgb(10 12 40 / 0.35); }
+.sheet::backdrop { background: rgb(10 12 40 / 0.4); animation: backdrop-in 300ms ease-out; }
+.sheet.is-closing::backdrop { opacity: 0; transition: opacity 240ms ease-out; }
+@keyframes backdrop-in { from { opacity: 0; } }
+/* The handle: the sheet follows a drag down from here or from its head (app.js bindDrag). Phones only. */
+.sheet-grab { flex: none; display: grid; place-items: center; height: 22px; touch-action: none; cursor: grab; }
+.sheet-grab::before { content: ""; width: 36px; height: 5px; border-radius: 3px; background: var(--ink-mark); }
+.sheet-head, .peek-head { touch-action: none; }
 .sheet-head {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 18px var(--pad) 12px;
+  gap: var(--s3);
+  padding: var(--s1) var(--pad) var(--s4);
   box-shadow: 0 1px 0 var(--hairline);
 }
 .sheet-head h2 { font-family: var(--font-display); font-size: 1.625rem; line-height: 1.1; font-weight: 700; font-synthesis: none; }
 /* The heading takes focus only so the sheet announces its name; it is not a control, so no ring. */
 .sheet-head h2:focus { outline: none; }
-.sheet-body { overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--pad) calc(24px + env(safe-area-inset-bottom)); }
+.sheet-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--pad) calc(var(--s5) + env(safe-area-inset-bottom)); }
 .cat-group h3 { padding: var(--s5) 0 var(--s3); color: var(--ink-muted); }
 /* Every option as a tile: the photo, the text under it, then Add and Photos. */
 .cat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
@@ -1088,24 +1120,24 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 
 /* Phone: a full-height bottom sheet (12 px from the top, 20 px corners): the title and close button
    on top, Done at the bottom, the things scrolling between them. */
+/* v9 (dir-3, design-v9 amendments b1.2): a bottom sheet as tall as what it holds (up to 12 px from the
+   top), the handle, the title and the X on top, the things scrolling under them, "This one" or Done at the
+   foot. */
 .peek {
   width: 100%;
   max-width: 100%;
-  height: calc(100% - 12px);
-  max-height: none;
-  margin: 12px 0 0;
-  border-radius: 20px 20px 0 0;
+  max-height: calc(100% - 12px);
 }
-.peek::backdrop { background: rgb(10 12 40 / 0.45); }
 .peek-head {
+  flex: none;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 16px var(--pad) 14px;
-  box-shadow: 0 1px 0 var(--hairline);
+  gap: var(--s3);
+  padding: var(--s1) var(--pad) var(--s4);
 }
-.peek-titles { flex: 1 1 auto; min-width: 0; display: grid; gap: 4px; padding-top: 6px; }
-.peek-head h2 { font-family: var(--font-display); font-size: 1.75rem; line-height: 1.1; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
+.peek--list .peek-head { box-shadow: 0 1px 0 var(--hairline); }
+.peek-titles { flex: 1 1 auto; min-width: 0; display: grid; gap: var(--s1); padding-top: 6px; }
+.peek-head h2 { font-family: var(--font-display); font-size: 1.875rem; line-height: 1.05; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
 /* The title takes focus only so the dialog announces its name; no ring. */
 .peek-head h2:focus { outline: none; }
 .peek-hint { font-size: 0.9375rem; color: var(--ink-muted); text-wrap: pretty; }
@@ -1132,12 +1164,13 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 @media (hover: hover) {
   .peek-x:hover { background-color: color-mix(in oklch, var(--ink) 14%, transparent); }
 }
-.peek-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 4px var(--pad) 24px; }
+.peek-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--s1) var(--pad) var(--s5); }
 .peek-foot {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px var(--pad) calc(12px + env(safe-area-inset-bottom));
+  gap: var(--s4);
+  padding: var(--s3) var(--pad) calc(var(--s3) + env(safe-area-inset-bottom));
   box-shadow: 0 -1px 0 var(--hairline);
 }
 .peek-done { margin-left: auto; min-width: 128px; justify-content: center; }
@@ -1147,17 +1180,17 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .peek-row {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
-  grid-template-areas: "thumb text" "strip strip" "toggle toggle";
-  column-gap: 12px;
-  padding: 16px 0;
+  grid-template-areas: "thumb text" "thumb toggle" "strip strip";
+  column-gap: var(--s3);
+  padding: var(--s4) 0;
   border-bottom: 1px solid var(--hairline);
 }
 .peek-row:last-child { border-bottom: 0; }
 .peek-row > .peek-thumb { grid-area: thumb; }
 .peek-row > .peek-text { grid-area: text; }
 .peek-row > .peek-strip { grid-area: strip; }
-.peek-row > .peek-toggle, .peek-row > .peek-no { grid-area: toggle; }
-.peek-no { min-height: 44px; min-width: 128px; margin-top: 12px; padding: 0 22px; border-radius: 12px; font-size: 0.9375rem; }
+.peek-row > .peek-toggle, .peek-row > .peek-no { grid-area: toggle; justify-self: start; align-self: start; }
+.peek-no { min-height: 44px; min-width: 112px; margin-top: var(--s3); padding: 0 18px; border-radius: var(--r-btn); font-size: 0.9375rem; }
 .peek-thumb {
   align-self: start;
   display: block;
@@ -1179,7 +1212,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .peek-name { font-size: 1.0625rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
 /* The whole line, never cut: it is the one sentence she chooses by (three to four lines at most). */
 .peek-line {
-  font-size: 0.90625rem;
+  font-size: 0.9375rem;
   line-height: 1.4;
   text-wrap: pretty;
 }
@@ -1189,20 +1222,20 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* In the peek the photos sit at 88 % of the strip, so the next one shows; each has its own corners. */
 .peek .stop-strip { grid-auto-columns: 88%; gap: 8px; border-radius: 0; }
 .peek .stop-photo { border-radius: 14px; overflow: hidden; }
-/* "This one": a hairline ring; pressed, an ink fill and a check that scales in. */
+/* "This one": quiet at rest (a soft fill, no ring); pressed, an ink fill and a check that scales in. */
 .peek-toggle {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 128px;
+  min-width: 112px;
   min-height: 44px;
-  margin-top: 12px;
-  padding: 0 22px;
+  margin-top: var(--s3);
+  padding: 0 18px;
   border: 0;
-  border-radius: 12px;
-  background-color: transparent;
-  box-shadow: inset 0 0 0 1px var(--hairline);
+  border-radius: var(--r-btn);
+  background-color: var(--fill-quiet);
+  box-shadow: none;
   color: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -1226,36 +1259,50 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   transition-duration: 180ms;
   transition-timing-function: ease-out;
 }
-.peek-toggle[aria-pressed="true"] { background-color: var(--ink); color: var(--on-ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.peek-toggle[aria-pressed="true"] { background-color: var(--ink); color: var(--on-ink); }
 .peek-toggle[aria-pressed="true"] .peek-toggle-in { translate: 11px 0; }
 .peek-toggle[aria-pressed="true"] .tick-i { opacity: 1; scale: 1; filter: blur(0); }
 @media (hover: hover) {
-  .peek-toggle[aria-pressed="false"]:hover { background-color: color-mix(in oklch, var(--ink) 8%, transparent); }
+  .peek-toggle[aria-pressed="false"]:hover { background-color: var(--fill-quiet-hover); }
 }
 
-/* An area, a wild card or a stop: one thing, bigger. */
-.peek-thing { display: grid; align-content: start; padding-top: 16px; }
-/* The laptop story-card rules name grid areas on .stop-photos / .stop-text; inside the single peek
-   those names would open implicit columns, so its parts stay in one column here. */
-.peek-thing > .stop-photos, .peek-thing > .peek-text, .peek-thing > .peek-toggle { grid-area: auto; }
-.peek-thing .peek-text { padding-top: 10px; gap: 6px; }
-.stop-photos:not(:has(.stop-dots)) + .peek-text { padding-top: 16px; }
+/* One thing (the class, an area, a wild card, a More ideas photo, See everything): its photos full width
+   (a tap pages them), the line, the facts, the details (class only); "This one" in the sticky foot. */
+.peek-thing { display: grid; align-content: start; }
+.peek-thing > .stop-photos, .peek-thing > .peek-text { grid-area: auto; }
+.peek-thing > .stop-photos { margin: 0 calc(-1 * var(--pad)); }
+.peek-thing .stop-strip { grid-auto-columns: 100%; gap: var(--s2); padding: 0 var(--pad); scroll-padding: 0 var(--pad); border-radius: 0; }
+.peek-thing .stop-photo { border-radius: var(--r-photo); overflow: hidden; cursor: pointer; }
+.peek-thing .stop-dots { margin-left: calc(var(--pad) - 14px); }
+.peek-thing .peek-text { display: block; }
 /* The header already carries the title; the body's copy stays only as the article's accessible name. */
 .peek-thing .peek-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.peek-thing .peek-line { display: block; font-size: 1rem; line-height: 1.5; }
-.peek-thing .peek-facts { font-size: 0.875rem; }
-.peek-thing .peek-toggle { justify-self: start; min-width: 168px; }
+.peek-thing .peek-line { display: block; margin-top: var(--s4); font-size: 1.0625rem; line-height: 1.55; }
+.stop-photos:has(.stop-dots) + .peek-text .peek-line { margin-top: var(--s2); }
+.peek-thing .peek-facts { margin-top: var(--s2); font-size: 0.875rem; }
+.peek-thing .peek-tip { margin-top: var(--s3); }
+/* The class's details: label and fact in two columns, a hairline between rows. */
+.peek-details { display: grid; grid-template-columns: max-content minmax(0, 1fr); margin: var(--s5) 0 0; }
+.peek-details dt, .peek-details dd { padding: var(--s3) 0; border-top: 1px solid var(--hairline); }
+.peek-details dt { padding-right: var(--s5); padding-top: calc(var(--s3) + 3px); color: var(--ink-muted); }
+.peek-details dd { margin: 0; font-size: 0.9375rem; line-height: 1.45; text-wrap: pretty; }
+.peek-details a { font-weight: 500; text-underline-offset: 3px; white-space: nowrap; }
+.peek-details a .i { display: inline-block; width: 12px; height: 12px; margin-left: 2px; vertical-align: -1px; }
+/* "This one" in the foot of one thing: the whole width on a phone, quiet until it is hers. */
+.peek--one .peek-foot .peek-toggle { flex: 1 1 auto; min-height: 52px; margin-top: 0; font-size: 1rem; }
 
 /* ---------- Wider screens ---------- */
 
 @media (min-width: 640px) {
   .tiles--many { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tile-label { font-size: 1.125rem; }
-  .tile-sub, .tile-more { font-size: 0.90625rem; }
+  .tile-sub, .tile-more { font-size: 0.9375rem; }
   .cat-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 768px) {
-  .sheet { max-width: 640px; max-height: 84vh; margin: auto; border-radius: 20px; }
+  .sheet { max-width: 640px; max-height: 84vh; margin: auto; border-radius: var(--r-card); }
+  .sheet-grab { display: none; }
+  .sheet-head, .peek-head { touch-action: auto; padding-top: var(--s5); }
 }
 /* Laptop: the questions span the wide column, four across, the buttons inline under the grid. On
    the pick-one steps the none button is the last cell of the grid, as tall as a tile. */
@@ -1268,11 +1315,11 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .hero-note > .note { max-width: none; }
   .section.section--ask { padding-top: var(--s8); }
   .step-title { font-size: clamp(44px, 4.2vw, 60px); line-height: 1.04; }
-  .step-hint { margin: 10px 0 22px; font-size: 1rem; }
-  .tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 22px 20px; }
+  .step-hint { margin: var(--s3) 0 var(--s5); font-size: 1rem; }
+  .tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: var(--s5); }
   .tiles--one { --ar: 4 / 3; }
-  .step-none { grid-column: span var(--span); min-height: 0; margin: 0; border-radius: 18px; font-size: 1.0625rem; }
-  .stage-foot { position: static; margin-top: 26px; padding: 0; background: none; }
+  .step-none { grid-column: span var(--span); min-height: 0; margin: 0; border-radius: var(--r-tile); font-size: 1.0625rem; }
+  .stage-foot { position: static; margin-top: var(--s5); padding: 0; background: none; }
   .peek, .catalogue {
     width: min(1040px, 100% - 48px);
     max-width: none;
@@ -1282,8 +1329,8 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
     margin: auto;
     border-radius: 22px;
   }
-  .peek-head, .peek-body, .peek-foot { padding-left: 32px; padding-right: 32px; }
-  .peek-head { padding-top: 22px; }
+  .peek-head, .peek-body, .peek-foot { padding-left: var(--s6); padding-right: var(--s6); }
+  .peek-head { padding-top: var(--s5); }
   .peek-head h2 { font-size: 2rem; }
   /* Two columns of rows; the thumbnail grows to 160 px and "This one" sits at the right edge. */
   /* align-items: start, so a row with its photos open does not stretch its neighbour (and push that
@@ -1291,13 +1338,16 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .peek-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; align-items: start; }
   .peek-row { grid-template-columns: 160px minmax(0, 1fr); grid-template-areas: "thumb text" "thumb toggle" "strip strip"; column-gap: 16px; }
   .peek-row:nth-last-child(2):nth-child(odd) { border-bottom: 0; }
-  .peek-row .peek-toggle, .peek-row .peek-no { justify-self: end; align-self: end; }
-  .peek--one .stop-strip { grid-auto-columns: 92%; }
-  /* Capped at 46vh so the line and "This one" still show under the photo on a 900 px screen. */
-  /* 16:10 of the strip's 92 % column (dialog width less 64 px padding), capped at 46vh. Set as a
-     height, not max-height: WebKit keeps the ratio by narrowing the photo instead of cropping it. */
-  .peek--one .stop-photo { aspect-ratio: auto; height: min(46vh, (min(1040px, 100vw - 48px) - 64px) * 0.92 * 10 / 16); }
-  .peek--one .peek-text { max-width: 62ch; }
+  /* One thing on a laptop: photos left (4:5), text right, so nothing hides below the fold (dir-3). */
+  .peek.peek--one { width: min(980px, 100% - 64px); height: auto; max-height: min(860px, 100% - 64px); }
+  .peek--one .peek-thing { grid-template-columns: 400px minmax(0, 1fr); column-gap: var(--s6); align-items: start; }
+  .peek--one .peek-thing > .stop-photos { position: sticky; top: 0; margin: 0; }
+  .peek--one .peek-thing .stop-strip { padding: 0; scroll-padding: 0; }
+  .peek--one .peek-thing .stop-photo { aspect-ratio: 4 / 5; }
+  .peek--one .peek-thing .stop-dots { margin-left: -14px; }
+  .peek--one .peek-thing .peek-line, .peek--one .stop-photos:has(.stop-dots) + .peek-text .peek-line { margin-top: 0; }
+  .peek--one .peek-foot { justify-content: flex-end; }
+  .peek--one .peek-foot .peek-toggle { flex: none; min-width: 200px; }
   .catalogue .sheet-head, .catalogue .sheet-body { padding-left: 32px; padding-right: 32px; }
   .cat-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 20px; }
   /* A story card is a row: the photos on the left (44 %), the rest on the right. */
@@ -1356,8 +1406,9 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-halo, .plan-item, .stop-card, .tile, .tile-photo, .tile-photo img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
-  .tile-more, .pill, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
+  .map-halo, .plan-item, .stop-card, .tile, .tile-img, .tile-img img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
+  .tile-more, .tile-more .i, .pill, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
+  .picked-ph, .sheet::backdrop { animation: none; }
   .note-en.is-on { animation: none; }
   .hud, .hud[data-on] { transition: none; }
   .stage-foot, .stage.is-foot .stage-foot { transition: none; }

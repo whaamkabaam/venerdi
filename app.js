@@ -61,6 +61,7 @@
   const ICON = {
     out: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6.5 5H11v4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     chev: '<svg class="i" viewBox="0 0 18 18" aria-hidden="true"><path d="m5 7 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    more: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3.5 4.5 4.5L6 12.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     plus: '<svg class="mark-off" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.75v8.5M7.75 12h8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
     check: '<svg class="mark-on" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path class="tick" d="m7.5 12.4 3 3 6-6.7" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     tick: '<svg class="tick-i" viewBox="0 0 16 16" aria-hidden="true"><path d="m3.25 8.4 3 3 6.5-6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -420,15 +421,16 @@
     const tiles = s.tiles.map((t, k) => {
       const state = s.multi ? 'aria-pressed="false"' : `role="radio" aria-checked="false" aria-posinset="${k + 1}" aria-setsize="${s.tiles.length}" tabindex="-1"`;
       const v = esc(tileValue(s, t));
-      // "See all 8", "See both", or plain "Photos" when one thing is behind it.
+      // "See all 8", "See both", or "Have a look" when one thing is behind it (v9, design-v9 2.4).
       const n = s.multi ? servedBy(t.id).length : 1;
-      const more = n === 1 ? PK.openPhotos : n === 2 ? PK.openTwo : fmt(PK.open, { n });
+      const more = n === 1 ? PK.openOne : n === 2 ? PK.openTwo : fmt(PK.open, { n });
+      // The photo sits on its own layer over an ink mat: picked, it steps in 6 px (styles.css, b1.1).
       return `<div class="tile-cell">
           <button type="button" class="tile" ${state} data-step="${i}" data-value="${v}">
-            ${thumbHTML(tilePhoto(t), 'tile-photo', '(min-width: 1024px) 280px, (min-width: 640px) 31vw, 46vw', `<span class="tile-check" aria-hidden="true">${ICON.check}</span>`, { loading: i ? 'lazy' : 'eager' })}
+            <span class="tile-photo">${thumbHTML(tilePhoto(t), 'tile-img', '(min-width: 1024px) 280px, (min-width: 640px) 31vw, 46vw', '', { loading: i ? 'lazy' : 'eager' })}<span class="tile-check" aria-hidden="true">${ICON.check}</span></span>
             <span class="tile-label">${esc(tileLabel(t))}</span><span class="tile-sub">${esc(tileSub(t))}</span>
           </button>
-          <button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span></button>
+          <button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span>${ICON.more}</button>
         </div>`;
     }).join('');
     // Laptop: four across. The none button fills the empty cells of the last row. When the tiles
@@ -450,6 +452,7 @@
         <div class="stage-steps">${STEPS.map(stepHTML).join('')}</div>
         <div class="stage-foot">
           <button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>
+          <span class="picked" aria-hidden="true"></span>
           <button type="button" class="btn stage-next" data-action="next"></button>
         </div>
       </div>
@@ -525,6 +528,25 @@
     next.classList.toggle('btn--primary', last || any);
     $('.stage-back', host).hidden = stage.step === 0;
     $('.stage-count', host).dataset.text = counterText(stage.step);
+    syncPicked();
+  }
+  // Beside Next: the photos of what she picked on this step, in the order she picked them, so the answer
+  // stays in sight when the tiles have scrolled away (dir-3, design-v9 amendments b1.1). Only the newest
+  // one pops in; the rest are already there. Decorative (the tiles carry the state).
+  function syncPicked() {
+    const box = $('.picked', slot('stage'));
+    if (!box) return;
+    const s = STEPS[stage.step];
+    const vals = chosen(stage.draft, s);
+    const sameStep = box.dataset.step === String(stage.step);
+    const have = sameStep ? $$('.picked-ph', box).map((el) => el.dataset.v) : [];
+    if (sameStep && have.join() === vals.join()) return;
+    box.dataset.step = String(stage.step);
+    box.innerHTML = vals.map((v) => {
+      const im = IMG[tilePhoto(tileOf(s, v))];
+      return `<span class="picked-ph" data-v="${esc(v)}" style="--ph:${esc(im?.color || '')}">${im ? `<img src="${esc(im.src800)}" alt="" width="${+im.w}" height="${+im.h}" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">` : ''}</span>`;
+    }).join('');
+    $$('.picked-ph', box).forEach((el) => { if (!sameStep || reduced || have.includes(el.dataset.v)) el.style.animation = 'none'; });
   }
   const hudBottom = () => (hud.hasAttribute('data-on') ? hud.getBoundingClientRect().bottom : 0);
   // Programmatic scrolls run on a short tween, so the sky and the HUD follow them like a real scroll.
@@ -1544,6 +1566,14 @@
     const strip = $('.stop-strip', dot.closest('.stop-photos'));
     strip.scrollTo({ left: stripLeft(strip, +dot.dataset.n), behavior: reduced ? 'auto' : 'smooth' });
   }
+  // A tap on a photo pages its strip to the next photo, round to the first after the last.
+  function pageStrip(photo) {
+    const strip = photo.closest('.stop-strip');
+    const n = strip.children.length;
+    if (n < 2) return;
+    const cur = [...strip.children].indexOf(photo);
+    strip.scrollTo({ left: stripLeft(strip, (cur + 1) % n), behavior: reduced ? 'auto' : 'smooth' });
+  }
   function onStripScroll(e) {
     const strip = e.target;
     if (!strip.classList || !strip.classList.contains('stop-strip')) return;
@@ -1574,7 +1604,7 @@
   function renderCatalogue() {
     const D = C.day;
     // The heading takes focus when the sheet opens (it names the dialog), not the Close button.
-    slot('catalogue').innerHTML = `<div class="sheet-head"><h2 id="cat-h" tabindex="-1" autofocus>${esc(D.seeEverything)}</h2><button type="button" class="btn btn--small" data-action="close">${esc(D.close)}</button></div>
+    slot('catalogue').innerHTML = `<div class="sheet-grab" aria-hidden="true"></div><div class="sheet-head"><h2 id="cat-h" tabindex="-1" autofocus>${esc(D.seeEverything)}</h2><button type="button" class="btn btn--small" data-action="close">${esc(D.close)}</button></div>
       <div class="sheet-body">${C.catalogue.groups.map((g) => {
         const opts = C.options.filter((o) => o.group === g.id);
         if (!opts.length) return '';
@@ -1613,13 +1643,12 @@
     syncCatalogue();
     dlg.showModal();
     $('.sheet-body', dlg).scrollTop = 0;
-    if (!reduced) gsap.fromTo(dlg, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out', clearProps: 'opacity,transform' });
+    sheetIn(dlg);
   }
-  function closeCatalogue() {
+  function closeCatalogue(fromY = 0) {
     const dlg = slot('catalogue');
-    if (!dlg.open) return;
-    if (reduced) { dlg.close(); return; }
-    gsap.to(dlg, { opacity: 0, y: 8, duration: 0.15, ease: 'power1.in', onComplete: () => { dlg.close(); gsap.set(dlg, { clearProps: 'opacity,transform' }); } });
+    if (!dlg.open || dlg.classList.contains('is-closing')) return;
+    sheetOut(dlg, fromY, () => dlg.close());
   }
   // Adding from here carries ADDED; tapping the check takes it off the day again. Photos opens the peek.
   function onCatalogueClick(e) {
@@ -1635,13 +1664,63 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Sheets: the iOS curve in, a softer exit, drag down to close         */
+  /* ------------------------------------------------------------------ */
+
+  // v9 (dir-3 openSheet/closeSheet/bindDrag; design-v9 amendments b1.2). Phone: the sheet rises from the
+  // bottom over 500 ms on the iOS sheet curve and leaves in 260 ms; dragging its handle or head down past a
+  // quarter of its height, or flicking it at 0.4 px/ms, closes it. Tablet and laptop: a fade with a 2 %
+  // scale, 260 ms in, 160 ms out. Reduced motion: a fade, 200 / 150 ms. Web Animations, so the compositor runs them.
+  // From 768 px the sheets are centred panels (styles.css), so they fade instead of rising, and do not drag.
+  const sheetWide = () => matchMedia('(min-width: 768px)').matches;
+  function sheetIn(dlg) {
+    dlg.classList.remove('is-closing');
+    dlg.style.transform = '';
+    if (reduced) return dlg.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+    if (sheetWide()) return dlg.animate([{ opacity: 0, transform: 'scale(0.98)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
+    return dlg.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], { duration: 500, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
+  }
+  function sheetOut(dlg, fromY, done) {
+    dlg.classList.add('is-closing');
+    const a = reduced ? dlg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'ease-out', fill: 'forwards' })
+      : sheetWide() ? dlg.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(0.98)' }], { duration: 160, easing: 'ease-out', fill: 'forwards' })
+        : dlg.animate([{ transform: `translateY(${fromY}px)` }, { transform: 'translateY(100%)' }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
+    a.onfinish = () => { done(); a.cancel(); dlg.classList.remove('is-closing'); dlg.style.transform = ''; };
+  }
+  function bindDrag(dlg, close) {
+    let y0 = 0, t0 = 0, dy = 0, on = false, id = null;
+    dlg.addEventListener('pointerdown', (e) => {
+      if (sheetWide() || dlg.classList.contains('is-closing') || !e.target.closest('.sheet-grab, .peek-head, .sheet-head') || e.target.closest('button, a')) return;
+      on = true; id = e.pointerId; y0 = e.clientY; t0 = performance.now(); dy = 0;
+      // A pointer the browser no longer counts as active cannot be captured; the drag works without it.
+      try { dlg.setPointerCapture(id); } catch { /* not capturable */ }
+    });
+    dlg.addEventListener('pointermove', (e) => {
+      if (!on || e.pointerId !== id) return;
+      dy = e.clientY - y0;
+      dlg.style.transform = `translateY(${dy < 0 ? dy * 0.15 : dy}px)`; // pulling up past the top is damped
+    });
+    const end = (e) => {
+      if (!on || e.pointerId !== id) return;
+      on = false;
+      const v = dy / Math.max(1, performance.now() - t0);
+      if (dy > dlg.offsetHeight * 0.25 || v > 0.4) { close(Math.max(dy, 0)); return; }
+      if (dy) dlg.animate([{ transform: `translateY(${Math.max(dy, 0)}px)` }, { transform: 'translateY(0)' }], { duration: 300, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
+      dlg.style.transform = '';
+    };
+    dlg.addEventListener('pointerup', end);
+    dlg.addEventListener('pointercancel', end);
+  }
+
+  /* ------------------------------------------------------------------ */
   /* The peek: what is behind a choice, in photos, one tap away          */
   /* ------------------------------------------------------------------ */
 
   // One dialog, three uses: `vibe` ("See all 8" under a sight or a food: every thing behind it as a
-  // compact row, each with "This one"), `pick` ("Photos" under an area or a wild card: the place, with
-  // "This one"), and `one` (Photos on a story card or in the catalogue: the place, no toggle). A
-  // bottom sheet on a phone, a centred panel on a laptop.
+  // compact row, each with "This one"; with one thing behind it, the class, that thing alone, "Have a
+  // look"), `pick` ("Have a look" under an area or a wild card: the place, with "This one"), and `one`
+  // (a More ideas photo or See everything: the place, no toggle). A bottom sheet on a phone, a centred
+  // panel on a laptop; a single thing shows its photos, line, facts and details, "This one" in the foot.
   const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false };
   // "This one". For something that can't happen on Friday, its reason shows in place of the toggle (the
   // toggle stays for screen readers, disabled and described by the reason).
@@ -1666,39 +1745,62 @@
         ${toggleHTML(o, 'want')}
       </article>`;
   }
-  // The single peek: one thing, bigger (and "This one" on the questions).
-  const peekOneHTML = (o, toggle) => `<article class="peek-thing" aria-labelledby="pk-${esc(o.id)}">
-        ${stripHTML(o, '(min-width: 1024px) 920px, 80vw')}
-        ${peekTextHTML(o)}
-        ${toggle ? toggleHTML(o, 'pick') : ''}
+  // The class's details (design-v9 2.4): When, Sauce, Drinks, Where, Run by; the last row ends with the
+  // option's second link (the Class page), opening in a new tab.
+  const detailsHTML = (o) => {
+    if (!o.details?.length) return '';
+    const rows = o.details.map((d, i, a) => {
+      const l = i === a.length - 1 && o.links?.[1];
+      const more = l ? `${esc(C.day.facts.join)}<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>` : '';
+      return `<dt class="label">${esc(d.label)}</dt><dd>${esc(d.text)}${more}</dd>`;
+    }).join('');
+    return `<dl class="peek-details">${rows}</dl>`;
+  };
+  // The single peek: one thing, its photos (a tap pages them), line, facts and details.
+  const peekOneHTML = (o) => `<article class="peek-thing" aria-labelledby="pk-${esc(o.id)}">
+        ${stripHTML(o, '(min-width: 1024px) 400px, 92vw', '', 'eager')}
+        <div class="peek-text">
+          <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
+          <p class="peek-line">${esc(o.line)}</p>
+          <p class="peek-facts">${factsHTML(factList(o))}</p>
+          ${detailsHTML(o)}
+          ${tipHTML(o, 'peek-tip')}
+        </div>
       </article>`;
   function openPeek(opener, kind, { step = -1, value = null, id = null } = {}) {
     const dlg = slot('peek');
     if (dlg.open) return;
-    Object.assign(peek, { kind, step, value, id, opener, closing: false });
-    let title, hint = '', body;
-    if (kind === 'vibe') {
+    // A sight or a food with one thing behind it (the class) opens that thing alone, with "This one"
+    // naming it under the food (design-v9 2.4); the list is for two or more.
+    const single = kind === 'vibe' && servedBy(value).length === 1 ? servedBy(value)[0] : null;
+    Object.assign(peek, { kind, step, value, id: single ? single.id : id, opener, closing: false });
+    let title, hint = '', body, foot;
+    if (kind === 'vibe' && !single) {
       title = tileLabel(tileOf(STEPS[step], value));
       hint = PK.vibeHint;
       body = `<div class="peek-list">${servedBy(value).map(peekRowHTML).join('')}</div>`;
+      foot = `<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button>`;
     } else {
-      title = OPT[id].title;
-      body = peekOneHTML(OPT[id], kind === 'pick');
+      const o = single || OPT[id];
+      title = o.title;
+      body = peekOneHTML(o);
+      const action = single ? 'want' : kind === 'pick' ? 'pick' : '';
+      foot = action ? toggleHTML(o, action) : '';
     }
-    dlg.className = `sheet peek peek--${kind === 'vibe' ? 'list' : 'one'}`;
-    dlg.innerHTML = `<div class="peek-head">
+    dlg.className = `sheet peek peek--${kind === 'vibe' && !single ? 'list' : 'one'}`;
+    dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
+      <div class="peek-head">
         <div class="peek-titles"><h2 id="peek-h" tabindex="-1">${esc(title)}</h2>${hint ? `<p class="peek-hint">${esc(hint)}</p>` : ''}</div>
         <button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>
       </div>
       <div class="peek-body">${body}</div>
-      <div class="peek-foot"><button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button></div>`;
+      ${foot ? `<div class="peek-foot sheet-foot">${foot}</div>` : ''}`;
     syncPeek();
     root.classList.add('is-locked');
     dlg.showModal();
     // The title takes focus (it names the dialog), not the close button.
     $('#peek-h', dlg).focus({ preventScroll: true });
-    const from = reduced ? { opacity: 0 } : matchMedia('(min-width: 1024px)').matches ? { opacity: 0, scale: 0.98 } : { opacity: 0, y: 24 };
-    gsap.fromTo(dlg, from, { opacity: 1, y: 0, scale: 1, duration: 0.26, ease: 'power2.out', clearProps: 'opacity,transform' });
+    sheetIn(dlg);
   }
   // The toggles show the draft: wanted things pressed, the picked area or wild card pressed.
   function syncPeek() {
@@ -1746,13 +1848,13 @@
     if (reduced) { el.hidden = true; return; }
     gsap.to(el, { height: 0, opacity: 0, duration: 0.2, ease: 'power2.inOut', onComplete: () => { el.hidden = true; gsap.set(el, { clearProps: 'height,opacity' }); } });
   }
-  // Out: 180 ms, 8 px down (a fade only under reduced motion). Escape, X, Done and the backdrop all close.
-  function closePeek() {
+  // Out: the sheet's exit (sheetOut). Escape, X, Done, the backdrop and a drag all close.
+  function closePeek(fromY = 0) {
     const dlg = slot('peek');
     if (!dlg.open || peek.closing) return;
     peek.closing = true;
     // Focus goes back right after close(), so the browser's own focus restore cannot land elsewhere.
-    gsap.to(dlg, { opacity: 0, y: reduced ? 0 : 8, duration: 0.18, ease: 'power1.in', onComplete: () => { const o = peek.opener; dlg.close(); if (o && o.isConnected) o.focus({ preventScroll: true }); } });
+    sheetOut(dlg, fromY, () => { const o = peek.opener; dlg.close(); if (o && o.isConnected) o.focus({ preventScroll: true }); });
   }
   function onPeekClick(e) {
     const dlg = slot('peek');
@@ -1761,6 +1863,9 @@
     if (dot) { onStripDot(dot); return; }
     const first = e.target.closest('.peek-strip .stop-photo[data-n="0"]');
     if (first) { toggleStrip($('.peek-thumb', first.closest('.peek-row'))); return; }
+    // A single thing's photo: a tap pages to the next one (a swipe still scrolls the strip).
+    const ph = e.target.closest('.peek-thing .stop-photo');
+    if (ph) { pageStrip(ph); return; }
     const b = e.target.closest('[data-action]');
     if (!b) return;
     if (b.dataset.action === 'peek-close') closePeek();
@@ -1770,8 +1875,9 @@
   // However it closed: the page scrolls again and focus goes back to the button that opened it.
   function onPeekClosed() {
     const dlg = slot('peek');
-    gsap.killTweensOf(dlg);
-    gsap.set(dlg, { clearProps: 'opacity,transform' });
+    dlg.getAnimations().forEach((a) => a.cancel());
+    dlg.classList.remove('is-closing');
+    dlg.style.transform = '';
     root.classList.remove('is-locked');
     peek.kind = null;
     peek.closing = false;
@@ -2312,6 +2418,9 @@
   // Escape plays the same exit as Done.
   slot('peek').addEventListener('cancel', (e) => { e.preventDefault(); closePeek(); });
   slot('peek').addEventListener('close', onPeekClosed);
+  bindDrag(slot('peek'), closePeek);
+  bindDrag(slot('catalogue'), closeCatalogue);
+  slot('catalogue').addEventListener('cancel', (e) => { e.preventDefault(); closeCatalogue(); });
   // Closing the sheet (Close, Escape, the backdrop) returns focus to "See everything".
   slot('catalogue').addEventListener('close', () => $('[data-action="catalogue"]', slot('day-body'))?.focus({ preventScroll: true }));
   let textTimer = 0;
