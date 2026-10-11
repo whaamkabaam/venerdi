@@ -44,17 +44,18 @@
 </aside>
 
 <header class="hero" id="top">
-  <div class="board-wrap" data-slot="board"></div>
+  <div class="hero-grid">
+    <div class="board-wrap" data-slot="board"></div>
+    <section class="hero-note" id="note" aria-labelledby="note-h">
+      <h2 id="note-h" class="sr-only" data-slot="note-title"></h2>
+      <div class="note" data-slot="note"></div>
+    </section>
+  </div>
   <h1 class="sr-only" data-slot="hero-title"></h1>
   <noscript><p class="noscript">This page needs JavaScript.</p></noscript>
 </header>
 
 <main>
-  <section class="section" id="note" aria-labelledby="note-h">
-    <h2 id="note-h" class="sr-only" data-slot="note-title"></h2>
-    <div class="note" data-slot="note"></div>
-  </section>
-
   <section class="section section--ask" id="ask" aria-labelledby="ask-h">
     <h2 id="ask-h" class="sr-only" data-slot="ask-title"></h2>
     <div class="stage" data-slot="stage"></div>
@@ -65,6 +66,7 @@
     <h2 id="dep-h" class="sr-only" data-slot="dep-title"></h2>
     <div data-slot="dep-note"></div>
     <div class="board-wrap" data-slot="dep-board"></div>
+    <p class="dep-weather" data-slot="weather" hidden></p>
   </section>
 
   <section class="section section--day" id="day" aria-labelledby="day-h" hidden>
@@ -73,7 +75,6 @@
       <button class="day-change" type="button" data-slot="change-answers"></button>
     </div>
     <div class="day-lines" data-slot="day-lines" hidden></div>
-    <p class="day-weather" data-slot="weather" hidden></p>
     <div class="day-map" data-slot="day-map"></div>
     <div class="day-body" data-slot="day-body"></div>
     <dialog class="sheet catalogue" data-slot="catalogue" aria-labelledby="cat-h"></dialog>

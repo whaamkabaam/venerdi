@@ -57,6 +57,16 @@
   --hud-h: 52px;
   --anchor-gap: calc(var(--hud-h) + env(safe-area-inset-top) + 20px);
 
+  /* v9 (design-v9 3.1): one spacing scale, one radius family, one muted ink. Every margin, padding and gap
+     the v9 pass touches is one of these. Radii are concentric where surfaces nest. */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+  --r-chip: 6px; --r-btn: 8px; --r-thumb: 10px; --r-photo: 14px; --r-tile: 18px; --r-card: 22px;
+  --ink-muted: color-mix(in oklch, var(--ink) 72%, transparent);
+  --ink-mark: color-mix(in oklch, var(--ink) 38%, transparent);   /* non-text marks: the photo bars, the grab handle */
+  --fill-quiet: color-mix(in oklch, var(--ink) 7%, transparent);
+  --fill-quiet-hover: color-mix(in oklch, var(--ink) 11%, transparent);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
   --font-display: "Michelangelus", "Bodoni 72", Didot, "Times New Roman", serif;
   --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
@@ -121,8 +131,8 @@ svg { display: block; }
 
 :focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: 3px;
-  border-radius: 6px;
+  outline-offset: 2px;
+  /* No radius override: the outline follows each control's own corners (an 8 px button, an 8 px ring). */
 }
 
 [hidden] { display: none !important; }
@@ -159,7 +169,7 @@ svg { display: block; }
   min-height: 44px;
   padding: 0 14px 0 16px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--r-btn);
   background: transparent;
   color: inherit;
   box-shadow: inset 0 0 0 1.5px currentColor;
@@ -185,6 +195,10 @@ svg { display: block; }
 }
 .btn--small { position: relative; min-height: 36px; padding: 0 12px; font-size: 0.8125rem; }
 .btn--small::after { content: ""; position: absolute; inset: -4px 0; }
+/* Quiet (design-v9 3.4): a soft fill, no ring. 40 px tall with a 44 px hit area. */
+.btn--quiet { position: relative; min-height: 40px; padding: 0 var(--s4); background-color: var(--fill-quiet); box-shadow: none; font-size: 0.875rem; font-weight: 500; }
+.btn--quiet::after { content: ""; position: absolute; inset: -2px 0; }
+@media (hover: hover) { .btn.btn--quiet:not(:disabled):hover { background-color: var(--fill-quiet-hover); } }
 .btn .i { width: 14px; height: 14px; flex: none; }
 
 .tag {
@@ -374,7 +388,7 @@ svg { display: block; }
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.board-hit:focus-visible { outline: 2px solid var(--flap-ink); outline-offset: 2px; }
+.board-hit:focus-visible { outline: 2px solid var(--flap-ink); outline-offset: -2px; border-radius: var(--r-chip); }
 
 @container (min-width: 560px) {
   .board-row, .board-colheads {
@@ -400,38 +414,40 @@ svg { display: block; }
   }
 }
 
-/* The weather line sits under "Your Friday", so the first question clears the fold. */
-.day-weather { margin: -8px 0 18px; font-size: 0.9375rem; min-height: 1.55em; }
-/* Under "Your Friday": the full-day line and anything that can't happen on Friday. */
-.day-lines { display: grid; gap: 4px; margin: -8px 0 14px; font-size: 0.9375rem; font-weight: 500; }
+/* v9 (design-v9 4.4): the forecast sits under the DEPARTURES board, like a destination's weather on a
+   real one, on the board's left edge at every width. */
+.section--dep > .dep-weather { max-width: 860px; margin: var(--s3) auto 0; padding: 0 2px; font-size: 0.875rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; text-wrap: pretty; }
+/* Under "Your Friday": the full-day line, the overlap line and anything that can't happen on Friday. */
+.day-lines { display: grid; gap: var(--s1); margin: 0 0 var(--s4); font-size: 0.9375rem; font-weight: 500; }
 .day-lines p { text-wrap: pretty; }
-.day-lines + .day-weather { margin-top: 0; }
 .weather-wet { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
 .noscript { margin-top: 24px; }
 
 /* ---------- Sections ---------- */
 
 .section {
-  padding: 72px var(--pad) 0;
+  padding: var(--s8) var(--pad) 0;
   padding-left: max(var(--pad), env(safe-area-inset-left));
   padding-right: max(var(--pad), env(safe-area-inset-right));
 }
 .section > * { max-width: var(--col); margin-left: auto; margin-right: auto; }
-.section > h2 {
-  font-size: 1.75rem;
-  line-height: 1.1;
-  font-weight: 600;
-  font-stretch: 87.5%;
+/* Screen headings take the display face (design-v9 3.2 Display L); no hairline above them (3.3). */
+.section > h2, .day-head h2 {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 8vw, 36px);
+  line-height: 1.04;
+  font-weight: 700;
+  font-synthesis: none;
   letter-spacing: -0.01em;
-  padding-top: 18px;
-  border-top: 1px solid var(--hairline);
-  margin-bottom: 22px;
 }
+.section > h2 { margin-bottom: var(--s5); }
 .section-lead { margin-bottom: 22px; }
 
-/* Note from Felix: straight under the board, then the first question. */
-#note { padding-top: 4px; }
-.note { display: grid; gap: 6px; font-size: 1.0625rem; line-height: 1.5; }
+/* Note from Felix: under the board on a phone; beside it on a laptop (design-v9 4.1). */
+.hero-grid { max-width: 860px; margin: 0 auto; }
+.hero-note { padding-top: var(--s2); }
+.hero-note > .note { max-width: var(--col); }
+.note { display: grid; gap: var(--s2); font-size: 1.0625rem; line-height: 1.5; }
 .note p { max-width: 36rem; }
 .note p { text-wrap: pretty; }
 .note-greeting, .note-sign { font-family: var(--font-display); font-size: 1.75rem; line-height: 1.1; font-style: italic; font-weight: 400; font-synthesis: none; }
@@ -515,7 +531,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 
 /* ---------- The four questions ---------- */
 
-.section--ask { padding-top: 22px; }
+.section--ask { padding-top: var(--s5); }
 .section--ask > .stage { max-width: var(--wide); }
 .stage-count { display: flex; gap: 2px; margin-bottom: 12px; --fw: 13px; }
 .stage-count .flap { color: var(--solari); }
@@ -532,7 +548,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 /* Focus lands on the question after a step change; it is not a control, so no ring. */
 .step-title:focus { outline: none; }
-.step-hint { margin: 8px 0 18px; font-size: 0.9375rem; color: color-mix(in oklch, currentColor 72%, transparent); }
+.step-hint { margin: var(--s2) 0 var(--s4); font-size: 0.9375rem; color: var(--ink-muted); }
 
 /* A tile: the photo, then its label and sub under it; the whole tile selects. Under the sub a
    sibling text button opens the peek. Selected: a 3 px ink ring round the photo (radius 18 + 3 = 21,
@@ -560,7 +576,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 .tile:active { scale: 0.96; }
 .tile:focus-visible { outline: none; }
-.tile:focus-visible .tile-photo { outline: 2px solid var(--ink); outline-offset: 6px; }
+.tile:focus-visible .tile-photo { outline: 2px solid var(--ink); outline-offset: 4px; }
 .tile-photo {
   position: relative;
   display: block;
@@ -605,7 +621,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   margin-top: 2px;
   font-size: 0.84375rem;
   line-height: 1.4;
-  color: color-mix(in oklch, currentColor 72%, transparent);
+  color: var(--ink-muted);
   text-wrap: pretty;
 }
 /* "See all 8" / "Photos": words under the sub. The hit area grows to 44 px, mostly downward into the
@@ -730,6 +746,8 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 @container (max-width: 559px) {
   .section--dep .board-colheads { display: none; }
   .section--dep .board-row { padding: 6px 0; }
+  /* No column heads on a phone, so the first row's top rule would double the head's rule (design-v9 4.4). */
+  .section--dep .board-rows > .board-row:first-child { border-top-color: transparent; }
 }
 
 /* ---------- Your day ---------- */
@@ -738,12 +756,9 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  padding-top: 18px;
-  border-top: 1px solid var(--hairline);
-  margin-bottom: 22px;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
 }
-.day-head h2 { font-size: 1.75rem; line-height: 1.1; font-weight: 600; font-stretch: 87.5%; letter-spacing: -0.01em; }
 .day-change {
   position: relative;
   flex: none;
@@ -785,7 +800,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .plan-item { border-radius: 8px; transition: background-color 600ms var(--ease-out); }
 .plan-item.is-flash { background-color: color-mix(in oklch, var(--accent) 16%, transparent); transition-duration: 150ms; }
 /* Under the Lunch heading, with two or more lunch cards: "We'll only have one of these." */
-.plan-choice { padding-top: 8px; font-size: 0.9375rem; font-weight: 500; color: color-mix(in oklch, var(--ink) 80%, transparent); }
+.plan-choice { padding-top: var(--s2); font-size: 0.9375rem; font-weight: 500; color: var(--ink-muted); }
 .day-after { display: grid; gap: 10px; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--hairline); }
 .day-summary { font-weight: 600; }
 .didnt { margin-top: 14px; }
@@ -811,7 +826,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stop-around { margin-right: -4px; font-size: 0.8125rem; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.02em; }
 .chip { display: inline-flex; flex: none; gap: 2px; padding: 4px; border-radius: 6px; background: #0B0B0C; --fw: 11px; }
 .chip .flap { color: var(--solari); }
-.stop-why { color: color-mix(in oklch, var(--ink) 62%, transparent); }
+.stop-why { color: var(--ink-muted); }
 .stop-strip {
   display: grid;
   grid-auto-flow: column;
@@ -878,7 +893,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stop-title { font-family: var(--font-display); font-size: 1.625rem; line-height: 1.1; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
 .stop-line { max-width: 62ch; text-wrap: pretty; }
 .fact { white-space: nowrap; }
-.stop-facts { font-size: 0.875rem; color: color-mix(in oklch, var(--ink) 72%, transparent); font-variant-numeric: tabular-nums; }
+.stop-facts { font-size: 0.875rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .stop-tip, .peek-tip { font-size: 0.78125rem; line-height: 1.35; font-weight: 600; color: var(--accent); }
 .stop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
 .stop-actions .btn--small { min-height: 40px; }
@@ -898,7 +913,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* Swap: an inline strip under the card. */
 .swap { overflow: hidden; }
 .swap-in { padding: 12px 0 2px 12px; }
-.swap-title { margin-bottom: 8px; color: color-mix(in oklch, var(--ink) 62%, transparent); }
+.swap-title { margin-bottom: var(--s2); color: var(--ink-muted); }
 .swap-list { display: grid; gap: 8px; }
 .swap-alt {
   display: grid;
@@ -935,7 +950,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .dinner-text { display: grid; gap: 3px; min-width: 0; }
 .dinner-name { font-size: 1.0625rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
 .dinner-line { font-size: 0.9375rem; line-height: 1.45; }
-.dinner-facts { font-size: 0.8125rem; line-height: 1.4; color: color-mix(in oklch, var(--ink) 72%, transparent); }
+.dinner-facts { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .dinner-text .stop-tip { margin-top: 3px; }
 .dinner-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .dinner-acts .peek-toggle { margin-top: 0; }
@@ -953,7 +968,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .room-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .room-tile { display: grid; grid-template-rows: auto auto 1fr auto; gap: 2px; }
 .room-photo { display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
-.room-why { margin-top: 8px; font-size: 0.6875rem; color: color-mix(in oklch, var(--ink) 62%, transparent); }
+.room-why { margin-top: var(--s2); font-size: 0.75rem; color: var(--ink-muted); }
 .room-name { font-size: 0.9375rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
 .room-add { justify-self: start; margin-top: 6px; }
 .room-all { margin-top: 14px; }
@@ -999,7 +1014,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* The heading takes focus only so the sheet announces its name; it is not a control, so no ring. */
 .sheet-head h2:focus { outline: none; }
 .sheet-body { overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--pad) calc(24px + env(safe-area-inset-bottom)); }
-.cat-group h3 { padding: 22px 0 10px; color: color-mix(in oklch, var(--ink) 62%, transparent); }
+.cat-group h3 { padding: var(--s5) 0 var(--s3); color: var(--ink-muted); }
 /* Every option as a tile: the photo, the text under it, then Add and Photos. */
 .cat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
 .cat-row { display: grid; grid-template-rows: auto 1fr auto; align-content: start; min-width: 0; }
@@ -1007,9 +1022,9 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .cat-text { display: grid; align-content: start; gap: 2px; padding-top: 8px; }
 .cat-name { font-weight: 600; line-height: 1.25; text-wrap: balance; }
 .cat-line {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.4;
-  color: color-mix(in oklch, var(--ink) 75%, transparent);
+  color: var(--ink-muted);
   text-wrap: pretty;
 }
 .cat-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 10px; }
@@ -1026,7 +1041,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   font-size: 0.8125rem;
   font-weight: 600;
   font-stretch: 87.5%;
-  color: color-mix(in oklch, var(--ink) 68%, transparent);
+  color: var(--ink-muted);
   white-space: nowrap;
 }
 .cat-no { min-height: 40px; }
@@ -1093,7 +1108,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .peek-head h2 { font-family: var(--font-display); font-size: 1.75rem; line-height: 1.1; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
 /* The title takes focus only so the dialog announces its name; no ring. */
 .peek-head h2:focus { outline: none; }
-.peek-hint { font-size: 0.9375rem; color: color-mix(in oklch, var(--ink) 72%, transparent); text-wrap: pretty; }
+.peek-hint { font-size: 0.9375rem; color: var(--ink-muted); text-wrap: pretty; }
 .peek-x {
   flex: none;
   display: grid;
@@ -1168,7 +1183,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   line-height: 1.4;
   text-wrap: pretty;
 }
-.peek-facts { font-size: 0.8125rem; line-height: 1.4; color: color-mix(in oklch, var(--ink) 72%, transparent); font-variant-numeric: tabular-nums; }
+.peek-facts { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .peek-strip { overflow: hidden; }
 .peek-strip .stop-photos { padding-top: 12px; }
 /* In the peek the photos sit at 88 % of the strip, so the next one shows; each has its own corners. */
@@ -1245,12 +1260,13 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* Laptop: the questions span the wide column, four across, the buttons inline under the grid. On
    the pick-one steps the none button is the last cell of the grid, as tall as a tile. */
 @media (min-width: 1024px) {
-  /* The note shares the questions' column and left edge (the board stays centred above it), 40 px
-     under the board; the question follows closer (two classes: `.section` below sets 112 px), so
-     the first row of photos stays about where it was. */
-  #note { padding-top: 40px; }
-  #note > .note { max-width: var(--wide); }
-  .section.section--ask { padding-top: 64px; }
+  /* The note sits beside the board, and the board, the note's column and the questions share one left
+     edge (design-v9 4.1). The question follows the hero (two classes: `.section` below sets 96 px). */
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: var(--s7); align-items: center; max-width: var(--wide); }
+  .hero .board-wrap { max-width: 860px; margin: 0; }
+  .hero-note { padding-top: 0; }
+  .hero-note > .note { max-width: none; }
+  .section.section--ask { padding-top: var(--s8); }
   .step-title { font-size: clamp(44px, 4.2vw, 60px); line-height: 1.04; }
   .step-hint { margin: 10px 0 22px; font-size: 1rem; }
   .tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 22px 20px; }
@@ -1302,8 +1318,8 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .board { padding: 22px 22px 18px; border-radius: 14px; }
   .board-title { font-size: 2rem; }
   .hero-title { margin-top: 56px; }
-  .section { padding-top: 112px; }
-  .section > h2, .day-head h2 { font-size: 2rem; }
+  .section { padding-top: var(--s9); }
+  .section > h2, .day-head h2 { font-size: 48px; }
   .plan-title { font-size: 1.75rem; }
 }
 /* Short laptop screens (1280 x 800): the pick-one photos drop to 16:9 (3:2 still left Wild card 26 px
@@ -1325,7 +1341,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
     align-items: start;
   }
   .section--day > * { grid-column: 2; }
-  .section--day > .day-head, .section--day > .day-weather, .section--day > .day-lines { width: 100%; }
+  .section--day > .day-head, .section--day > .day-lines { width: 100%; }
   .section--day > .day-map {
     grid-column: 1;
     grid-row: 1 / span 4;
