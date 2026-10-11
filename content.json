@@ -303,7 +303,7 @@
   "defaultDay": [
     {
       "id": "maritozzo",
-      "reason": "pastry"
+      "reason": "felix"
     },
     {
       "id": "pantheon",
@@ -716,7 +716,7 @@
         }
       ],
       "booking": "none",
-      "price": 2,
+      "price": "Free before 11:30, then €2 each",
       "serves": {
         "ancient": 5
       }
@@ -2568,7 +2568,7 @@
       "id": "circusjog",
       "group": "wild",
       "title": "A lap of the Circus Maximus",
-      "line": "One easy shakeout lap of the old chariot track, about 1.5 km, with the Palatine ruins above you.",
+      "line": "One easy lap of the old chariot track, about 1.5 km, with the Palatine ruins above you.",
       "board": {
         "to": "CIRCUS MAXIMUS"
       },
