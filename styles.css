@@ -602,11 +602,13 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .tile-check .mark-on .tick { stroke: var(--inchiostro); } /* ink on the white badge, over any photo */
 .tile[aria-pressed="true"] .tile-check, .tile[aria-checked="true"] .tile-check { opacity: 1; scale: 1; filter: blur(0) drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); }
 .tile-label { display: block; margin-top: 10px; font-size: 1rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+/* Four lines at most: every tile's own sub fits a phone column whole (v8's Rome from above names the
+   Spanish Steps last); only a long "You picked: ..." list is cut. */
 .tile-sub {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
   overflow: hidden;
   margin-top: 2px;
   font-size: 0.84375rem;
