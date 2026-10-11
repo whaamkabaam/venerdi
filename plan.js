@@ -544,10 +544,12 @@
       const o = best(reason);
       if (o) add(o.id, reason, 'see');
     }
-    // 5. Street food: the market while the day has no lunch, else the best street option.
+    // 5. Street food: the market while the day has no lunch; with lunch on, the best street option that
+    //    is not a snack (a snack keeps two hours after lunch, so it would only be squeezed in; v8 fold-in,
+    //    mechanics F4), else the best street option.
     if (eat.includes(STREET) && !namedUnder(STREET)) {
       const lunchOn = picks.some((p) => O[p.id].lunch);
-      const o = (!lunchOn && best(STREET, (x) => !!x.lunch)) || best(STREET);
+      const o = (!lunchOn && best(STREET, (x) => !!x.lunch)) || (lunchOn && best(STREET, (x) => !x.lunch && !isSnack(x))) || best(STREET);
       if (o) add(o.id, STREET, 'eat');
     }
     // 6. A light day gets my default-day picks, in order, up to three.
