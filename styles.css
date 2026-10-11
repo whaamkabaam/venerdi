@@ -245,6 +245,26 @@ svg { display: block; }
 }
 .hud-clock { display: flex; align-items: center; gap: 2px; flex: none; --fw: 14px; }
 .hud-clock .colon { width: 6px; text-align: center; font-weight: 700; line-height: 1; }
+/* v9b B2a (b3.2): the clock is a button back to the board, 44 px tall, its padding taken back by the margin so
+   the bar's layout stays where it was. */
+button.hud-clock {
+  height: 44px;
+  margin: 0 -6px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--r-btn);
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: scale 150ms var(--ease-out);
+}
+button.hud-clock:active { scale: 0.96; }
+/* The board's first time on its way up into the bar's clock (a clone of the row's five cells). */
+.dock { position: fixed; z-index: 60; display: flex; gap: 2px; margin: 0; pointer-events: none; transform-origin: 0 0; will-change: transform, opacity; }
+.dock .flap { overflow: visible; }
+.dock .flap.to-colon > span { background-color: transparent; transition: background-color 300ms ease-out; }
+.dock .flap.to-colon::after { opacity: 0; transition: opacity 200ms ease-out; }
+.dock .flap.to-colon b { color: var(--ink); transition: color 300ms ease-out; }
 .hud-place {
   flex: 1 1 auto;
   min-width: 0;
@@ -377,6 +397,9 @@ svg { display: block; }
 @keyframes en-in { from { opacity: 0; } }
 .board-colheads .ch i:empty { display: none; }
 .board-row { position: relative; }
+/* A row lights up for a moment: where the bar's time came from (0.16 s), or the entry she was on when the
+   clock took her back (0.6 s). */
+.board-row.is-flash { background-color: rgb(255 201 74 / 0.10); transition: background-color 150ms ease-out; }
 /* A transparent button over each row that does something (Details, the eggs). */
 .board-hit {
   position: absolute;

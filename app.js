@@ -344,6 +344,7 @@
     // The map's accessible description carries both credits (no credit on the page itself, brief 3).
     slot('map-credit').textContent = `${U.mapCredit} ${U.mapNolliCredit}`;
     slot('hud-map').setAttribute('aria-label', U.mapTitle);
+    slot('hud-clock').setAttribute('aria-label', U.backToBoard);
 
     slot('hud').setAttribute('aria-label', U.hud.label);
     $$('main > section').forEach((sec) => { if (U.hud[sec.id]) sec.dataset.hud = U.hud[sec.id]; });
@@ -2519,17 +2520,111 @@
   hudClock.innerHTML = FLAP + FLAP + '<span class="colon">:</span>' + FLAP + FLAP;
   const clockFlaps = $$('.flap', hudClock).map(flapOf);
   let clockText = '';
-  function setClock(hhmm, animate) {
-    if (hhmm === clockText) return;
+  // `done` runs once the flaps have landed (about 0.26 s after a flip, at once without one). Returns false
+  // when the clock already read that time.
+  function setClock(hhmm, animate, done) {
+    if (hhmm === clockText) return false;
     clockText = hhmm;
     $('[data-slot="hud-time"]').textContent = hhmm + ', ';
+    let any = false;
     [...hhmm.replace(':', '')].forEach((d, i) => {
       const f = clockFlaps[i];
       if (f.tl) { f.tl.progress(1).kill(); f.tl = null; }
       if (f.cur === d) return;
       if (!animate || !f.cur) { setFlap(f, d); return; }
+      any = true;
       f.tl = gsap.timeline({ onComplete: () => { f.tl = null; } });
       addFlip(f.tl, f, d, i * 0.03, 0.07);
+    });
+    if (done) { if (any) gsap.delayedCall(0.26, done); else done(); }
+    return true;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* The board hands over to the bar (design-v9 amendments b3.2, dir-3)  */
+  /* ------------------------------------------------------------------ */
+
+  // When the board's first row passes under the bar, its time flies up into the bar's clock and the bar comes
+  // on; above that point the bar steps away again (no flight back). The bar then reads the first departure
+  // until her first entry takes over. A tap on the clock takes her back to the board.
+  let dockY = Infinity, docked = false, dockTl = null;
+  const hudH = () => $('.hud-inner', hud).getBoundingClientRect().height + (parseFloat(getComputedStyle(hud).paddingTop) || 0);
+  let firstMemo = { plan: null, v: null };
+  // The board's first row as it will read once the replay is done (mid-replay the row may show another time).
+  function firstDeparture() {
+    if (firstMemo.plan !== plan) {
+      const r = plan ? depRows(plan)[0] : null;
+      const li = r ? keyEl(r.key) : null;
+      firstMemo = { plan, v: { time: r ? r.time : START, place: li ? li.dataset.hudTitle : r ? r.label || '' : '' } };
+    }
+    return firstMemo.v;
+  }
+  function syncDock(fly = true) {
+    const on = dayShown && scrollY >= dockY;
+    if (on === docked) return;
+    docked = on;
+    if (on) dockIn(fly); else dockOut();
+  }
+  function dockIn(fly) {
+    const f = firstDeparture();
+    setClock(f.time, false);
+    hudPlaceText = f.place;
+    hudPlace.textContent = f.place;
+    const row = DEP.board && DEP.board.rows[0];
+    const src = row && $('.c--time .cells', row.el);
+    const a = src && src.getBoundingClientRect();
+    // Only from a row she can see (a restored scroll position or a fast fling just turns the bar on).
+    if (reduced || !fly || !a || a.bottom < -40 || a.top > innerHeight) { hud.setAttribute('data-on', ''); render(lastY); return; }
+    // The bar fades in where it is (no slide), so the time has a fixed place to land.
+    hud.style.transition = 'none';
+    hud.setAttribute('data-on', '');
+    const b = clockFlaps[0].ltEl.parentElement.getBoundingClientRect();
+    const clone = src.cloneNode(true);
+    clone.className = 'dock';
+    clone.setAttribute('aria-hidden', 'true');
+    Object.assign(clone.style, { left: a.left + 'px', top: a.top + 'px', width: a.width + 'px', height: a.height + 'px' });
+    clone.style.setProperty('--fw', getComputedStyle(src.firstElementChild).width);
+    // The final text on every cell, every leaf at rest.
+    [...clone.children].forEach((fl, k) => { const ch = cellChar(f.time, k); $$('b', fl).forEach((x) => { x.textContent = ch; }); $$(':scope > span', fl).forEach((x) => { x.style.transform = ''; }); });
+    document.body.appendChild(clone);
+    const s = b.height / a.height;
+    dockTl?.progress(1).kill();
+    const tl = gsap.timeline({ onComplete: () => { clone.remove(); hud.style.transition = ''; if (dockTl === tl) dockTl = null; } });
+    tl.call(() => clone.remove(), null, 0.5);
+    dockTl = tl;
+    tl.fromTo(hud, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: 'power1.out', clearProps: 'opacity' }, 0);
+    tl.set([hudClock, hudPlace], { opacity: 0 }, 0);
+    tl.to(clone, { x: b.left - a.left, y: b.top - a.top, scale: s, duration: 0.5, ease: 'power3.out' }, 0);
+    // The board writes the colon on a flap; the bar's colon is a narrow glyph. The middle cell narrows on the
+    // way, so the five cells land on the bar's four digits.
+    const mid = clone.children[2];
+    if (mid) { mid.classList.add('to-colon'); tl.to(mid, { width: 6 / s, duration: 0.5, ease: 'power3.out' }, 0); }
+    tl.to(clone, { opacity: 0, duration: 0.08, ease: 'none' }, 0.42);
+    tl.to(hudClock, { opacity: 1, duration: 0.12, ease: 'none', clearProps: 'opacity' }, 0.42);
+    tl.fromTo(hudPlace, { opacity: 0, x: 6 }, { opacity: 1, x: 0, duration: 0.26, ease: 'power2.out', clearProps: 'opacity,transform' }, 0.46);
+    // The row it left from flashes once, so the eye knows where it came from.
+    flashRow(row, 0.16);
+    render(lastY);
+  }
+  function dockOut() {
+    dockTl?.progress(1).kill();
+    dockTl = null;
+    hud.removeAttribute('data-on');
+  }
+  function flashRow(row, s) {
+    if (!row) return;
+    row.el.classList.add('is-flash');
+    clearTimeout(row.flashT);
+    row.flashT = setTimeout(() => row.el.classList.remove('is-flash'), s * 1000);
+  }
+  // The clock: back to the board, where the row of the entry she was on flashes; focus goes to the board.
+  function backToBoard() {
+    if (!DEP.board) return;
+    const key = itemAt(lastY)?.dataset.key;
+    const y = DEP.board.host.getBoundingClientRect().top + scrollY - scrollGap();
+    scrollToY(y, 0.7, () => {
+      flashRow(DEP.board.rows.find((r) => r.data && r.data.key === key), 0.6);
+      slot('dep-title').focus({ preventScroll: true });
     });
   }
 
@@ -2556,6 +2651,9 @@
     sectionMarks = $$('main > section')
       .filter((sec) => sec.offsetParent !== null)
       .map((sec) => ({ y: top(sec) - mid, id: sec.id, name: sec.dataset.hud || '' }));
+    // The board's first row under the bar: the handover point (b3.2).
+    const row0 = dayShown && DEP.board && DEP.board.rows[0];
+    dockY = row0 ? top(row0.el) - hudH() : Infinity;
   }
 
   function timeAt(y) {
@@ -2588,8 +2686,10 @@
     let sec = null;
     for (const s of sectionMarks) if (y >= s.y) sec = s;
     const inDay = sec && sec.id === 'day' && el;
-    setClock(el ? minToHHMM(+el.dataset.min) : START, !reduced && hud.hasAttribute('data-on'));
-    const place = inDay ? el.dataset.hudTitle : sec ? sec.name : '';
+    // Docked with no entry current yet: the first departure, the time that flew up from the board.
+    const first = docked && !el ? firstDeparture() : null;
+    setClock(first ? first.time : el ? minToHHMM(+el.dataset.min) : START, !reduced && hud.hasAttribute('data-on'));
+    const place = first ? first.place : inDay ? el.dataset.hudTitle : sec ? sec.name : '';
     if (place !== hudPlaceText) { hudPlaceText = place; hudPlace.textContent = place; }
 
     // The map follows the entry she is on (the laptop map and the pocket).
@@ -2770,17 +2870,10 @@
       if (DEP.board) depTriggers();
     });
 
-    // The HUD stays off the hero and the questions: it appears from DEPARTURES onward (and never
-    // while DEPARTURES is still hidden).
-    ScrollTrigger.create({
-      trigger: '#dep',
-      start: 'top top+=64',
-      onEnter: () => { if (dayShown) hud.setAttribute('data-on', ''); },
-      onLeaveBack: () => hud.removeAttribute('data-on'),
-      onRefresh: (self) => hud.toggleAttribute('data-on', dayShown && (self.progress > 0 || scrollY > self.start)),
-    });
-
-    ScrollTrigger.addEventListener('refresh', () => { measure(); render(reduced ? scrollY : lastY); });
+    // The HUD stays off the hero, the questions and the top of the board: it comes on when the board's
+    // first row passes under it (syncDock, b3.2). A refresh (a resize, a font, a new day) re-measures that
+    // point and puts the bar right without a flight.
+    ScrollTrigger.addEventListener('refresh', () => { measure(); syncDock(false); render(reduced ? scrollY : lastY); });
     ScrollTrigger.addEventListener('scrollEnd', syncSkyVar);
   }
 
@@ -2834,6 +2927,8 @@
   slot('board').addEventListener('click', onHeroClick);
   slot('send').addEventListener('click', send);
   nowBtns.forEach((b) => b.addEventListener('click', jumpToNow));
+  slot('hud-clock').addEventListener('click', backToBoard);
+  addEventListener('scroll', () => syncDock(), { passive: true });
   wideMQ.addEventListener('change', () => { ensureAtlases(); ScrollTrigger.refresh(); });
   slot('hud-map').addEventListener('click', openMapSheet);
   slot('mapsheet').addEventListener('click', onMapSheetClick);
@@ -2856,6 +2951,8 @@
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
     shareText: () => shareText(), dinner: () => dinner,
+    // The handover (b3.2): where the bar comes on, and what the clock reads.
+    dockY: () => dockY, clock: () => clockText, firstDeparture: () => ({ ...firstDeparture() }),
     // The map, for the checks: whether the engraving is in, each atlas's marks in screen px, and a way to put
     // the map on an entry directly (reduced motion, so the camera jumps).
     mapReady: () => INK.day.length > 0 && INK.p === 1,
