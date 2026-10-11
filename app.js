@@ -812,15 +812,17 @@
     const r = picks.map((p) => (WHY[p.reason] || WHY.added).code).join('');
     return `${base}?v=8&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
   }
-  // A mini timetable: "10:00 Maritozzo" per card on her day (at its rough time), her dinner pick, then
-  // her line, then the link. No prices. Something that can't happen on Friday has no card, so no line.
+  // A mini timetable: "around 10:00 Maritozzo" per card on her day (its time as the card shows it:
+  // "around" for a rough time, the bare time for an exact one), her dinner pick, then her line, then the
+  // link. No prices. Something that can't happen on Friday has no card, so no line.
   function shareText() {
-    const stops = plan.items.filter((it) => it.kind === 'option').map((it) => `${it.rough} ${it.option.title}`);
+    const timeOf = (it) => (it.exact ? it.rough : fmt(U.around, { time: it.rough }));
+    const stops = plan.items.filter((it) => it.kind === 'option').map((it) => `${timeOf(it)} ${it.option.title}`);
     const note = freeText.trim();
     // Only a note: send the note and the link, without the timetable frame.
-    if (!stops.length) return [note, linkURL()].filter(Boolean).join('\n');
+    if (!stops.length && !dinner) return [note, linkURL()].filter(Boolean).join('\n');
     const lines = [C.send.shareIntro, ...stops];
-    if (dinner) lines.push(fmt(C.send.shareDinner, { time: C.anchors.dinner.time, title: IDEA[dinner].title }));
+    if (dinner) lines.push(fmt(C.send.shareDinner, { time: timeOf(plan.items.find((it) => it.id === 'dinner')), title: IDEA[dinner].title }));
     if (note) lines.push(`${C.send.shareExtra} ${note}`);
     lines.push(linkURL());
     return lines.join('\n');
@@ -1373,6 +1375,7 @@
     renderDepNote();
     renderMapPlan();
     syncDepBoard();
+    syncSend();
     refreshSoon();
   }
 
@@ -2155,8 +2158,8 @@
 
   let booted = false;
   let refreshTimer = 0;
-  // Send needs something to send: a pick or a line of text.
-  function syncSend() { slot('send').disabled = !picks.length && !freeText.trim(); }
+  // Send needs something to send: a pick, her dinner pick or a line of text.
+  function syncSend() { slot('send').disabled = !picks.length && !dinner && !freeText.trim(); }
 
   function update() {
     plan = P.build(C, pickIds());
