@@ -44,6 +44,10 @@
   } catch { /* private mode */ }
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const OPT = Object.fromEntries(C.options.map((o) => [o.id, o]));
+  // v9: the coffee stop became the pastry stop at Barnum. An old link or a stored day that names coffee
+  // gets Barnum, with the same reason and in the same place (design-v9 amendments b4.2).
+  const RENAMED = { coffee: 'barnum' };
+  const aliasId = (id) => RENAMED[id] || id;
   const WHY = C.pickReasons;
   const PK = C.peek;
   const reasonLabel = (r) => (WHY[r] || WHY.added).label;
@@ -400,8 +404,8 @@
       if (s.multi) c[s.id] = (Array.isArray(c[s.id]) ? c[s.id] : []).filter((v, i, arr) => tileOf(s, v) && arr.indexOf(v) === i);
       else if (!tileOf(s, c[s.id])) c[s.id] = null;
     });
-    c.wantFrom = c.wantFrom && typeof c.wantFrom === 'object' ? c.wantFrom : {};
-    c.want = (Array.isArray(c.want) ? c.want : []).filter((id, i, arr) => OPT[id] && arr.indexOf(id) === i && (vibesOf(c).some((r) => serves(OPT[id], r)) || rehome(c, id)));
+    c.wantFrom = c.wantFrom && typeof c.wantFrom === 'object' ? Object.fromEntries(Object.entries(c.wantFrom).map(([id, r]) => [aliasId(id), r])) : {};
+    c.want = (Array.isArray(c.want) ? c.want.map(aliasId) : []).filter((id, i, arr) => OPT[id] && arr.indexOf(id) === i && (vibesOf(c).some((r) => serves(OPT[id], r)) || rehome(c, id)));
     c.wantFrom = Object.fromEntries(Object.entries(c.wantFrom || {}).filter(([id, r]) => c.want.includes(id) && vibesOf(c).includes(r) && serves(OPT[id], r)));
     return c;
   };
@@ -659,7 +663,7 @@
   let plan = null;
   let hasBackup = false;
   const pickIds = () => picks.map((p) => p.id);
-  const cleanPicks = (list) => (Array.isArray(list) ? list : []).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
+  const cleanPicks = (list) => (Array.isArray(list) ? list : []).map((p) => (p && typeof p.id === 'string' ? { ...p, id: aliasId(p.id) } : p)).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
   const cleanDinner = (id) => (typeof id === 'string' && IDEA[id] ? id : null);
   // What the answers compose to (kept while the answers stay the same): the build a full replay shows.
   let composedMemo = { key: null, res: null };
@@ -699,11 +703,11 @@
     // A leading answer letter says which sight or food it was named under, if she answered that one.
     const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
     String(parts[STEPS.length] || '').split('.').forEach((seg) => {
-      const id = OPT[seg] ? seg : OPT[seg.slice(1)] ? seg.slice(1) : null;
+      const id = OPT[aliasId(seg)] ? aliasId(seg) : OPT[aliasId(seg.slice(1))] ? aliasId(seg.slice(1)) : null;
       // A v6 link's named thing whose home moved brings its home along (mechanics F2).
       if (!id || a.want.includes(id) || !(vibesOf(a).some((r) => serves(OPT[id], r)) || (v6 && rehome(a, id)))) return;
       a.want.push(id);
-      const from = id === seg ? null : byCode[seg[0]];
+      const from = OPT[aliasId(seg)] ? null : byCode[seg[0]];
       if (from && vibesOf(a).includes(from) && serves(OPT[id], from)) a.wantFrom[id] = from;
     });
     return a;
@@ -731,7 +735,7 @@
       let linkAnswers = q.has('a') ? decodeAnswers(q.get('a'), { v6: !['7', '8'].includes(q.get('v')) }) : null;
       // A link with answers but no picks composes them here, and so does a link whose picks name a
       // place this page no longer has (a v6 link with the Colosseum, say): its day comes from its answers.
-      const linkIds = q.has('p') ? q.get('p').split(',').map((s) => s.trim()) : [];
+      const linkIds = q.has('p') ? q.get('p').split(',').map((s) => aliasId(s.trim())) : [];
       let linkPicks = q.has('p') ? cleanPicks(linkIds.map((id, i) => ({ id, reason: byCode[codes[i]] || 'added' }))) : null;
       if (!linkPicks || linkIds.some((id) => id && !OPT[id])) {
         // From the link's own ids and answer letters, before the gone places are cut (mechanics F6).

@@ -160,14 +160,12 @@
    "https://mesprestiges.com/en/roma/places/pasticceria-regoli",
    "https://katieparla.com/pasticceria-regoli-rome-cafe/"
   ],
-  "coffee": [
-   "https://santeustachioilcaffe.it/",
-   "https://mesprestiges.com/en/roma/places/santeustachio-il-caffe",
-   "https://www.timeout.com/rome/restaurants/caffe-santeustachio",
-   "https://italyplanner.com/rome-coffee-bars.html",
-   "https://eurovistatrips.com/es/mejores-cafes-roma-economico-2026/",
-   "https://nominatim.openstreetmap.org",
-   "https://routing.openstreetmap.de/routed-foot/"
+  "barnum": [
+   "https://www.barnumroma.com/",
+   "https://www.puntarellarossa.it/2026/09/21/barnum-roma-brunch/",
+   "https://www.romatoday.it/cibo/barnum-nuova-sede-specialty-coffee-bakery.html",
+   "https://zero.eu/en/luoghi/375099-barnum-2,roma/",
+   "https://nominatim.openstreetmap.org/search?q=Via+del+Pellegrino+63+Roma&format=json"
   ],
   "boccione": [
    "https://turismoroma.it/en/page/rione-xi-santangelo",

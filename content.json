@@ -1650,31 +1650,31 @@
       "booking": "none",
       "friendTip": true,
       "serves": {
-        "pastry": 1
+        "pastry": 3
       }
     },
     {
-      "id": "coffee",
+      "id": "barnum",
       "group": "food",
-      "title": "Coffee at Sant'Eustachio",
-      "line": "The old coffee bar by the Pantheon. We drink it standing at the counter. Say amaro, or it comes with sugar already in.",
+      "title": "Croissants at Barnum",
+      "line": "A bakery just off Campo de' Fiori that makes its own croissants. We get the pain au chocolat, and the almond croissant if they have it that day.",
       "board": {
-        "to": "SANT'EUSTACHIO"
+        "to": "BARNUM"
       },
       "photos": [
-        "sant-eustachio-night",
-        "coffee-1"
+        "pastry-counter",
+        "via-pellegrino"
       ],
       "area": "centro",
-      "lat": 41.89825,
-      "lon": 12.47543,
+      "lat": 41.89673,
+      "lon": 12.47068,
       "role": "pastry",
-      "minutes": 15,
+      "minutes": 20,
       "hours": {
         "intervals": [
           [
-            "07:30",
-            "23:59"
+            "08:00",
+            "15:30"
           ]
         ],
         "lastEntry": [
@@ -1682,16 +1682,20 @@
         ]
       },
       "order": 6.2,
-      "hud": "Coffee",
+      "hud": "Croissants",
       "links": [
         {
           "label": "Map",
-          "url": "https://maps.google.com/?q=Sant+Eustachio+Il+Caffe+Roma"
+          "url": "https://maps.google.com/?q=Barnum+Via+del+Pellegrino+63+Roma"
         }
       ],
       "booking": "none",
       "serves": {
-        "pastry": 2
+        "pastry": 1
+      },
+      "say": {
+        "words": "almond croissant",
+        "how": "In Italian it's un cornetto alle mandorle (oon cor-NET-toh AHL-leh MAHN-dor-leh)."
       }
     },
     {
@@ -1732,7 +1736,7 @@
       ],
       "booking": "none",
       "serves": {
-        "pastry": 3
+        "pastry": 2
       }
     },
     {
@@ -2860,7 +2864,8 @@
     "srTitle": "Your Friday",
     "breakfasts": [
       "maritozzo",
-      "boccione"
+      "boccione",
+      "barnum"
     ]
   }
 }

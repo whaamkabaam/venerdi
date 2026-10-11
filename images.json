@@ -1997,5 +1997,37 @@
    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Espresso_machine_and_counter_of_a_coffee_bar_in_Rome.jpg"
   }
+ },
+ "pastry-counter": {
+  "src800": "img/pastry-counter-800.webp",
+  "src1600": "img/pastry-counter-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A bakery shelf piled with croissants on the left and pains au chocolat on the right",
+  "focal": "50% 50%",
+  "color": "#a35c17",
+  "credit": {
+   "title": "Boulangerie Bardoulet (Contrevoz) - croissants et pains au chocolat",
+   "author": "Benoît Prieur",
+   "license": "CC0",
+   "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Boulangerie_Bardoulet_(Contrevoz)_-_croissants_et_pains_au_chocolat.jpg"
+  }
+ },
+ "via-pellegrino": {
+  "src800": "img/via-pellegrino-800.webp",
+  "src1600": "img/via-pellegrino-1600.webp",
+  "w": 1600,
+  "h": 1067,
+  "alt": "Via del Pellegrino, a cobbled street of shop doors and blue banners near Campo de' Fiori, with people walking away down the middle",
+  "focal": "50% 55%",
+  "color": "#908782",
+  "credit": {
+   "title": "Via del Pellegrino in Rome (1)",
+   "author": "Krzysztof Golik",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Via_del_Pellegrino_in_Rome_(1).jpg"
+  }
  }
 }
