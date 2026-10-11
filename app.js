@@ -578,7 +578,13 @@
     stage.busy = true;
     setCount(to, true);
     syncStage();
-    const land = () => { inn.hidden = false; $('.step-title', inn).focus({ preventScroll: true }); refreshSoon(); };
+    const land = () => {
+      inn.hidden = false;
+      $('.step-title', inn).focus({ preventScroll: true });
+      refreshSoon();
+      // The Aventine tile shows through the keyhole as step 3 comes in (b3.3).
+      if (STEPS[to].id === 'wander') keyholeOpen($('.tile[data-value="aventine"] .tile-photo', inn), 0.12, 'tile');
+    };
     if (reduced) { out.hidden = true; land(); stage.busy = false; return; }
     const parts = (f) => [$('.step-title', f), $('.step-hint', f), $('.step-none', f)].filter(Boolean);
     const run = () => {
@@ -1471,6 +1477,7 @@
     // More ideas and See everything come after the day, so it reads morning to night without a detour.
     html += roomHTML();
     body.innerHTML = `<ol class="plan">${html}</ol>`;
+    watchKeyhole();
   }
 
   const stopEl = (id) => $(`.stop[data-key="${CSS.escape(id)}"]`, slot('day-body'));
@@ -1827,6 +1834,8 @@
     // The title takes focus (it names the dialog), not the close button.
     $('#peek-h', dlg).focus({ preventScroll: true });
     sheetIn(dlg);
+    // The Aventine's own sheet: its first photo shows through the keyhole (b3.3).
+    if (peek.id === 'keyhole') keyholeOpen($('.peek-thing .stop-photo[data-n="0"]', dlg), 0.18, 'sheet');
   }
   // The toggles show the draft: wanted things pressed, the picked area or wild card pressed.
   function syncPeek() {
@@ -1909,6 +1918,52 @@
     peek.closing = false;
     if (peek.opener && peek.opener.isConnected) peek.opener.focus({ preventScroll: true });
     peek.opener = null;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* The keyhole (design-v9 amendments b3.3, D1)                         */
+  /* ------------------------------------------------------------------ */
+
+  // The Aventine photo is the view through the Knights of Malta keyhole: the first time she sees it (the tile
+  // when step 3 comes in, the first photo of its sheet, the photo of its entry on her day), it shows through a
+  // near-black plate with a keyhole-shaped hole on the dome; after a beat the plate opens outward past the edges
+  // and is gone (0.8 s). Once per page load on each of the three. Reduced motion: nothing is drawn.
+  // The hole sits on the dome wherever the photo is cropped: its centre and size come from where `object-fit:
+  // cover` puts the dome (48 % across, its lantern to its drum about 47 % down the photo, 27 % of its width wide)
+  // in this frame, and the plate opens from the hole.
+  const KEYHOLE = { x: 0.483, y: 0.47, r: 0.155 };
+  const keyholeDone = new Set();
+  function keyholeOpen(frame, delay, where) {
+    if (reduced || !frame || keyholeDone.has(where) || !window.gsap) return;
+    const img = $('img', frame);
+    const W = frame.clientWidth, Hh = frame.clientHeight;
+    if (!img || W < 20 || Hh < 20) return;
+    keyholeDone.add(where);
+    const iw = +img.getAttribute('width') || 1600, ih = +img.getAttribute('height') || 2134;
+    const k = Math.max(W / iw, Hh / ih), dw = iw * k, dh = ih * k;
+    const cx = (W - dw) / 2 + KEYHOLE.x * dw, cy = (Hh - dh) / 2 + KEYHOLE.y * dh, r = KEYHOLE.r * dw;
+    // A keyhole: a round head and a slot that widens below it (D1's shape, scaled to the hole).
+    const f = (n) => n.toFixed(1);
+    const hole = `M${f(cx - 0.4375 * r)} ${f(cy + 0.9 * r)}A${f(r)} ${f(r)} 0 1 1 ${f(cx + 0.4375 * r)} ${f(cy + 0.9 * r)}L${f(cx + 0.875 * r)} ${f(cy + 3.5 * r)}H${f(cx - 0.875 * r)}Z`;
+    frame.insertAdjacentHTML('beforeend', `<svg class="keyhole" viewBox="0 0 ${W} ${Hh}" aria-hidden="true"><path fill-rule="evenodd" d="M${-4 * W} ${-4 * Hh}H${5 * W}V${5 * Hh}H${-4 * W}Z${hole}"/></svg>`);
+    const svg = frame.lastElementChild;
+    gsap.timeline({ delay, onComplete: () => svg.remove() })
+      .fromTo(svg, { scale: 1 }, { scale: 10, duration: 0.55, ease: 'power3.in', transformOrigin: `${f(cx)}px ${f(cy + 0.3 * r)}px` }, 0.25);
+  }
+  // Her entry: the first time its first photo is two-thirds in view (the day re-renders, so this follows it).
+  let keyholeIO = null;
+  function watchKeyhole() {
+    if (reduced || keyholeDone.has('entry') || !('IntersectionObserver' in window)) return;
+    const ph = $('.stop[data-key="keyhole"] .stop-photo[data-n="0"]', slot('day-body'));
+    keyholeIO?.disconnect();
+    if (!ph) return;
+    keyholeIO = new IntersectionObserver((es) => {
+      if (!es.some((x) => x.isIntersecting && x.intersectionRatio >= 0.66)) return;
+      keyholeIO.disconnect();
+      keyholeIO = null;
+      keyholeOpen(ph, 0, 'entry');
+    }, { threshold: 0.66 });
+    keyholeIO.observe(ph);
   }
 
   /* ------------------------------------------------------------------ */
