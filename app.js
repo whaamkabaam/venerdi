@@ -3196,6 +3196,9 @@
     e.stopPropagation();
     const ctl = sw.parentElement.firstElementChild;
     if (!ctl || ctl === sw || ctl.disabled || ctl.hidden) return;
+    // Android (b3.4): the tiles, the toggles, the word and Show me Friday buzz in their own handlers; every other
+    // deliberate tap gets a light one here. (An iPhone has no navigator.vibrate: its switch already ticked.)
+    if (!ctl.matches('.tile, .peek-toggle, .say') && !(ctl.matches('.stage-next') && stage.step === STEPS.length - 1)) buzz('light');
     try { ctl.focus({ preventScroll: true, focusVisible: false }); } catch { /* focus options unsupported */ }
     ctl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, detail: e.detail, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY }));
   }, true);
