@@ -136,8 +136,8 @@
         "tiles": [
           {
             "id": "pastry",
-            "label": "Pastries and coffee",
-            "sub": "A maritozzo, the Ghetto bakery, coffee by the Pantheon",
+            "label": "Pastries",
+            "sub": "Pain au chocolat, almond croissants, a maritozzo",
             "photo": "roscioli-counter"
           },
           {
@@ -272,7 +272,7 @@
       "code": "r"
     },
     "pastry": {
-      "label": "Pastries and coffee",
+      "label": "Pastries",
       "code": "p"
     },
     "street": {
@@ -1628,7 +1628,7 @@
         "to": "MARITOZZO"
       },
       "photos": [
-        "roman-bar-counter",
+        "maritozzo-2",
         "maritozzo"
       ],
       "area": "esquilino",
