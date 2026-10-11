@@ -1348,6 +1348,27 @@
     return `<button type="button" class="${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog" aria-label="${esc(PK.openPhotos)}: ${esc(o.title)}" style="--ph:${esc(im?.color || '')}">${im ? `<img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${sizes}" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">` : ''}</button>`;
   };
   const tipHTML = (o, cls) => (o.friendTip ? `<p class="${cls}">${esc(PK.tip)}</p>` : '');
+  // How to say it (b3.5): in Barnum's line, "almond croissant" is a button that opens one caption under the line
+  // with the Italian and a respelling. One phrase, no phrasebook: on her entry (`cid` say-barnum) and on its row
+  // in the pastry sheet (say-barnum-pk); everywhere else the plain line. The caption is the paragraph's last,
+  // block-level span, so a closed caption adds no space.
+  function lineHTML(o, cid) {
+    const line = esc(o.line), S = o.say;
+    const at = S && cid ? line.indexOf(esc(S.words)) : -1;
+    if (at < 0) return line;
+    const w = esc(S.words);
+    return `${line.slice(0, at)}${hap(`<button type="button" class="say" data-action="say" aria-expanded="false" aria-controls="${cid}">${w}</button>`, 'say')}${line.slice(at + w.length)}<span class="say-cap" id="${cid}"><span class="say-in"><span class="say-how">${howHTML(S.how)}</span></span></span>`;
+  }
+  // The respelling in brackets never breaks across lines (round 1: "(oon" was left at the end of a line).
+  const howHTML = (how) => { const i = how.lastIndexOf('('); return i > 0 ? `${esc(how.slice(0, i))}<span class="say-sound">${esc(how.slice(i))}</span>` : esc(how); };
+  function toggleSay(b) {
+    const cap = document.getElementById(b.getAttribute('aria-controls'));
+    if (!cap) return;
+    const open = b.getAttribute('aria-expanded') !== 'true';
+    buzz('selection');
+    b.setAttribute('aria-expanded', String(open));
+    cap.classList.toggle('is-open', open);
+  }
   // One entry (dir-3 anatomy, design-v9 amendments b1.3): no box. Its time chip ("around" before a rough
   // time, spec 8.5; exact for the noon cannon, Gesù at 17:30, a class session), "Felix's pick" when it is
   // his, then the photos (one at a time; a tap pages them), the title, the line, the facts, the friend's
@@ -1368,7 +1389,7 @@
           ${stripHTML(o, '(min-width: 1024px) 640px, 92vw')}
           <div class="stop-text">
             <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>
-            <p class="stop-line">${esc(o.line)}</p>
+            <p class="stop-line">${lineHTML(o, `say-${o.id}`)}</p>
             <p class="stop-facts">${factsHTML(factList(o))}</p>
             ${tipHTML(o, 'stop-tip')}
             <div class="stop-actions">${alts.length ? hap(`<button type="button" class="tbtn" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>`) : ''}${hap(`<button type="button" class="tbtn" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}${linksHTML(o)}</div>
@@ -1637,6 +1658,7 @@
     else if (a === 'add') addPick(b.dataset.id, b.dataset.reason);
     else if (a === 'dinner') setDinner(b.dataset.id);
     else if (a === 'catalogue') openCatalogue();
+    else if (a === 'say') toggleSay(b);
   }
 
   /* ------------------------------------------------------------------ */
@@ -1768,7 +1790,7 @@
   const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}${hap(`<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`)}`;
   const peekTextHTML = (o) => `<div class="peek-text">
           <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
-          <p class="peek-line">${esc(o.line)}</p>
+          <p class="peek-line">${lineHTML(o, `say-${o.id}-pk`)}</p>
           <p class="peek-facts">${factsHTML(factList(o))}</p>
           ${tipHTML(o, 'peek-tip')}
         </div>`;
@@ -1914,6 +1936,7 @@
     if (b.dataset.action === 'peek-close') closePeek();
     else if (b.dataset.action === 'expand') toggleStrip(b);
     else if (b.dataset.action === 'want' || b.dataset.action === 'pick') onPeekToggle(b);
+    else if (b.dataset.action === 'say') toggleSay(b);
   }
   // However it closed: the page scrolls again and focus goes back to the button that opened it.
   function onPeekClosed() {

@@ -1031,6 +1031,34 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stop-map.tbtn { padding: 0 var(--s3); font-size: 0.9375rem; }
 .stop-map .i { width: 14px; height: 14px; }
 
+/* How to say it (v9b B2d, b3.5): the one tappable word on the page, in the line itself. A dotted underline, so it
+   does not read as a link; its caption opens under the line (rows 0fr to 1fr, 200 ms) and is hidden from screen
+   readers while closed. */
+.hapw--say { display: inline-grid; vertical-align: baseline; }
+.say {
+  position: relative;
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  text-decoration: underline dotted 1px;
+  text-decoration-color: color-mix(in oklch, currentColor 70%, transparent);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.say::after { content: ""; position: absolute; inset: -10px -4px; }
+.say[aria-expanded="true"] { text-decoration-style: solid; }
+.say-cap { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 200ms ease-out, visibility 0s linear 200ms; }
+.say-cap.is-open { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 200ms ease-out, visibility 0s linear 0s; }
+.say-in { min-height: 0; overflow: hidden; }
+.say-sound { white-space: nowrap; }
+.say-how { display: block; padding-top: var(--s1); font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); text-wrap: pretty; }
+
 /* Swap: the alternatives open under the entry, between hairlines, no boxes. */
 .swap { overflow: hidden; }
 .swap-in { margin-top: var(--s2); padding: var(--s3) 0 0; border-top: 1px solid var(--hairline); }
@@ -1554,4 +1582,5 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .note-en.is-on { animation: none; }
   .hud, .hud[data-on] { transition: none; }
   .stage-foot, .stage.is-foot .stage-foot { transition: none; }
+  .say-cap, .say-cap.is-open { transition: none; }
 }
