@@ -2298,12 +2298,15 @@
     mapKey = key;
     ATLASES.forEach((a) => { if (a.kind !== 'sheet') a.focus(el); });
   }
-  // A glide to an entry (C's goToEntry): its top lands at the middle of the screen, so it is the current entry;
-  // the map moves once, when the glide (and the sky's smoothing after it) has landed; then the entry lights up.
+  // A glide to an entry (C's goToEntry): the map moves once, when the glide (and the sky's smoothing after it)
+  // has landed; then the entry lights up. A tall entry (a place, dinner) lands just under the bar, where its title
+  // is in view and it is still the current entry; a short one lands at the middle of the screen, which makes it
+  // current (round 1: on a phone the middle left a place's title below the fold, so its flash went unseen).
   function goToEntry(key) {
     const el = keyEl(key);
     if (!el) return;
-    const y = el.getBoundingClientRect().top + scrollY - innerHeight * 0.5 + 2;
+    const gap = scrollGap();
+    const y = el.getBoundingClientRect().top + scrollY - (el.offsetHeight > innerHeight * 0.5 - gap ? gap : innerHeight * 0.5 - 2);
     scrollToY(y, Math.min(1.1, 0.45 + Math.abs(y - scrollY) / 4000), () => flash(el));
   }
   // Laptop: a mark names itself under the pointer, and a click glides to its entry.
