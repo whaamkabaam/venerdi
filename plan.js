@@ -581,23 +581,27 @@
   }
 
   /* More ideas (spec 8.8, AM12): up to three, skipping anything on the day or with fridayNo: options
-     serving what she answered (sights, foods, area, wild card), best score first; then options within
-     NEAR_M of a card on her day, nearest first. Each is { id, reason } (reason `added` for a near one). */
+     serving what she answered (sights, foods, area, wild card), best score first and at most one per
+     answer (v8 fold-in, gate P4); then options within NEAR_M of a card on her day, nearest first; then
+     the rest of what serves her answers, best first. Each is { id, reason } (reason `added` for a near
+     one). */
   function suggestions(C, picks, answers = {}) {
     const O = optionsById(C);
     const ids = picks.map((p) => p.id);
     const out = [];
     const seen = new Set(ids);
     const take = (id, reason) => {
-      if (out.length >= 3 || seen.has(id) || !O[id] || O[id].fridayNo) return;
+      if (out.length >= 3 || seen.has(id) || !O[id] || O[id].fridayNo) return false;
       seen.add(id);
       out.push({ id, reason });
+      return true;
     };
     const answered = [...(answers.see || []), ...(answers.eat || []), ...(answers.wander ? ['wander'] : []), ...(answers.wild ? ['wild'] : [])];
-    answered
+    const serving = answered
       .flatMap((reason) => ranked(C, reason, ids, ids, (o) => !o.fridayNo).map((o) => ({ id: o.id, reason, s: scoreOf(C, o, reason, ids), order: o.order })))
-      .sort((a, b) => a.s - b.s || a.order - b.order)
-      .forEach((x) => take(x.id, x.reason));
+      .sort((a, b) => a.s - b.s || a.order - b.order);
+    const homes = new Set();
+    serving.forEach((x) => { if (!homes.has(x.reason) && take(x.id, x.reason)) homes.add(x.reason); });
     const placed = optsOf(C, ids).filter((o) => !o.fridayNo && typeof o.lat === 'number');
     if (placed.length) {
       C.options
@@ -607,6 +611,7 @@
         .sort((a, b) => a.d - b.d || a.o.order - b.o.order)
         .forEach((x) => take(x.o.id, 'added'));
     }
+    serving.forEach((x) => take(x.id, x.reason));
     return out;
   }
 
