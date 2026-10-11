@@ -2817,7 +2817,8 @@
     "creditsPage": {
       "title": "Photos",
       "back": "Back",
-      "preview": "Link preview"
+      "preview": "Link preview",
+      "map": "Map"
     }
   },
   "departures": {
