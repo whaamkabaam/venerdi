@@ -64,7 +64,10 @@
   // screens only, styles.css). Her tap toggles the switch, which ticks, and onHapClick passes the tap on to the
   // control, so every handler and focus return works as before.
   const HAP = '<input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true">';
-  const hap = (html, mod = '') => `<span class="hapw${mod ? ` hapw--${mod}` : ''}">${html}${HAP}</span>`;
+  // No :has() in these rules (a final perf pass found that `.hapw:has(...)` selectors cost the board's replay every
+  // other frame in Chromium at 390 px): the wrapper carries its control's role as a class, and is hidden with it.
+  const hap = (html, mod = '', hidden = false) => `<span class="hapw${mod ? ` hapw--${mod}` : ''}"${hidden ? ' hidden' : ''}>${html}${HAP}</span>`;
+  const hideCtl = (el, v) => { if (el.hidden !== v) el.hidden = v; const w = el.parentElement; if (w && w.classList.contains('hapw') && w.hidden !== v) w.hidden = v; };
 
   const ICON = {
     out: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6.5 5H11v4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -167,7 +170,7 @@
   const EN = '<span class="note-en" aria-hidden="true"></span>';
   const rowHTML = (w) => `<div class="board-row" role="row">
       ${cellHTML('time', w[0])}${w.length > 2 ? cellHTML('who', w[1]) + cellHTML('note', w[2], EN) : cellHTML('who', w[1], EN)}
-      ${hap('<button type="button" class="board-hit" hidden></button>', 'hit')}
+      ${hap('<button type="button" class="board-hit" hidden></button>', 'hit', true)}
     </div>`;
   function rowModel(el, widths) {
     return {
@@ -217,7 +220,7 @@
     row.en.textContent = d && d.en ? d.en : '';
     row.en.classList.toggle('is-on', !!(d && d.enOn));
     const hasTarget = !!(d && d.target);
-    row.hit.hidden = !hasTarget;
+    hideCtl(row.hit, !hasTarget);
     if (hasTarget) row.hit.setAttribute('aria-label', d.hitLabel || fmt(U.boardHit, { time: d.time, to: String(d.label || d.to).replace(/\.$/, '') }));
     row.shownTexts = t;
   }
@@ -441,7 +444,7 @@
             <span class="tile-photo">${thumbHTML(tilePhoto(t), 'tile-img', '(min-width: 1024px) 280px, (min-width: 640px) 31vw, 46vw', '', { loading: i ? 'lazy' : 'eager' })}<span class="tile-check" aria-hidden="true">${ICON.check}</span></span>
             <span class="tile-label">${esc(tileLabel(t))}</span><span class="tile-sub">${esc(tileSub(t))}</span>
           </button>${HAP}</span>
-          ${hap(`<button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span>${ICON.more}</button>`)}
+          ${hap(`<button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span>${ICON.more}</button>`, 'more')}
         </div>`;
     }).join('');
     // Laptop: four across. The none button fills the empty cells of the last row. When the tiles
@@ -462,7 +465,7 @@
         <div class="stage-count" aria-hidden="true">${FLAP.repeat(Array.from(counterText(STEPS.length - 1)).length)}</div>
         <div class="stage-steps">${STEPS.map(stepHTML).join('')}</div>
         <div class="stage-foot">
-          ${hap(`<button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>`)}
+          ${hap(`<button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>`, 'back')}
           <span class="picked" aria-hidden="true"></span>
           ${hap('<button type="button" class="btn stage-next" data-action="next"></button>')}
         </div>
@@ -537,7 +540,7 @@
     const next = $('.stage-next', host);
     next.textContent = last ? ASK.plan : any ? ASK.next : ASK.skip;
     next.classList.toggle('btn--primary', last || any);
-    $('.stage-back', host).hidden = stage.step === 0;
+    hideCtl($('.stage-back', host), stage.step === 0);
     $('.stage-count', host).dataset.text = counterText(stage.step);
     syncPicked();
   }
@@ -1012,7 +1015,7 @@
     if (dayShown) return;
     dayShown = true;
     ['dep', 'day', 'send'].forEach((id) => { document.getElementById(id).hidden = false; });
-    slot('hud-map').hidden = false;
+    hideCtl(slot('hud-map'), false);
     renderDepBoard();
     ensureAtlases();
     // Only a change of width matters; the rebuild waits for the next frame, so the observer never sees
@@ -1419,7 +1422,7 @@
     }).join('');
     return `${sugg.length ? `<li class="plan-group plan-group--more"><h3 class="label">${esc(D.roomTitle)}</h3></li>` : ''}<li class="plan-room${sugg.length ? '' : ' is-bare'}">
         ${sugg.length ? `<ul class="room-list">${tiles}</ul>` : ''}
-        ${hap(`<button type="button" class="btn room-all" data-action="catalogue" aria-haspopup="dialog">${esc(D.seeEverything)}</button>`)}
+        ${hap(`<button type="button" class="btn room-all" data-action="catalogue" aria-haspopup="dialog">${esc(D.seeEverything)}</button>`, 'all')}
       </li>`;
   }
   const undoHTML = () => `<li class="plan-undo">${hap(`<button type="button" class="undo-btn" data-action="undo">${esc(C.day.undo)}<span class="sr-only">: ${esc(undo.title)}</span></button>`)}</li>`;
@@ -1791,7 +1794,7 @@
   const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false };
   // "This one". For something that can't happen on Friday, its reason shows in place of the toggle (the
   // toggle stays for screen readers, disabled and described by the reason).
-  const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}${hap(`<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`)}`;
+  const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}${hap(`<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`, 'toggle')}`;
   const peekTextHTML = (o) => `<div class="peek-text">
           <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
           <p class="peek-line">${lineHTML(o, `say-${o.id}-pk`)}</p>
@@ -1846,7 +1849,7 @@
       title = tileLabel(tileOf(STEPS[step], value));
       hint = PK.vibeHint;
       body = `<div class="peek-list">${servedBy(value).map(peekRowHTML).join('')}</div>`;
-      foot = hap(`<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button>`);
+      foot = hap(`<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button>`, 'done');
     } else {
       const o = single || OPT[id];
       title = o.title;
@@ -1858,7 +1861,7 @@
     dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
       <div class="peek-head">
         <div class="peek-titles"><h2 id="peek-h" tabindex="-1">${esc(title)}</h2>${hint ? `<p class="peek-hint">${esc(hint)}</p>` : ''}</div>
-        ${hap(`<button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`)}
+        ${hap(`<button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`, 'x')}
       </div>
       <div class="peek-body">${body}</div>
       ${foot ? `<div class="peek-foot sheet-foot">${foot}</div>` : ''}`;
@@ -1982,7 +1985,9 @@
     const hole = `M${f(cx - 0.4375 * r)} ${f(cy + 0.9 * r)}A${f(r)} ${f(r)} 0 1 1 ${f(cx + 0.4375 * r)} ${f(cy + 0.9 * r)}L${f(cx + 0.875 * r)} ${f(cy + 3.5 * r)}H${f(cx - 0.875 * r)}Z`;
     frame.insertAdjacentHTML('beforeend', `<svg class="keyhole" viewBox="0 0 ${W} ${Hh}" aria-hidden="true"><path fill-rule="evenodd" d="M${-4 * W} ${-4 * Hh}H${5 * W}V${5 * Hh}H${-4 * W}Z${hole}"/></svg>`);
     const svg = frame.lastElementChild;
-    gsap.timeline({ delay, onComplete: () => svg.remove() })
+    const clip = frame.classList.contains('stop-photo'); // a photo in a strip clips the growing plate itself
+    if (clip) frame.classList.add('has-keyhole');
+    gsap.timeline({ delay, onComplete: () => { svg.remove(); if (clip) frame.classList.remove('has-keyhole'); } })
       .fromTo(svg, { scale: 1 }, { scale: 10, duration: 0.55, ease: 'power3.in', transformOrigin: `${f(cx)}px ${f(cy + 0.3 * r)}px` }, 0.25);
   }
   // Her entry: the first time its first photo is two-thirds in view (the day re-renders, so this follows it).
@@ -2594,7 +2599,7 @@
       dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
         <div class="sheet-head mapsheet-head">
           <div class="mapsheet-titles"><h2 id="ms-h" tabindex="-1">${esc(U.mapTitle)}</h2><p class="mapsheet-note">${esc(U.mapNote)}</p></div>
-          ${hap(`<button type="button" class="peek-x" data-action="map-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`)}
+          ${hap(`<button type="button" class="peek-x" data-action="map-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`, 'x')}
         </div>
         <div class="mapsheet-map"></div>`;
       sheetAtlas = new Atlas($('.mapsheet-map', dlg), 'sheet');
@@ -3209,8 +3214,10 @@
     try { ctl.focus({ preventScroll: true, focusVisible: false }); } catch { /* focus options unsupported */ }
     ctl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, detail: e.detail, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY }));
   }, true);
-  // iOS applies :active (the 0.96 press on the switch's control) only once the page listens for touches.
-  addEventListener('touchstart', () => {}, { passive: true });
+  // The press her finger would give the control (0.96), shown while it is on the control's switch (b3.4).
+  const press = (e, on) => { const sw = e.target; if (sw.classList && sw.classList.contains('hap') && sw.previousElementSibling) sw.previousElementSibling.classList.toggle('is-pressed', on); };
+  document.addEventListener('pointerdown', (e) => press(e, true), { passive: true });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => document.addEventListener(t, (e) => press(e, false), { passive: true, capture: t === 'pointerleave' }));
   addEventListener('scroll', () => syncDock(), { passive: true });
   wideMQ.addEventListener('change', () => { ensureAtlases(); ScrollTrigger.refresh(); });
   slot('hud-map').addEventListener('click', openMapSheet);

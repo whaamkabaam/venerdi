@@ -212,7 +212,6 @@ svg { display: block; }
 .hapw--block { display: grid; justify-self: stretch; }
 .hapw--hit { position: absolute; inset: 0; display: block; }
 .hap { display: none; }
-.hapw:has(> [hidden]) { display: none; }
 @media (hover: none) and (pointer: coarse) {
   .hap {
     display: block;
@@ -228,20 +227,21 @@ svg { display: block; }
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .hapw:has(> :disabled) > .hap { display: none; }
-  /* The press the control would show under a finger, shown while the finger is on its switch. */
-  .hapw:has(> .hap:active) > :first-child:not(:disabled) { scale: 0.96; }
+  .hapw > :disabled + .hap { display: none; }
+  /* The press the control would show under a finger, shown while the finger is on its switch (app.js). */
+  .hapw > .is-pressed:not(:disabled) { scale: 0.96; }
 }
-/* Where a control sat in its row: its own margins and its place in the grid or the flex line. */
-.hapw:has(> .tile-more) { margin-top: var(--s1); z-index: 2; } /* its hit area still reaches a little into the tile's sub above it */
-.hapw:has(> .stage-back) { margin-left: -14px; }
-.peek-row > .hapw:has(> .peek-toggle) { grid-area: toggle; justify-self: start; align-self: start; margin-top: var(--s3); }
-.peek--one .peek-foot > .hapw:has(> .peek-toggle) { flex: 1 1 auto; display: grid; }
-.hapw:has(> .peek-done) { margin-left: auto; }
-.hapw:has(> .peek-x) { flex: none; margin-right: -6px; }
+/* Where a control sat in its row: its own margins and its place in the grid or the flex line (by class: a
+   `.hapw:has(...)` selector cost the board's replay frames in Chromium, final perf pass). */
+.hapw--more { margin-top: var(--s1); z-index: 2; } /* its hit area still reaches a little into the tile's sub above it */
+.hapw--back { margin-left: -14px; }
+.peek-row > .hapw--toggle { grid-area: toggle; justify-self: start; align-self: start; margin-top: var(--s3); }
+.peek--one .peek-foot > .hapw--toggle { flex: 1 1 auto; display: grid; }
+.hapw--done { margin-left: auto; }
+.hapw--x { flex: none; margin-right: -6px; }
 .swap-alt > .hapw { grid-area: use; }
 .room-tile > .hapw { grid-area: add; }
-.hapw:has(> .room-all) { margin-top: var(--s4); }
+.hapw--all { margin-top: var(--s4); }
 .hapw--send { justify-self: start; margin-top: var(--s1); }
 .hapw--clock { flex: none; margin: 0 -6px; }
 .hapw--pocket { flex: none; }
@@ -993,7 +993,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* v9b B2b (b3.3): the keyhole plate over the Aventine photo, for 0.8 s the first time she sees it. One SVG on
    its own layer while it opens; the photo's frame clips it. */
 .keyhole { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; fill: #07080A; will-change: transform; }
-.stop-photo:has(> .keyhole) { overflow: clip; }
+.stop-photo.has-keyhole { overflow: clip; }
 .stop-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; user-select: none; -webkit-user-select: none; }
 /* A tap on an entry's photo shows the next one, so a strip of two reads as a pointer on a laptop. */
 .stop .stop-strip:has(> :nth-child(2)) .stop-photo { cursor: pointer; }
@@ -1538,7 +1538,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .peek--one .peek-thing .peek-line, .peek--one .stop-photos:has(.stop-dots) + .peek-text .peek-line { margin-top: 0; }
   .peek--one .peek-foot { justify-content: flex-end; }
   .peek--one .peek-foot .peek-toggle { flex: none; min-width: 200px; }
-  .peek--one .peek-foot > .hapw:has(> .peek-toggle) { flex: none; }
+  .peek--one .peek-foot > .hapw--toggle { flex: none; }
   .catalogue .sheet-head, .catalogue .sheet-body { padding-left: 32px; padding-right: 32px; }
   .cat-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s6) var(--s5); }
   /* The time in a 104 px gutter, the entry beside it in a 640 px column; no line between the times. */
