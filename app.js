@@ -2285,7 +2285,9 @@
       const above = y1 > y2 + 4;
       if (above !== sg.above) { sg.above = above; lab.setAttribute('y', above ? -10 : 17); }
     }
-    lap(t) { t.lapPending = false; gsap.fromTo(t.paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: 'power1.inOut', overwrite: true }); }
+    // autoRound off: GSAP rounds a px value to whole pixels, and on a path of length 1 that made the lap a jump at its
+    // midpoint (round 2, sampled per frame) instead of a 0.7 s draw.
+    lap(t) { t.lapPending = false; gsap.fromTo(t.paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: 'power1.inOut', overwrite: true, autoRound: false }); }
     // On (the laptop map while the keyhole is hers, walked in once; the phone's sheet whenever the keyhole is on her
     // day, drawn complete) or off (it fades in 250 ms). Her other places step back while it shows on the laptop.
     setSight(show, animate = false) {
