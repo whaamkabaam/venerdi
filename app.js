@@ -2028,10 +2028,13 @@
       .catch(() => { INK.failed = true; });
     return INK.ready;
   }
-  // At dusk the engraving swaps to its lamplight copies: nothing is recoloured on the scroll path.
+  // At dusk the engraving swaps to its lamplight copies (nothing is recoloured on the scroll path) and every mark
+  // becomes a street lamp (styles.css, B1c), at once with the page's ink flip: no fill fade on that frame.
   function setInkDark(dark) {
     if (INK.dark === dark) return;
     INK.dark = dark;
+    ATLASES.forEach((a) => a.el.classList.add('is-switching'));
+    requestAnimationFrame(() => requestAnimationFrame(() => ATLASES.forEach((a) => a.el.classList.remove('is-switching'))));
     repaint();
   }
 
@@ -2112,9 +2115,9 @@
     }
     setMarks(list) {
       this.tw?.kill(); this.tw = null;
-      this.svg.innerHTML = list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}"><circle class="mk-hit" r="22"/><circle class="mk-halo"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
+      this.svg.innerHTML = list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}"><circle class="mk-hit" r="22"/><circle class="mk-halo"/><circle class="mk-glow"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
       const gs = [...this.svg.children];
-      this.marks = list.map((m, i) => ({ ...m, g: gs[i], dot: $('.mk-dot', gs[i]), halo: $('.mk-halo', gs[i]), ring: $('.mk-ring', gs[i]), text: $('.mk-label', gs[i]), state: '', gone: false }));
+      this.marks = list.map((m, i) => ({ ...m, g: gs[i], dot: $('.mk-dot', gs[i]), halo: $('.mk-halo', gs[i]), glow: $('.mk-glow', gs[i]), ring: $('.mk-ring', gs[i]), text: $('.mk-label', gs[i]), state: '', gone: false }));
       this.byId = new Map(this.marks.map((m) => [m.id, m]));
       this.cur = null;
     }
@@ -2141,6 +2144,7 @@
           const r = { current: 5.5, past: 3.5, ahead: 4, idea: 4 }[state] + (m.kind === 'edge' && state !== 'current' ? 1 : 0);
           m.dot.setAttribute('r', r);
           m.halo.setAttribute('r', state === 'current' ? 10 : r + 2.5);
+          m.glow.setAttribute('r', r * 2); // the lamp's glow after dark (B1c)
           if (state === 'current' && m.state !== 'current') {
             this.svg.append(m.g); // paints on top
             if (reduced || !window.gsap) m.ring.style.strokeDashoffset = '0';
@@ -2834,7 +2838,7 @@
     // The map, for the checks: whether the engraving is in, each atlas's marks in screen px, and a way to put
     // the map on an entry directly (reduced motion, so the camera jumps).
     mapReady: () => INK.day.length > 0 && INK.p === 1,
-    mapState: (kind) => { const a = ATLASES.find((x) => x.kind === kind); if (!a) return null; const box = (el) => { const r = el.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; }; return { kind, key: mapKey, cam: { ...a.cam }, vw: a.vw, vh: a.vh, rect: box(a.el), dark: INK.dark, night: INK.night.filter(Boolean).length, flying: !!a.tw, marks: a.marks.map((m) => ({ id: m.id, key: m.key, kind: m.kind, x: m.x, y: m.y, label: m.text.textContent, state: m.state, gone: m.gone, cls: m.g.getAttribute('class'), op: +getComputedStyle(m.g).opacity, named: m.g.classList.contains('is-named') || m.state === 'current', labelOpacity: +getComputedStyle(m.text).opacity, dot: box(m.dot), labelBox: box(m.text), fill: getComputedStyle(m.dot).fill, ring: String(parseFloat(getComputedStyle(m.ring).strokeDashoffset)) })) }; },
+    mapState: (kind) => { const a = ATLASES.find((x) => x.kind === kind); if (!a) return null; const box = (el) => { const r = el.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; }; return { kind, key: mapKey, cam: { ...a.cam }, vw: a.vw, vh: a.vh, rect: box(a.el), dark: INK.dark, night: INK.night.filter(Boolean).length, inks: INK.day.length, flying: !!a.tw, marks: a.marks.map((m) => ({ id: m.id, key: m.key, kind: m.kind, x: m.x, y: m.y, label: m.text.textContent, state: m.state, gone: m.gone, cls: m.g.getAttribute('class'), op: +getComputedStyle(m.g).opacity, named: m.g.classList.contains('is-named') || m.state === 'current', labelOpacity: +getComputedStyle(m.text).opacity, dot: box(m.dot), labelBox: box(m.text), fill: getComputedStyle(m.dot).fill, glow: +getComputedStyle(m.glow).opacity, ring: String(parseFloat(getComputedStyle(m.ring).strokeDashoffset)) })) }; },
     mapFocus: (key, jump = true) => { const el = keyEl(key); ATLASES.forEach((a) => a.focus(el, { jump, camera: a.kind !== 'sheet' })); mapKey = el ? key : null; },
   };
 

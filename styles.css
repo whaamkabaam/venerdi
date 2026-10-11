@@ -479,6 +479,14 @@ svg { display: block; }
 .mk-ring { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; visibility: hidden; }
 .mk.is-current .mk-ring { visibility: visible; }
 .mk.is-current .mk-halo { fill: none; stroke: var(--mk-bg); stroke-width: 5; }
+/* After dark (B1c, design-v9 amendments b3.1) every mark of her day is a street lamp: the dot fills sodium with
+   one glow twice its size at 22 %, no blur. At dinner and Early night the map is the night recap of her day. */
+.mk-glow { fill: var(--sodium); opacity: 0; }
+:root[data-dark] .mk:not(.is-idea) .mk-glow { opacity: 0.22; }
+/* The glow does the halo's work after dark: no dark ring between the lamp and its light. */
+:root[data-dark] .mk:not(.is-idea):not(.is-current) .mk-halo { fill: none; }
+:root[data-dark] .mk:not(.is-idea) .mk-dot { fill: var(--sodium); stroke: none; }
+.atlas.is-switching .mk-dot { transition: none; }
 /* A place off the engraving: a ring on its edge, in the same states. The three pizza places (only while
    dinner is the current entry): hollow, in the accent. */
 .mk.is-edge .mk-dot, .mk.is-idea .mk-dot { fill: var(--mk-bg); stroke: var(--accent); stroke-width: 1.75; }
