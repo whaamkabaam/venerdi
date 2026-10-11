@@ -2097,6 +2097,32 @@
         {
           "label": "Map",
           "url": "https://maps.google.com/?q=Via+Giuseppe+Zanardelli+14+Roma"
+        },
+        {
+          "label": "Class page",
+          "url": "https://www.eatandwalkitaly.it/experience-class/fettuccine-pasta-and-tiramisu-dessert/"
+        }
+      ],
+      "details": [
+        {
+          "label": "When",
+          "text": "11:00 or 13:00. 1h 30 making, 1h 30 eating."
+        },
+        {
+          "label": "Sauce",
+          "text": "We pick tomato and basil, amatriciana or cacio e pepe, and the kitchen makes it."
+        },
+        {
+          "label": "Drinks",
+          "text": "A glass of wine or a soft drink, and limoncello or a coffee."
+        },
+        {
+          "label": "Where",
+          "text": "Via Giuseppe Zanardelli 14, by Piazza Navona"
+        },
+        {
+          "label": "Run by",
+          "text": "Eat and Walk Italy"
         }
       ],
       "book": "the pasta class",
