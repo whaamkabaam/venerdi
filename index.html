@@ -37,10 +37,10 @@
 <div class="sky-bg" aria-hidden="true"></div>
 <aside class="hud" data-slot="hud">
   <div class="hud-inner">
-    <button class="hud-clock" type="button" data-slot="hud-clock"></button>
+    <span class="hapw hapw--clock"><button class="hud-clock" type="button" data-slot="hud-clock"></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
     <p class="hud-place"><span class="sr-only" data-slot="hud-time"></span><span data-slot="hud-place"></span></p>
     <button class="btn btn--small hud-now" type="button" hidden><span class="now-long" data-slot="now-long"></span><span class="now-short" data-slot="now-short"></span></button>
-    <button class="hud-map" type="button" data-slot="hud-map" aria-haspopup="dialog" hidden></button>
+    <span class="hapw hapw--pocket"><button class="hud-map" type="button" data-slot="hud-map" aria-haspopup="dialog" hidden></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
   </div>
 </aside>
 
@@ -86,7 +86,7 @@
     <div class="send">
       <label class="send-label" id="free-label" for="free-text" data-slot="free-label"></label>
       <textarea id="free-text" class="send-text" rows="2" maxlength="1000" data-slot="free-text"></textarea>
-      <button class="btn btn--primary send-btn" type="button" data-slot="send"></button>
+      <span class="hapw hapw--send"><button class="btn btn--primary send-btn" type="button" data-slot="send"></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
     </div>
   </section>
 

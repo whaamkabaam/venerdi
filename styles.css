@@ -201,6 +201,52 @@ svg { display: block; }
 @media (hover: hover) { .btn.btn--quiet:not(:disabled):hover { background-color: var(--fill-quiet-hover); } }
 .btn .i { width: 14px; height: 14px; flex: none; }
 
+/* ---------- Haptics on the iPhone (v9b B2c, design-v9 amendments b3.4) ---------- */
+/* Each control she taps on purpose sits in a .hapw with an invisible native switch laid over it (the test
+   page's row A, the one route that ticked on Felix's iPhone). On touch screens her finger lands on the switch,
+   which ticks, and app.js passes the tap on to the control. Everywhere else the switch is not there at all, and
+   this rule is also the one switch that turns every overlay off. The wrapper takes the control's place in the
+   layout: the control's margins move onto the wrapper, so the switch covers the control exactly. */
+.hapw { position: relative; display: inline-grid; }
+.hapw > :first-child { margin: 0 !important; }
+.hapw--block { display: grid; justify-self: stretch; }
+.hapw--hit { position: absolute; inset: 0; display: block; }
+.hap { display: none; }
+.hapw:has(> [hidden]) { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .hap {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0.02;
+    appearance: auto;
+    -webkit-appearance: auto;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hapw:has(> :disabled) > .hap { display: none; }
+  /* The press the control would show under a finger, shown while the finger is on its switch. */
+  .hapw:has(> .hap:active) > :first-child:not(:disabled) { scale: 0.96; }
+}
+/* Where a control sat in its row: its own margins and its place in the grid or the flex line. */
+.hapw:has(> .tile-more) { margin-top: var(--s1); z-index: 2; } /* its hit area still reaches a little into the tile's sub above it */
+.hapw:has(> .stage-back) { margin-left: -14px; }
+.peek-row > .hapw:has(> .peek-toggle) { grid-area: toggle; justify-self: start; align-self: start; margin-top: var(--s3); }
+.peek--one .peek-foot > .hapw:has(> .peek-toggle) { flex: 1 1 auto; display: grid; }
+.hapw:has(> .peek-done) { margin-left: auto; }
+.hapw:has(> .peek-x) { flex: none; margin-right: -6px; }
+.swap-alt > .hapw { grid-area: use; }
+.room-tile > .hapw { grid-area: add; }
+.hapw:has(> .room-all) { margin-top: var(--s4); }
+.hapw--send { justify-self: start; margin-top: var(--s1); }
+.hapw--clock { flex: none; margin: 0 -6px; }
+.hapw--pocket { flex: none; }
+.hapw--clock > .hud-clock { display: flex; }
+
 .tag {
   display: inline-flex;
   align-items: center;
@@ -1066,7 +1112,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .room-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
   .room-tile { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; grid-template-areas: "photo" "why" "name" "add"; align-items: start; row-gap: 2px; }
   .room-why { margin-top: var(--s2); }
-  .room-add { justify-self: start; margin-top: var(--s2); }
+  .room-tile > .hapw { justify-self: start; margin-top: var(--s2); }
 }
 
 .plan-undo { display: flex; justify-content: center; padding: var(--s1) 0; }
@@ -1433,6 +1479,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .peek--one .peek-thing .peek-line, .peek--one .stop-photos:has(.stop-dots) + .peek-text .peek-line { margin-top: 0; }
   .peek--one .peek-foot { justify-content: flex-end; }
   .peek--one .peek-foot .peek-toggle { flex: none; min-width: 200px; }
+  .peek--one .peek-foot > .hapw:has(> .peek-toggle) { flex: none; }
   .catalogue .sheet-head, .catalogue .sheet-body { padding-left: 32px; padding-right: 32px; }
   .cat-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s6) var(--s5); }
   /* The time in a 104 px gutter, the entry beside it in a 640 px column; no line between the times. */
@@ -1469,7 +1516,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* From 1280 px the day is two columns: the map sticks on the left, unboxed, the plan runs on the right
    (design-v9 amendments b2); the pocket map steps aside. */
 @media (min-width: 1280px) {
-  .hud-map { display: none; }
+  .hud-map, .hapw--pocket { display: none; }
   /* Send sits in the day's column (design-v9 4.7), so the page keeps one left edge to the end. */
   .section--send { display: grid; grid-template-columns: 440px minmax(0, 760px); justify-content: center; column-gap: var(--s7); }
   .section--send > .send { grid-column: 2; max-width: none; margin-left: 0; margin-right: 0; }

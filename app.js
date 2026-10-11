@@ -54,9 +54,17 @@
   // The three dinner ideas (spec 4): she picks one, or none.
   const IDEAS = C.dinners.ideas;
   const IDEA = Object.fromEntries(IDEAS.map((d) => [d.id, d]));
-  // Haptics (web-haptics): a tick on a tile or a toggle, a firmer one on Show me Friday. Called inside the tap.
+  // Haptics (web-haptics): a tick on a tile or a toggle, a firmer one on Show me Friday. Called inside the tap,
+  // and only where the browser can vibrate (Android): on an iPhone the switch under her finger already ticked
+  // (b3.4), so a second, script-fired tick would only be silent or doubled. Never on load or scroll.
   const haptics = window.WebHaptics ? new window.WebHaptics() : null;
-  const buzz = (p) => { try { haptics?.trigger(p)?.catch?.(() => {}); } catch { /* no haptics here */ } };
+  const buzz = (p) => { if (!navigator.vibrate) return; try { haptics?.trigger(p)?.catch?.(() => {}); } catch { /* no haptics here */ } };
+  // Haptics on the iPhone (b3.4; brief 12, row A of the test page): Safari ticks only when a real finger toggles
+  // a native switch, so each control she taps on purpose has an invisible <input switch> laid over it (touch
+  // screens only, styles.css). Her tap toggles the switch, which ticks, and onHapClick passes the tap on to the
+  // control, so every handler and focus return works as before.
+  const HAP = '<input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true">';
+  const hap = (html, mod = '') => `<span class="hapw${mod ? ` hapw--${mod}` : ''}">${html}${HAP}</span>`;
 
   const ICON = {
     out: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6.5 5H11v4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -159,7 +167,7 @@
   const EN = '<span class="note-en" aria-hidden="true"></span>';
   const rowHTML = (w) => `<div class="board-row" role="row">
       ${cellHTML('time', w[0])}${w.length > 2 ? cellHTML('who', w[1]) + cellHTML('note', w[2], EN) : cellHTML('who', w[1], EN)}
-      <button type="button" class="board-hit" hidden></button>
+      ${hap('<button type="button" class="board-hit" hidden></button>', 'hit')}
     </div>`;
   function rowModel(el, widths) {
     return {
@@ -429,11 +437,11 @@
       const more = n === 1 ? PK.openOne : n === 2 ? PK.openTwo : fmt(PK.open, { n });
       // The photo sits on its own layer over an ink mat: picked, it steps in 6 px (styles.css, b1.1).
       return `<div class="tile-cell">
-          <button type="button" class="tile" ${state} data-step="${i}" data-value="${v}">
+          <span class="hapw hapw--block"><button type="button" class="tile" ${state} data-step="${i}" data-value="${v}">
             <span class="tile-photo">${thumbHTML(tilePhoto(t), 'tile-img', '(min-width: 1024px) 280px, (min-width: 640px) 31vw, 46vw', '', { loading: i ? 'lazy' : 'eager' })}<span class="tile-check" aria-hidden="true">${ICON.check}</span></span>
             <span class="tile-label">${esc(tileLabel(t))}</span><span class="tile-sub">${esc(tileSub(t))}</span>
-          </button>
-          <button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span>${ICON.more}</button>
+          </button>${HAP}</span>
+          ${hap(`<button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span>${ICON.more}</button>`)}
         </div>`;
     }).join('');
     // Laptop: four across. The none button fills the empty cells of the last row. When the tiles
@@ -454,9 +462,9 @@
         <div class="stage-count" aria-hidden="true">${FLAP.repeat(Array.from(counterText(STEPS.length - 1)).length)}</div>
         <div class="stage-steps">${STEPS.map(stepHTML).join('')}</div>
         <div class="stage-foot">
-          <button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>
+          ${hap(`<button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>`)}
           <span class="picked" aria-hidden="true"></span>
-          <button type="button" class="btn stage-next" data-action="next"></button>
+          ${hap('<button type="button" class="btn stage-next" data-action="next"></button>')}
         </div>
       </div>
       <div class="stage-closed"><p class="stage-answers"></p><button type="button" class="btn btn--small" data-action="change">${esc(ASK.change)}</button></div>`;
@@ -1320,7 +1328,7 @@
         <ul class="swap-list">${alts.map((a) => { const o = OPT[a]; return `<li class="swap-alt">
           ${thumbHTML(o.photos?.[0], 'swap-photo', '112px')}
           <span class="swap-text"><span class="swap-name">${esc(o.title)}</span><span class="swap-line">${esc(o.line)}</span></span>
-          <button type="button" class="btn btn--quiet swap-use" data-action="use" data-id="${esc(a)}">${esc(D.useThis)}<span class="sr-only">: ${esc(o.title)}</span></button>
+          ${hap(`<button type="button" class="btn btn--quiet swap-use" data-action="use" data-id="${esc(a)}">${esc(D.useThis)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}
         </li>`; }).join('')}</ul>
       </div></div>`;
   }
@@ -1363,7 +1371,7 @@
             <p class="stop-line">${esc(o.line)}</p>
             <p class="stop-facts">${factsHTML(factList(o))}</p>
             ${tipHTML(o, 'stop-tip')}
-            <div class="stop-actions">${alts.length ? `<button type="button" class="tbtn" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>` : ''}<button type="button" class="tbtn" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>${linksHTML(o)}</div>
+            <div class="stop-actions">${alts.length ? hap(`<button type="button" class="tbtn" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>`) : ''}${hap(`<button type="button" class="tbtn" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}${linksHTML(o)}</div>
           </div>
         </article>
         ${alts.length ? swapHTML(o.id, alts) : ''}
@@ -1382,15 +1390,15 @@
           ${photoButtonHTML(o, 'room-photo', '(min-width: 640px) 240px, 96px')}
           <span class="room-why label">${esc(label)}</span>
           <span class="room-name">${esc(o.title)}</span>
-          <button type="button" class="btn btn--quiet room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>
+          ${hap(`<button type="button" class="btn btn--quiet room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}
         </li>`;
     }).join('');
     return `${sugg.length ? `<li class="plan-group plan-group--more"><h3 class="label">${esc(D.roomTitle)}</h3></li>` : ''}<li class="plan-room${sugg.length ? '' : ' is-bare'}">
         ${sugg.length ? `<ul class="room-list">${tiles}</ul>` : ''}
-        <button type="button" class="btn room-all" data-action="catalogue" aria-haspopup="dialog">${esc(D.seeEverything)}</button>
+        ${hap(`<button type="button" class="btn room-all" data-action="catalogue" aria-haspopup="dialog">${esc(D.seeEverything)}</button>`)}
       </li>`;
   }
-  const undoHTML = () => `<li class="plan-undo"><button type="button" class="undo-btn" data-action="undo">${esc(C.day.undo)}<span class="sr-only">: ${esc(undo.title)}</span></button></li>`;
+  const undoHTML = () => `<li class="plan-undo">${hap(`<button type="button" class="undo-btn" data-action="undo">${esc(C.day.undo)}<span class="sr-only">: ${esc(undo.title)}</span></button>`)}</li>`;
 
   // The dinner card (spec 4.2, AM2): "around 19:00", "Dinner", one line, then the three ideas. Each idea:
   // its name, its line, "{area} · {booking} · {price}", the friend's tip, Map, and "This one". Tapping
@@ -1406,7 +1414,7 @@
             ${tipHTML(d, 'stop-tip')}
           </div>
           <div class="dinner-acts">
-            <button type="button" class="peek-toggle dinner-toggle" aria-pressed="${dinner === d.id}" data-action="dinner" data-id="${esc(d.id)}"><span class="peek-toggle-in">${ICON.tick}${esc(PK.pick)}</span><span class="sr-only">: ${esc(d.title)}</span></button>
+            ${hap(`<button type="button" class="peek-toggle dinner-toggle" aria-pressed="${dinner === d.id}" data-action="dinner" data-id="${esc(d.id)}"><span class="peek-toggle-in">${ICON.tick}${esc(PK.pick)}</span><span class="sr-only">: ${esc(d.title)}</span></button>`)}
             ${mapLink(d).replace('class="stop-map"', 'class="stop-map tbtn"')}
           </div>
         </li>`).join('');
@@ -1638,7 +1646,7 @@
   function renderCatalogue() {
     const D = C.day;
     // The heading takes focus when the sheet opens (it names the dialog), not the Close button.
-    slot('catalogue').innerHTML = `<div class="sheet-grab" aria-hidden="true"></div><div class="sheet-head"><h2 id="cat-h" tabindex="-1" autofocus>${esc(D.seeEverything)}</h2><button type="button" class="btn btn--small" data-action="close">${esc(D.close)}</button></div>
+    slot('catalogue').innerHTML = `<div class="sheet-grab" aria-hidden="true"></div><div class="sheet-head"><h2 id="cat-h" tabindex="-1" autofocus>${esc(D.seeEverything)}</h2>${hap(`<button type="button" class="btn btn--small" data-action="close">${esc(D.close)}</button>`)}</div>
       <div class="sheet-body">${C.catalogue.groups.map((g) => {
         const opts = C.options.filter((o) => o.group === g.id);
         if (!opts.length) return '';
@@ -1647,7 +1655,7 @@
             ${photoButtonHTML(o, 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw')}
             <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span></span>
             <span class="cat-acts">
-            <button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button><span class="cat-no" id="cw-${esc(o.id)}" hidden></span></span>
+            ${hap(`<button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button>`)}<span class="cat-no" id="cw-${esc(o.id)}" hidden></span></span>
           </li>`).join('')}</ul></section>`;
       }).join('')}</div>`;
   }
@@ -1723,7 +1731,7 @@
   function bindDrag(dlg, close) {
     let y0 = 0, t0 = 0, dy = 0, on = false, id = null;
     dlg.addEventListener('pointerdown', (e) => {
-      if (sheetWide() || dlg.classList.contains('is-closing') || !e.target.closest('.sheet-grab, .peek-head, .sheet-head') || e.target.closest('button, a')) return;
+      if (sheetWide() || dlg.classList.contains('is-closing') || !e.target.closest('.sheet-grab, .peek-head, .sheet-head') || e.target.closest('button, a, .hap')) return;
       on = true; id = e.pointerId; y0 = e.clientY; t0 = performance.now(); dy = 0;
       // A pointer the browser no longer counts as active cannot be captured; the drag works without it.
       try { dlg.setPointerCapture(id); } catch { /* not capturable */ }
@@ -1757,7 +1765,7 @@
   const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false };
   // "This one". For something that can't happen on Friday, its reason shows in place of the toggle (the
   // toggle stays for screen readers, disabled and described by the reason).
-  const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`;
+  const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}${hap(`<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`)}`;
   const peekTextHTML = (o) => `<div class="peek-text">
           <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
           <p class="peek-line">${esc(o.line)}</p>
@@ -1812,7 +1820,7 @@
       title = tileLabel(tileOf(STEPS[step], value));
       hint = PK.vibeHint;
       body = `<div class="peek-list">${servedBy(value).map(peekRowHTML).join('')}</div>`;
-      foot = `<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button>`;
+      foot = hap(`<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button>`);
     } else {
       const o = single || OPT[id];
       title = o.title;
@@ -1824,7 +1832,7 @@
     dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
       <div class="peek-head">
         <div class="peek-titles"><h2 id="peek-h" tabindex="-1">${esc(title)}</h2>${hint ? `<p class="peek-hint">${esc(hint)}</p>` : ''}</div>
-        <button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>
+        ${hap(`<button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`)}
       </div>
       <div class="peek-body">${body}</div>
       ${foot ? `<div class="peek-foot sheet-foot">${foot}</div>` : ''}`;
@@ -2407,7 +2415,7 @@
       dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
         <div class="sheet-head mapsheet-head">
           <div class="mapsheet-titles"><h2 id="ms-h" tabindex="-1">${esc(U.mapTitle)}</h2><p class="mapsheet-note">${esc(U.mapNote)}</p></div>
-          <button type="button" class="peek-x" data-action="map-close" aria-label="${esc(PK.close)}">${ICON.close}</button>
+          ${hap(`<button type="button" class="peek-x" data-action="map-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`)}
         </div>
         <div class="mapsheet-map"></div>`;
       sheetAtlas = new Atlas($('.mapsheet-map', dlg), 'sheet');
@@ -2983,6 +2991,21 @@
   slot('send').addEventListener('click', send);
   nowBtns.forEach((b) => b.addEventListener('click', jumpToNow));
   slot('hud-clock').addEventListener('click', backToBoard);
+  // Her tap toggled a switch (the tick): the control under it gets the tap, at the same spot and with the same
+  // count, so Remove's double-tap guard still sees it; focus moves to the control (b3.4). A disabled or hidden
+  // control gets nothing (its switch is off in styles.css anyway). Capture phase: the switch's own click never
+  // reaches the page's handlers.
+  document.addEventListener('click', (e) => {
+    const sw = e.target;
+    if (!sw.classList || !sw.classList.contains('hap')) return;
+    e.stopPropagation();
+    const ctl = sw.parentElement.firstElementChild;
+    if (!ctl || ctl === sw || ctl.disabled || ctl.hidden) return;
+    try { ctl.focus({ preventScroll: true, focusVisible: false }); } catch { /* focus options unsupported */ }
+    ctl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, detail: e.detail, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY }));
+  }, true);
+  // iOS applies :active (the 0.96 press on the switch's control) only once the page listens for touches.
+  addEventListener('touchstart', () => {}, { passive: true });
   addEventListener('scroll', () => syncDock(), { passive: true });
   wideMQ.addEventListener('change', () => { ensureAtlases(); ScrollTrigger.refresh(); });
   slot('hud-map').addEventListener('click', openMapSheet);
