@@ -1285,7 +1285,9 @@
   const tipHTML = (o, cls) => (o.friendTip ? `<p class="${cls}">${esc(PK.tip)}</p>` : '');
   // One story card: time chip and the answer it came from, the photos, title, line, facts, actions.
   // On a laptop the card is a row: the photos on the left, the rest on the right. Every card with
-  // something to swap to has Swap.
+  // something to swap to has Swap. The chip's time is rough, so "around" sits before it (spec 8.5),
+  // except for the exact times (the noon cannon, Gesù at 17:30, a class session).
+  const aroundWord = fmt(U.around, { time: '' }).trim();
   function stopHTML(it, time, attrs) {
     const o = it.option, D = C.day;
     const i = picks.findIndex((p) => p.id === o.id);
@@ -1294,7 +1296,7 @@
     const id = esc(o.id);
     return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
         <article class="stop-card" aria-labelledby="st-${id}">
-          <p class="stop-top"><span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span><span class="stop-why label">${esc(reasonLabel(reason))}</span>${nowTag}</p>
+          <p class="stop-top">${it.exact ? '' : `<span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span>`}<span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span><span class="stop-why label">${esc(reasonLabel(reason))}</span>${nowTag}</p>
           ${stripHTML(o, '(min-width: 1024px) 340px, (min-width: 768px) 640px, 92vw', photosPill(o, 'strip-peek'))}
           <div class="stop-text">
             <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>

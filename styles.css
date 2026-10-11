@@ -815,6 +815,8 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stop.is-flash .stop-card { background-color: color-mix(in oklch, var(--accent) 14%, var(--surface)); transition-duration: 150ms; }
 .stop-top { display: flex; align-items: center; gap: 10px; padding: 4px 4px 10px; }
 .stop-top .tag--now { margin-left: auto; }
+/* "around" before a rough time's chip, in the text cards' time style; a little closer to its chip. */
+.stop-around { margin-right: -4px; font-size: 0.8125rem; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.02em; }
 .chip { display: inline-flex; flex: none; gap: 2px; padding: 4px; border-radius: 6px; background: #0B0B0C; --fw: 11px; }
 .chip .flap { color: var(--solari); }
 .stop-why { color: color-mix(in oklch, var(--ink) 62%, transparent); }
