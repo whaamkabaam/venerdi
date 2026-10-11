@@ -1461,18 +1461,22 @@
     gsap.to([$('.stop-card', li), $('.swap', li)], { opacity: 0, duration: 0.14, ease: 'power1.in', onComplete: land });
   }
   // Remove: the card collapses (opacity first, then height over 220 ms); "Undo" holds its place for 6 s.
-  // While one card collapses, and for half a second after the tap, no other Remove acts: a double
-  // click's second click lands on the next card's Remove as it slides up (v8 mechanics review F1).
-  let removing = false, removedAt = -Infinity;
+  // While one card collapses no other Remove acts, and for half a second after a Remove neither does a
+  // click at the same spot: a double click's second click lands on the next card's Remove as it slides
+  // up (v8 mechanics review F1). A Remove on another card, at its own spot, acts as soon as the first
+  // card is gone (v8 check fixes, N3).
+  let removing = false, lastRemove = null;
   function removeStop(btn, ev) {
     const li = btn.closest('.stop');
-    // A second tap while the card collapses would remove the next stop too (mechanics F1).
-    if (li.dataset.out || removing || (ev && ev.detail > 1) || performance.now() - removedAt < 500) return;
+    const now = performance.now();
+    const pointer = !!ev && ev.detail > 0; // keyboard Enter and Space give 0
+    const echo = pointer && !!lastRemove && now - lastRemove.t < 500 && Math.hypot(ev.clientX - lastRemove.x, ev.clientY - lastRemove.y) < 24;
+    if (li.dataset.out || removing || (ev && ev.detail > 1) || echo) return;
     const id = li.dataset.key;
     if (!picks.some((p) => p.id === id)) return;
     li.dataset.out = '1';
     removing = true;
-    removedAt = performance.now();
+    lastRemove = pointer ? { t: now, x: ev.clientX, y: ev.clientY } : null;
     let prev = li.previousElementSibling;
     while (prev && !prev.matches('.plan-item')) prev = prev.previousElementSibling;
     const go = () => {
