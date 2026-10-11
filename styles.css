@@ -490,7 +490,7 @@ svg { display: block; }
 /* ---------- Footer ---------- */
 
 .footer {
-  padding: 56px var(--pad) calc(40px + env(safe-area-inset-bottom));
+  padding: var(--s8) var(--pad) calc(var(--s7) + env(safe-area-inset-bottom));
   padding-left: max(var(--pad), env(safe-area-inset-left));
   padding-right: max(var(--pad), env(safe-area-inset-right));
 }
@@ -737,14 +737,14 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 .stage-answers { flex: 1 1 14rem; font-weight: 500; text-wrap: pretty; }
 
-.send { display: grid; gap: 10px; margin-top: 22px; }
+.send { display: grid; gap: var(--s3); margin-top: var(--s5); }
 .send-label { font-weight: 600; }
 .send-text {
   width: 100%;
   min-height: 88px;
-  padding: 12px 14px;
+  padding: var(--s3) var(--s4);
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--r-btn);
   background-color: var(--surface);
   box-shadow: inset 0 0 0 1px var(--hairline);
   color: inherit;
@@ -753,7 +753,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   resize: vertical;
 }
 .send-text::placeholder { color: color-mix(in oklch, currentColor 60%, transparent); }
-.send-btn { justify-self: start; margin-top: 6px; }
+.send-btn { justify-self: start; margin-top: var(--s1); }
 
 /* ---------- Departures ---------- */
 
@@ -799,54 +799,34 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .day-empty { font-size: 1.125rem; }
 .plan { display: grid; }
 .plan-group {
-  margin-top: 26px;
-  padding-top: 10px;
+  margin-top: var(--s4);
+  padding-top: var(--s3);
   border-top: 1px solid var(--hairline);
 }
 .plan-group:first-child { margin-top: 0; }
-.plan-item { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; padding: 14px 0; }
-.plan-item--text { grid-template-columns: minmax(0, 1fr); }
-.plan-photo {
-  width: 64px; height: 64px; border-radius: 6px; overflow: hidden;
-  background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent));
-}
-.plan-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
-.plan-text { display: grid; gap: 4px; }
-.plan-time { font-size: 0.8125rem; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.02em; }
-.plan-title { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.1; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
-.plan-line { max-width: 66ch; text-wrap: pretty; }
-.plan-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 6px; }
-.plan-meta .tag { box-shadow: inset 0 0 0 1px var(--hairline); }
+/* v9 (dir-3 anatomy, design-v9 amendments b1.3): entries without boxes. Each starts with its time as the
+   board's flap chip ("around" before a rough one), then, for a place, one photo at a time, the title in the
+   display face, the line, the facts and quiet text actions; a text entry is a time, a title and its line. */
+.plan-item { display: grid; grid-template-columns: minmax(0, 1fr); padding: var(--s4) 0 var(--s6); }
+.plan-text { display: grid; gap: var(--s2); }
+.plan-time, .stop-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); min-height: 26px; }
+.plan-title { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.08; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
+.plan-line { max-width: 34em; text-wrap: pretty; }
 .tag--now { display: none; background: var(--accent); color: var(--on-accent); }
 .plan-item.is-now .tag--now { display: inline-flex; }
-.plan-item { border-radius: 8px; transition: background-color 600ms var(--ease-out); }
-.plan-item.is-flash { background-color: color-mix(in oklch, var(--accent) 16%, transparent); transition-duration: 150ms; }
-/* Under the Lunch heading, with two or more lunch cards: "We'll only have one of these." */
+/* A board row or Add sends her to an entry: its title lights up in the accent for a moment. */
+.stop-title, .plan-title, .plan-item--text h4 { transition: color 700ms var(--ease-out); }
+.plan-item.is-flash :is(.stop-title, .plan-title, h4) { color: var(--accent); transition-duration: 150ms; }
+/* Under the Lunch heading, with two or more lunch entries: "We'll only have one of these." */
 .plan-choice { padding-top: var(--s2); font-size: 0.9375rem; font-weight: 500; color: var(--ink-muted); }
-.day-after { display: grid; gap: 10px; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--hairline); }
-.day-summary { font-weight: 600; }
-.didnt { margin-top: 14px; }
-.didnt h3 { font-size: 1.125rem; line-height: 1.3; margin-bottom: 6px; }
-.didnt li { padding: 6px 0; text-wrap: pretty; }
-.didnt-title { font-weight: 600; }
 
-/* Story cards: time chip and answer, two photos, title, line, facts, Swap / Remove / Map.
-   Radii are concentric: card 22 = photo 14 + padding 8. */
-.plan-item.stop { display: block; padding: 10px 0; }
-.stop-card {
-  padding: 8px;
-  border-radius: 22px;
-  background-color: var(--surface);
-  box-shadow: var(--shadow-border);
-  transition: background-color 600ms var(--ease-out);
-}
-.stop.is-flash { background-color: transparent; }
-.stop.is-flash .stop-card { background-color: color-mix(in oklch, var(--accent) 14%, var(--surface)); transition-duration: 150ms; }
-.stop-top { display: flex; align-items: center; gap: 10px; padding: 4px 4px 10px; }
-.stop-top .tag--now { margin-left: auto; }
-/* "around" before a rough time's chip, in the text cards' time style; a little closer to its chip. */
-.stop-around { margin-right: -4px; font-size: 0.8125rem; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.02em; }
-.chip { display: inline-flex; flex: none; gap: 2px; padding: 4px; border-radius: 6px; background: #0B0B0C; --fw: 11px; }
+.plan-item.stop { display: block; }
+.stop-card { display: block; }
+.stop-top { margin-bottom: var(--s3); }
+.stop-top .tag--now, .plan-time .tag--now { margin-left: auto; }
+/* "around" before a rough time's chip, a little closer to its chip. */
+.stop-around { margin-right: -4px; font-size: 0.8125rem; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.02em; color: var(--ink-muted); }
+.chip { display: inline-flex; flex: none; gap: 2px; padding: 4px; border-radius: var(--r-chip); background: #0B0B0C; --fw: 11px; }
 .chip .flap { color: var(--solari); }
 .stop-why { color: var(--ink-muted); }
 .stop-strip {
@@ -856,49 +836,19 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-  border-radius: 14px;
+  border-radius: var(--r-photo);
   scrollbar-width: none;
+  -webkit-touch-callout: none;
 }
 .stop-strip::-webkit-scrollbar { display: none; }
 .strip-frame { position: relative; }
-/* The Photos pill on a story card's photos: 32 px tall, a 44 px hit area, no backdrop blur. */
-.pill {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px 0 10px;
-  border: 0;
-  border-radius: 16px;
-  background-color: rgb(12 12 20 / 0.62);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition-property: scale, background-color;
-  transition-duration: 150ms;
-  transition-timing-function: ease-out;
-}
-.pill::after { content: ""; position: absolute; inset: -6px -4px; }
-.pill:active { scale: 0.96; }
-.pill .i { width: 13px; height: 13px; flex: none; }
-.pill:focus-visible { outline-color: #fff; outline-offset: 2px; border-radius: 16px; }
-@media (hover: hover) {
-  .pill:hover { background-color: rgb(12 12 20 / 0.8); }
-}
-.stop-photo { display: block; aspect-ratio: 4 / 3; scroll-snap-align: start; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
-.stop-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
+.stop-photo { position: relative; display: block; aspect-ratio: 4 / 3; scroll-snap-align: start; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
+.stop-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; user-select: none; -webkit-user-select: none; }
+/* A tap on an entry's photo shows the next one, so a strip of two reads as a pointer on a laptop. */
+.stop .stop-strip:has(> :nth-child(2)) .stop-photo { cursor: pointer; }
 /* Which photo: short bars, not dots (dir-3; design-v9 amendments b1.3): 16 x 2 px, the current one in
-   ink, the other at 30 %; each a 44 x 44 target. In a sheet the first bar starts on the content's edge. */
-.stop-dots { display: flex; justify-content: center; margin-top: var(--s1); }
-.peek-thing .stop-dots { justify-content: flex-start; }
+   ink, the other at 30 %; each a 44 x 44 target. The first bar starts on the content's edge. */
+.stop-dots { display: flex; justify-content: flex-start; margin: var(--s1) 0 0 -14px; }
 .stop-dot { position: relative; width: 44px; height: 24px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .stop-dot::before {
   content: "";
@@ -912,92 +862,140 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 .stop-dot[aria-current="true"]::before { opacity: 1; }
 .stop-dot::after { content: ""; position: absolute; inset: -10px 0; }
-.stop-text { display: grid; gap: 6px; padding: 12px 6px 4px; }
-.stop-dots + .stop-text, .stop-photos:has(.stop-dots) + .stop-text { padding-top: 4px; }
-.stop-title { font-family: var(--font-display); font-size: 1.625rem; line-height: 1.1; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
-.stop-line { max-width: 62ch; text-wrap: pretty; }
+.stop-text { display: grid; gap: var(--s2); padding-top: var(--s3); }
+.stop-photos:has(.stop-dots) + .stop-text { padding-top: var(--s1); }
+.stop-title { font-family: var(--font-display); font-size: 1.875rem; line-height: 1.04; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
+.stop-line { max-width: 34em; text-wrap: pretty; }
 .fact { white-space: nowrap; }
 .stop-facts { font-size: 0.875rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .stop-tip, .peek-tip { font-size: 0.8125rem; line-height: 1.35; font-weight: 600; color: var(--accent); }
-.stop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
-.stop-actions .btn--small { min-height: 40px; }
+/* Swap, Remove and the links: text buttons, the quietest control (no fill, muted, 44 px tall). The
+   labels sit on the column's edges: the hit areas reach past them into the margin. */
+.stop-actions { display: flex; flex-wrap: wrap; align-items: center; margin: 0 calc(-1 * var(--s3)); }
+.stop-actions > .stop-map:first-of-type { margin-left: auto; }
+.tbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: var(--r-btn);
+  background: none;
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition-property: color, scale;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+.tbtn:active { scale: 0.96; }
+.tbtn .i { width: 14px; height: 14px; flex: none; }
+@media (hover: hover) and (pointer: fine) { .tbtn:hover { color: var(--ink); } }
 .stop-map {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   min-height: 44px;
-  margin-left: auto;
   padding: 0 4px;
   font-size: 0.875rem;
   font-weight: 500;
   text-underline-offset: 3px;
 }
+.stop-map.tbtn { padding: 0 var(--s3); font-size: 0.9375rem; }
 .stop-map .i { width: 14px; height: 14px; }
 
-/* Swap: an inline strip under the card. */
+/* Swap: the alternatives open under the entry, between hairlines, no boxes. */
 .swap { overflow: hidden; }
-.swap-in { padding: 12px 0 2px 12px; }
+.swap-in { margin-top: var(--s2); padding: var(--s3) 0 0; border-top: 1px solid var(--hairline); }
 .swap-title { margin-bottom: var(--s2); color: var(--ink-muted); }
-.swap-list { display: grid; gap: 8px; }
+.swap-list { display: grid; gap: var(--s3); }
 .swap-alt {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  grid-template-areas: "photo text" "photo use";
-  column-gap: 12px;
-  row-gap: 8px;
-  align-items: start;
-  padding: 8px;
-  border-radius: 16px;
-  background-color: var(--surface);
-  box-shadow: var(--shadow-border);
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  grid-template-areas: "photo text use";
+  column-gap: var(--s3);
+  align-items: center;
 }
-.swap-photo { grid-area: photo; display: block; aspect-ratio: 4 / 3; border-radius: 8px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
+.swap-photo { grid-area: photo; display: block; aspect-ratio: 1; border-radius: var(--r-thumb); overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
 .swap-photo img, .room-photo img, .cat-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
-.swap-text { grid-area: text; display: grid; gap: 2px; }
-.swap-name { font-weight: 600; line-height: 1.25; text-wrap: balance; }
-.swap-line { font-size: 0.875rem; line-height: 1.4; text-wrap: pretty; }
-.swap-use { grid-area: use; justify-self: start; }
+.swap-text { grid-area: text; display: grid; gap: 2px; min-width: 0; }
+.swap-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.25; text-wrap: balance; }
+.swap-line { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); text-wrap: pretty; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.swap-use { grid-area: use; }
 
-/* Dinner: the evening card's three ideas, stacked. Each idea is a quiet surface: its name, line, facts
+/* Dinner: the evening entry's three ideas, a hairline between them, no boxes. Each: its name, line, facts
    and the friend's tip, then "This one" and Map (on the right from 640 px). */
-.plan-dinner { gap: 12px; }
-.dinner-ideas { display: grid; gap: 8px; }
+.plan-dinner .plan-text + .dinner-ideas { margin-top: var(--s3); }
+.dinner-ideas { display: grid; }
 .dinner-idea {
   display: grid;
-  gap: 10px;
-  padding: 14px 14px 12px 16px;
-  border-radius: 16px;
-  background-color: var(--surface);
-  box-shadow: var(--shadow-border);
-  transition: background-color 600ms var(--ease-out);
+  gap: var(--s2);
+  padding: var(--s4) 0;
+  border-top: 1px solid var(--hairline);
 }
 .dinner-text { display: grid; gap: 3px; min-width: 0; }
 .dinner-name { font-size: 1.0625rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
 .dinner-line { font-size: 0.9375rem; line-height: 1.45; }
 .dinner-facts { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .dinner-text .stop-tip { margin-top: 3px; }
-.dinner-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.dinner-acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); }
 .dinner-acts .peek-toggle { margin-top: 0; }
-.dinner-acts .stop-map { margin-left: auto; }
+.dinner-acts .stop-map { margin-left: auto; margin-right: calc(-1 * var(--s3)); }
 @media (min-width: 640px) {
-  .dinner-idea { grid-template-columns: minmax(0, 1fr) auto; column-gap: 20px; align-items: center; }
+  .dinner-idea { grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s5); align-items: center; }
   .dinner-acts { flex-direction: column; align-items: flex-end; }
   .dinner-acts .stop-map { margin-left: 0; }
 }
 
-/* More ideas, then See everything. */
-.plan-room { padding: 18px 0 10px; }
-.room-title { font-size: 1.125rem; line-height: 1.3; margin-bottom: 10px; }
-/* More ideas: tiles like the questions' (the photo, then the text under it, then Add). */
-.room-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.room-tile { display: grid; grid-template-rows: auto auto 1fr auto; gap: 2px; }
-.room-photo { display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
-.room-why { margin-top: var(--s2); font-size: 0.75rem; color: var(--ink-muted); }
-.room-name { font-size: 0.9375rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
-.room-add { justify-self: start; margin-top: 6px; }
-.room-all { margin-top: 14px; }
+/* More ideas, after the day: the group label, then the ideas (rows on a phone, three tiles from 640 px),
+   then See everything. The photo is a button that opens the idea. */
+.plan-room { padding: var(--s3) 0 var(--s2); }
+.plan-room.is-bare { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--hairline); }
+.room-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
+.room-tile {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  grid-template-areas: "photo why add" "photo name add";
+  column-gap: var(--s3);
+  align-items: center;
+}
+.room-photo {
+  grid-area: photo;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-photo);
+  overflow: hidden;
+  background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: scale 150ms ease-out;
+}
+.room-photo:active, .cat-photo:active { scale: 0.96; }
+.room-photo img, .cat-photo img { transition: scale 300ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .room-photo:hover img, .cat-photo:hover img { scale: 1.03; } }
+.room-why { grid-area: why; align-self: end; font-size: 0.75rem; color: var(--ink-muted); }
+.room-name { grid-area: name; align-self: start; font-size: 0.9375rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+.room-add { grid-area: add; }
+.room-all { margin-top: var(--s4); }
+@media (min-width: 640px) {
+  .room-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
+  .room-tile { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; grid-template-areas: "photo" "why" "name" "add"; align-items: start; row-gap: 2px; }
+  .room-why { margin-top: var(--s2); }
+  .room-add { justify-self: start; margin-top: var(--s2); }
+}
 
-.plan-undo { display: flex; justify-content: center; padding: 4px 0; }
+.plan-undo { display: flex; justify-content: center; padding: var(--s1) 0; }
 .undo-btn {
   min-height: 44px;
   padding: 0 18px;
@@ -1048,9 +1046,23 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .sheet-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--pad) calc(var(--s5) + env(safe-area-inset-bottom)); }
 .cat-group h3 { padding: var(--s5) 0 var(--s3); color: var(--ink-muted); }
 /* Every option as a tile: the photo, the text under it, then Add and Photos. */
-.cat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+.cat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s5) var(--s3); }
 .cat-row { display: grid; grid-template-rows: auto 1fr auto; align-content: start; min-width: 0; }
-.cat-photo { display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
+/* The photo is the button that opens the thing (design-v9 4.5.7): no separate "Photos" link. */
+.cat-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-photo);
+  overflow: hidden;
+  background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: scale 150ms ease-out;
+}
+.cat-photo:focus-visible { outline-offset: 3px; }
 .cat-text { display: grid; align-content: start; gap: 2px; padding-top: 8px; }
 .cat-name { font-weight: 600; line-height: 1.25; text-wrap: balance; }
 .cat-line {
@@ -1059,8 +1071,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   color: var(--ink-muted);
   text-wrap: pretty;
 }
-.cat-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 10px; }
-.cat-acts .tile-more { margin-top: 0; }
+.cat-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: var(--s3); }
 /* Something that can't happen on Friday: its reason in place of Add (the disabled button stays, out of
    sight, for screen readers). */
 .cat-no, .peek-no {
@@ -1068,7 +1079,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   align-items: center;
   justify-content: center;
   padding: 0 14px;
-  border-radius: 6px;
+  border-radius: var(--r-btn);
   background-color: color-mix(in oklch, var(--ink) 7%, transparent);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -1088,16 +1099,15 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   place-items: center;
   min-width: 64px;
   height: 40px;
-  padding: 0 12px;
+  padding: 0 var(--s4);
   border: 0;
-  border-radius: 6px;
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px currentColor;
+  border-radius: var(--r-btn);
+  background-color: var(--fill-quiet);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition-property: scale, box-shadow;
+  transition-property: scale, background-color;
   transition-duration: 150ms;
   transition-timing-function: ease-out;
 }
@@ -1106,12 +1116,12 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .cat-add:disabled {
   cursor: default;
   scale: none;
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklch, currentColor 30%, transparent);
   color: color-mix(in oklch, currentColor 60%, transparent);
 }
+@media (hover: hover) { .cat-add[aria-pressed="false"]:not(:disabled):hover { background-color: var(--fill-quiet-hover); } }
 .cat-add > .cat-add-label, .cat-add > .mark-on { grid-area: 1 / 1; transition-property: opacity, scale, filter; transition-duration: 300ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
 .cat-add .mark-on { width: 26px; height: 26px; color: var(--accent); opacity: 0; scale: 0.25; filter: blur(4px); }
-.cat-add[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px transparent; }
+.cat-add[aria-pressed="true"] { background-color: transparent; }
 .cat-add[aria-pressed="true"] .mark-on { opacity: 1; scale: 1; filter: blur(0); }
 .cat-add[aria-pressed="true"] .cat-add-label { opacity: 0; scale: 0.25; filter: blur(4px); }
 .mark-on .tick { stroke: var(--on-accent); }
@@ -1349,20 +1359,22 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .peek--one .peek-foot { justify-content: flex-end; }
   .peek--one .peek-foot .peek-toggle { flex: none; min-width: 200px; }
   .catalogue .sheet-head, .catalogue .sheet-body { padding-left: 32px; padding-right: 32px; }
-  .cat-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 20px; }
-  /* A story card is a row: the photos on the left (44 %), the rest on the right. */
-  .stop-card {
-    display: grid;
-    grid-template-columns: 44% minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "photos top" "photos text";
-    column-gap: 20px;
-    align-items: start;
-  }
-  .stop-top { grid-area: top; padding: 6px 8px 6px 0; }
+  .cat-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s6) var(--s5); }
+  /* The time in a 104 px gutter, the entry beside it in a 640 px column; no line between the times. */
+  .stop-card, .plan-item--text > .plan-text { display: grid; grid-template-columns: 104px minmax(0, 640px); align-items: start; }
+  .stop-card { grid-template-areas: "top photos" "top text"; }
+  .stop-top, .plan-time { grid-row: 1 / span 3; flex-direction: column; align-items: flex-start; gap: 6px; margin: 2px 0 0; }
+  .stop-top { grid-area: top; }
+  .plan-time { grid-column: 1; }
+  .stop-top .tag--now, .plan-time .tag--now { margin-left: 0; }
   .stop-photos { grid-area: photos; }
-  .stop-text, .stop-photos:has(.stop-dots) + .stop-text { grid-area: text; padding: 4px 10px 4px 0; }
-  .stop-title { font-size: 1.625rem; }
+  .stop-text { grid-area: text; }
+  .plan-text > :not(.plan-time) { grid-column: 2; }
+  .plan-item--text > .plan-text { column-gap: 0; row-gap: var(--s2); }
+  .plan-dinner > .dinner-ideas, .swap, .plan-room { margin-left: 104px; max-width: 640px; }
+  .stop-photo { aspect-ratio: 3 / 2; }
+  .stop-title { font-size: 2.125rem; }
+  .plan-item { padding-bottom: var(--s8); }
   .hud-clock { --fw: 17px; }
   .hero { padding-top: calc(env(safe-area-inset-top) + 56px); }
   .board { padding: 22px 22px 18px; border-radius: 14px; }
@@ -1370,7 +1382,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .hero-title { margin-top: 56px; }
   .section { padding-top: var(--s9); }
   .section > h2, .day-head h2 { font-size: 48px; }
-  .plan-title { font-size: 1.75rem; }
+  .plan-title { font-size: 1.625rem; }
 }
 /* Short laptop screens (1280 x 800): the pick-one photos drop to 16:9 (3:2 still left Wild card 26 px
    short) and the question sits a little smaller, so every step still fits with its buttons. */
@@ -1383,6 +1395,9 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
    and the separate map section steps aside so the map never shows twice. */
 @media (min-width: 1280px) {
   #map { display: none; }
+  /* Send sits in the day's column (design-v9 4.7), so the page keeps one left edge to the end. */
+  .section--send { display: grid; grid-template-columns: 440px minmax(0, 760px); justify-content: center; column-gap: var(--s7); }
+  .section--send > .send { grid-column: 2; max-width: none; margin-left: 0; margin-right: 0; }
   .section--day {
     display: grid;
     grid-template-columns: 440px minmax(0, 760px);
@@ -1391,7 +1406,8 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
     align-items: start;
   }
   .section--day > * { grid-column: 2; }
-  .section--day > .day-head, .section--day > .day-lines { width: 100%; }
+  /* The day takes its whole 760 px column (the time gutter, then a 640 px entry, design-v9 amendments b1.3). */
+  .section--day > .day-head, .section--day > .day-lines, .section--day > .day-body { width: 100%; max-width: none; margin-left: 0; margin-right: 0; }
   .section--day > .day-map {
     grid-column: 1;
     grid-row: 1 / span 4;
@@ -1407,7 +1423,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 
 @media (prefers-reduced-motion: reduce) {
   .map-halo, .plan-item, .stop-card, .tile, .tile-img, .tile-img img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
-  .tile-more, .tile-more .i, .pill, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
+  .tile-more, .tile-more .i, .tbtn, .room-photo, .room-photo img, .cat-photo, .cat-photo img, .stop-title, .plan-title, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
   .picked-ph, .sheet::backdrop { animation: none; }
   .note-en.is-on { animation: none; }
   .hud, .hud[data-on] { transition: none; }

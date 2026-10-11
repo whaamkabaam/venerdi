@@ -1242,10 +1242,10 @@
   // change moves a stop, its chip re-flips from the old time (single flip, D 0.07).
   const chipSeen = {};
   function syncChips() {
-    $$('.stop').forEach((li) => {
+    // v9 (dir-3, design-v9 amendments b1.3): every entry, text entries too, starts with its time as a chip.
+    $$('#day .plan-item').forEach((li) => {
       const id = li.dataset.key;
-      const it = plan.items.find((x) => x.kind === 'option' && x.id === id);
-      const text = it ? it.rough : '';
+      const text = li.dataset.min ? P.hhmm(+li.dataset.min) : '';
       const fl = $$('.chip .flap', li).map(flapOf);
       const prev = chipSeen[id];
       chipSeen[id] = text;
@@ -1291,6 +1291,10 @@
   const groupLabel = (o) => (C.catalogue.groups.find((g) => g.id === o.group) || {}).label || '';
   const nowTag = `<span class="tag tag--now">${esc(U.nowTag)}</span>`;
   const mapLink = (o) => (o.links?.[0] ? `<a class="stop-map" href="${esc(o.links[0].url)}" target="_blank" rel="noopener">${esc(o.links[0].label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>` : '');
+  // On an entry every link of the option sits at the right: Map, and for the class its Class page too.
+  const linksHTML = (o) => (o.links || []).map((l) => `<a class="stop-map tbtn" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>`).join('');
+  // A time chip with "around" before a rough time (the board's language), and the Now tag on the day.
+  const whenHTML = (it, extra = '') => `${it.exact ? '' : `<span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span>`}<span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span>${extra}${nowTag}`;
 
   function swapHTML(id, alts) {
     const D = C.day;
@@ -1299,12 +1303,12 @@
         <ul class="swap-list">${alts.map((a) => { const o = OPT[a]; return `<li class="swap-alt">
           ${thumbHTML(o.photos?.[0], 'swap-photo', '112px')}
           <span class="swap-text"><span class="swap-name">${esc(o.title)}</span><span class="swap-line">${esc(o.line)}</span></span>
-          <button type="button" class="btn btn--small swap-use" data-action="use" data-id="${esc(a)}">${esc(D.useThis)}<span class="sr-only">: ${esc(o.title)}</span></button>
+          <button type="button" class="btn btn--quiet swap-use" data-action="use" data-id="${esc(a)}">${esc(D.useThis)}<span class="sr-only">: ${esc(o.title)}</span></button>
         </li>`; }).join('')}</ul>
       </div></div>`;
   }
-  // An option's photos in a scroll-snap strip with a dot per photo (story cards and the peek share
-  // it). `pill`, when given, sits over the photos (the "Photos" button that opens the peek).
+  // An option's photos in a scroll-snap strip with a bar per photo (entries and the peek share it). A tap
+  // on a photo pages to the next one; a swipe scrolls the strip. `pill` is unused since v9 (no Photos pill).
   function stripHTML(o, sizes, pill = '', loading = 'lazy') {
     const photos = (o.photos || []).filter((k) => IMG[k]);
     const strip = photos.map((k, n) => thumbHTML(k, 'stop-photo', sizes, '', { alt: true, loading }).replace('<span', `<span data-n="${n}"`)).join('');
@@ -1313,12 +1317,17 @@
       : '';
     return `<div class="stop-photos"><div class="strip-frame"><div class="stop-strip">${strip}</div>${pill}</div>${dots}</div>`;
   }
-  const photosPill = (o, cls) => `<button type="button" class="pill ${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog">${ICON.photos}${esc(PK.openPhotos)}<span class="sr-only">: ${esc(o.title)}</span></button>`;
+  // A photo that opens one thing's sheet (More ideas, See everything): the photo is the button.
+  const photoButtonHTML = (o, cls, sizes) => {
+    const im = IMG[o.photos?.[0]];
+    return `<button type="button" class="${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog" aria-label="${esc(PK.openPhotos)}: ${esc(o.title)}" style="--ph:${esc(im?.color || '')}">${im ? `<img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${sizes}" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">` : ''}</button>`;
+  };
   const tipHTML = (o, cls) => (o.friendTip ? `<p class="${cls}">${esc(PK.tip)}</p>` : '');
-  // One story card: time chip and the answer it came from, the photos, title, line, facts, actions.
-  // On a laptop the card is a row: the photos on the left, the rest on the right. Every card with
-  // something to swap to has Swap. The chip's time is rough, so "around" sits before it (spec 8.5),
-  // except for the exact times (the noon cannon, Gesù at 17:30, a class session).
+  // One entry (dir-3 anatomy, design-v9 amendments b1.3): no box. Its time chip ("around" before a rough
+  // time, spec 8.5; exact for the noon cannon, Gesù at 17:30, a class session), "Felix's pick" when it is
+  // his, then the photos (one at a time; a tap pages them), the title, the line, the facts, the friend's
+  // tip, and quiet text actions: Swap (when there is something to swap to), Remove, the links at the
+  // right. On a laptop the time sits in a gutter left of the photos.
   const aroundWord = fmt(U.around, { time: '' }).trim();
   function stopHTML(it, time, attrs) {
     const o = it.option, D = C.day;
@@ -1326,23 +1335,26 @@
     const reason = i >= 0 ? picks[i].reason : 'added';
     const alts = i >= 0 ? P.alternatives(C, picks, i, { want: answers?.want || [] }) : [];
     const id = esc(o.id);
+    // Only Felix's pick says why it is there: her own answers need no label (design-v9 4.5.2).
+    const why = reason === 'felix' ? `<span class="stop-why label">${esc(WHY.felix.label)}</span>` : '';
     return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
         <article class="stop-card" aria-labelledby="st-${id}">
-          <p class="stop-top">${it.exact ? '' : `<span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span>`}<span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span><span class="stop-why label">${esc(reasonLabel(reason))}</span>${nowTag}</p>
-          ${stripHTML(o, '(min-width: 1024px) 340px, (min-width: 768px) 640px, 92vw', photosPill(o, 'strip-peek'))}
+          <p class="stop-top">${whenHTML(it, why)}</p>
+          ${stripHTML(o, '(min-width: 1024px) 640px, 92vw')}
           <div class="stop-text">
             <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>
             <p class="stop-line">${esc(o.line)}</p>
             <p class="stop-facts">${factsHTML(factList(o))}</p>
             ${tipHTML(o, 'stop-tip')}
-            <div class="stop-actions">${alts.length ? `<button type="button" class="btn btn--small" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>` : ''}<button type="button" class="btn btn--small" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>${mapLink(o)}</div>
+            <div class="stop-actions">${alts.length ? `<button type="button" class="tbtn" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>` : ''}<button type="button" class="tbtn" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>${linksHTML(o)}</div>
           </div>
         </article>
         ${alts.length ? swapHTML(o.id, alts) : ''}
       </li>`;
   }
-  // "More ideas" (hidden when there is nothing to offer) and "See everything", before dinner. A tile is
-  // the photo, the answer it serves, the title and Add: no time, no price (AM12). Adding always works.
+  // "More ideas" after the day (design-v9 4.5.7): a group label (only when there is something to offer),
+  // then the ideas and "See everything". An idea is its photo (a button that opens it), the answer it
+  // serves, the title and Add: no time, no price (AM12). Adding always works.
   function roomHTML() {
     const D = C.day;
     const sugg = roomNow;
@@ -1350,14 +1362,14 @@
       const o = OPT[x.id];
       const label = x.reason === 'added' ? groupLabel(o) : reasonLabel(x.reason);
       return `<li class="room-tile">
-          ${thumbHTML(o.photos?.[0], 'room-photo', '(min-width: 768px) 200px, 30vw')}
+          ${photoButtonHTML(o, 'room-photo', '(min-width: 640px) 240px, 96px')}
           <span class="room-why label">${esc(label)}</span>
           <span class="room-name">${esc(o.title)}</span>
-          <button type="button" class="btn btn--small room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>
+          <button type="button" class="btn btn--quiet room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>
         </li>`;
     }).join('');
-    return `<li class="plan-room">
-        ${sugg.length ? `<h3 class="room-title">${esc(D.roomTitle)}</h3><ul class="room-list">${tiles}</ul>` : ''}
+    return `${sugg.length ? `<li class="plan-group plan-group--more"><h3 class="label">${esc(D.roomTitle)}</h3></li>` : ''}<li class="plan-room${sugg.length ? '' : ' is-bare'}">
+        ${sugg.length ? `<ul class="room-list">${tiles}</ul>` : ''}
         <button type="button" class="btn room-all" data-action="catalogue" aria-haspopup="dialog">${esc(D.seeEverything)}</button>
       </li>`;
   }
@@ -1378,7 +1390,7 @@
           </div>
           <div class="dinner-acts">
             <button type="button" class="peek-toggle dinner-toggle" aria-pressed="${dinner === d.id}" data-action="dinner" data-id="${esc(d.id)}"><span class="peek-toggle-in">${ICON.tick}${esc(PK.pick)}</span><span class="sr-only">: ${esc(d.title)}</span></button>
-            ${mapLink(d)}
+            ${mapLink(d).replace('class="stop-map"', 'class="stop-map tbtn"')}
           </div>
         </li>`).join('');
     return `<li class="plan-item plan-item--text plan-dinner" ${attrs} data-dot="${dinner ? 'dinner' : ''}" data-hud-title="${esc(A.hud || A.title)}">
@@ -1423,7 +1435,6 @@
     if (!picks.length && !answers) { body.innerHTML = `<p class="day-empty">${esc(D.empty)}</p>`; return; }
     let html = '', group = '', undoShown = false;
     plan.items.forEach((it) => {
-      if (it.kind === 'anchor' && it.id === 'dinner') html += roomHTML();
       if (it.slot !== group) {
         group = it.slot;
         html += `<li class="plan-group"><h3 class="label">${esc(D.slots[group])}</h3></li>`;
@@ -1433,7 +1444,7 @@
       const time = it.exact ? it.rough : fmt(U.around, { time: it.rough });
       const key = it.kind === 'lunch-filler' ? 'lunch' : it.id;
       const attrs = `data-min="${toMin(it.rough)}" data-key="${esc(key)}"`;
-      const timeRow = `<p class="plan-time"><span aria-hidden="true">${esc(time)}</span> ${nowTag}</p>`;
+      const timeRow = `<p class="plan-time">${whenHTML(it)}</p>`;
       if (it.kind === 'option') html += stopHTML(it, time, attrs);
       else if (it.kind === 'lunch-filler') html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
       else if (it.id === 'dinner') html += dinnerHTML(time, attrs, timeRow);
@@ -1446,6 +1457,8 @@
       if (undo && !undoShown && key === undo.after) { html += undoHTML(); undoShown = true; }
     });
     if (undo && !undoShown) html = undoHTML() + html;
+    // More ideas and See everything come after the day, so it reads morning to night without a detour.
+    html += roomHTML();
     body.innerHTML = `<ol class="plan">${html}</ol>`;
   }
 
@@ -1584,6 +1597,9 @@
   function onDayClick(e) {
     const dot = e.target.closest('.stop-dot');
     if (dot) { onStripDot(dot); return; }
+    // A tap or a click on an entry's photo shows the next one (no dialog: the entry already says it all).
+    const ph = e.target.closest('.stop .stop-photo');
+    if (ph) { pageStrip(ph); return; }
     const b = e.target.closest('[data-action]');
     if (!b) return;
     const a = b.dataset.action;
@@ -1608,13 +1624,12 @@
       <div class="sheet-body">${C.catalogue.groups.map((g) => {
         const opts = C.options.filter((o) => o.group === g.id);
         if (!opts.length) return '';
-        // A tile per option, as on the questions: the photo, the text under it, then Add and Photos.
+        // A tile per option, as on the questions: the photo (it opens the thing), the text under it, then Add.
         return `<section class="cat-group" aria-labelledby="cg-${esc(g.id)}"><h3 class="label" id="cg-${esc(g.id)}">${esc(g.label)}</h3><ul class="cat-list">${opts.map((o) => `<li class="cat-row">
-            ${thumbHTML(o.photos?.[0], 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw')}
+            ${photoButtonHTML(o, 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw')}
             <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span></span>
             <span class="cat-acts">
-            <button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button><span class="cat-no" id="cw-${esc(o.id)}" hidden></span>
-            <button type="button" class="tile-more" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog">${esc(PK.openPhotos)}<span class="sr-only">: ${esc(o.title)}</span></button></span>
+            <button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button><span class="cat-no" id="cw-${esc(o.id)}" hidden></span></span>
           </li>`).join('')}</ul></section>`;
       }).join('')}</div>`;
   }
