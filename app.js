@@ -2255,9 +2255,13 @@
         if (show !== t.shown) {
           t.shown = show;
           t.g.classList.toggle('is-shown', show);
+          // Its stop's second name line only while the lane itself can be seen (round 1: on the phone's whole-day
+          // sheet "Once a running track" showed under Navona with no lane drawn).
+          this.marks.forEach((m) => { if (t.stops.includes(m.id)) m.g.classList.toggle('has-track', show); });
           if (show && !this.lapped.has(t.id)) {
             this.lapped.add(t.id);
-            if (!reduced && window.gsap) gsap.fromTo(t.paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: 'power1.inOut', overwrite: true });
+            // The lap waits for the camera to land (round 1: drawn during the flight, it was over before she could see it).
+            if (!reduced && window.gsap) { gsap.set(t.paths, { strokeDashoffset: 1 }); if (this.tw) t.lapPending = true; else this.lap(t); }
           }
         }
         if (!show) continue;
@@ -2281,6 +2285,7 @@
       const above = y1 > y2 + 4;
       if (above !== sg.above) { sg.above = above; lab.setAttribute('y', above ? -10 : 17); }
     }
+    lap(t) { t.lapPending = false; gsap.fromTo(t.paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: 'power1.inOut', overwrite: true }); }
     // On (the laptop map while the keyhole is hers, walked in once; the phone's sheet whenever the keyhole is on her
     // day, drawn complete) or off (it fades in 250 ms). Her other places step back while it shows on the laptop.
     setSight(show, animate = false) {
@@ -2417,7 +2422,7 @@
       if (this.vw <= 1) return;
       this.tw?.kill(); this.tw = null;
       to = this.cover(to);
-      if (reduced || !dur || !window.gsap) { Object.assign(this.cam, to); this.el.classList.remove('is-flying'); this.apply(); this.name(); return; }
+      if (reduced || !dur || !window.gsap) { Object.assign(this.cam, to); this.el.classList.remove('is-flying'); this.apply(); this.name(); this.tracks.forEach((t) => { if (t.lapPending && window.gsap) this.lap(t); }); return; }
       const from = { ...this.cam }, st = { p: 0 };
       const dist = Math.hypot(to.x - from.x, to.y - from.y) * from.s;
       const dip = Math.min(0.4, Math.max(0, (dist - this.vw * 0.5) / (this.vw * 3)));
@@ -2429,7 +2434,7 @@
         this.cam.y = from.y + (to.y - from.y) * p;
         this.cam.s = Math.max(minS, (from.s + (to.s - from.s) * p) * (1 - dip * Math.sin(Math.PI * p)));
         this.apply();
-      }, onComplete: () => { this.tw = null; this.paint(); this.name(); this.el.classList.remove('is-flying'); } });
+      }, onComplete: () => { this.tw = null; this.paint(); this.name(); this.el.classList.remove('is-flying'); this.tracks.forEach((t) => { if (t.lapPending) this.lap(t); }); } });
     }
     // Noon (b3.6): one ring leaves the cannon's mark: on the laptop map out to 230 px over 1.6 s, in the pocket to 30 px
     // over 0.9 s (screen px; the pocket's marks are drawn at 0.7). Reduced motion: a still ring, r 18 at 50 %.
@@ -2466,7 +2471,7 @@
       // A track stop's name has a second line ("Once a running track"), shown while it is current or hovered: the
       // pair is placed as one box, the name above, the line under it.
       const put = (p, c) => {
-        const sub = p.m.sub, two = sub && p.m.state === 'current';
+        const sub = p.m.sub, two = sub && p.m.state === 'current' && p.m.g.classList.contains('has-track');
         p.m.text.setAttribute('x', c[0]); p.m.text.setAttribute('y', two ? c[1] - 8 : c[1]); p.m.text.setAttribute('text-anchor', c[2]);
         if (sub) { sub.setAttribute('x', c[0]); sub.setAttribute('y', two ? c[1] + 9 : c[1] + 14); sub.setAttribute('text-anchor', c[2]); }
       };
@@ -2504,7 +2509,7 @@
   // The current name's box, with its track line under it when it has one.
   function markSize(m) {
     const a = labelSize(m.text);
-    if (!m.sub) return a;
+    if (!m.sub || !m.g.classList.contains('has-track')) return a;
     const b = labelSize(m.sub);
     return { w: Math.max(a.w, b.w), h: a.h + 17 };
   }
@@ -3230,6 +3235,8 @@
     // The handover (b3.2): where the bar comes on, and what the clock reads.
     dockY: () => dockY, clock: () => clockText, firstDeparture: () => ({ ...firstDeparture() }),
     glideTo: (key) => goToEntry(key),
+    // For the frame shots of the race tracks' lap: forget that the lanes were drawn in, so the next one laps again.
+    mapRelap: () => ATLASES.forEach((a) => { a.lapped.clear(); a.tracks.forEach((t) => { t.shown = false; t.g.classList.remove('is-shown'); }); a.marks.forEach((m) => m.g.classList.remove('has-track')); }),
     // The map, for the checks: whether the engraving is in, each atlas's marks in screen px, and a way to put
     // the map on an entry directly (reduced motion, so the camera jumps).
     mapReady: () => INK.day.length > 0 && INK.p === 1,

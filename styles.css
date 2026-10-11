@@ -445,7 +445,7 @@ button.hud-clock:active { scale: 0.96; }
 .board-row { position: relative; }
 /* A row lights up for a moment: where the bar's time came from (0.16 s), or the entry she was on when the
    clock took her back (0.6 s). */
-.board-row.is-flash { background-color: rgb(255 201 74 / 0.10); transition: background-color 150ms ease-out; }
+.board-row.is-flash { background-color: rgb(255 201 74 / 0.14); transition: background-color 150ms ease-out; }
 /* A transparent button over each row that does something (Details, the eggs). */
 .board-hit {
   position: absolute;
@@ -555,7 +555,7 @@ button.hud-clock:active { scale: 0.96; }
   fill: var(--ink-muted); stroke: var(--mk-bg); stroke-width: 3.5px; stroke-linejoin: round; paint-order: stroke;
   pointer-events: none; opacity: 0; transition: opacity 200ms ease-out; text-rendering: geometricPrecision;
 }
-.mk.is-current .mk-sub, .mk.is-hover .mk-sub { opacity: 1; }
+.mk.has-track.is-current .mk-sub, .mk.has-track.is-hover .mk-sub { opacity: 1; }
 .atlas.is-flying .mk .mk-sub { opacity: 0; transition-duration: 120ms; }
 .sight { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 0.5 5; }
 .sight-halo { fill: none; stroke: var(--mk-bg); stroke-width: 4; stroke-linecap: round; opacity: 0.7; }
