@@ -337,8 +337,6 @@
     slot('day-title').textContent = C.day.title;
     slot('change-answers').textContent = C.day.changeAnswers;
     slot('map-title').textContent = U.mapTitle;
-    // Who took each photo is on credits.html (built by tooling/build-data.mjs); the footer links there.
-    slot('credits').textContent = U.credits;
 
     slot('hud').setAttribute('aria-label', U.hud.label);
     $$('main > section').forEach((sec) => { if (U.hud[sec.id]) sec.dataset.hud = U.hud[sec.id]; });

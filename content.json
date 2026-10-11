@@ -116,13 +116,13 @@
           },
           {
             "id": "odd",
-            "label": "The weird stuff",
+            "label": "Weirdly interesting",
             "sub": "A bone crypt, a fake dome, a trick corridor",
             "photoOf": "capuchin"
           },
           {
             "id": "art",
-            "label": "Art that's worth it",
+            "label": "Cool art",
             "sub": "St Peter's, Bernini's marble, three Caravaggios, Haring",
             "photoOf": "borghese"
           }
@@ -264,7 +264,7 @@
       "code": "v"
     },
     "odd": {
-      "label": "The weird stuff",
+      "label": "Weirdly interesting",
       "code": "o"
     },
     "art": {
@@ -374,11 +374,11 @@
       },
       {
         "id": "odd",
-        "label": "The weird stuff"
+        "label": "Weirdly interesting"
       },
       {
         "id": "art",
-        "label": "Art that's worth it"
+        "label": "Cool art"
       },
       {
         "id": "food",
@@ -1958,7 +1958,7 @@
       "id": "fortunata",
       "group": "food",
       "title": "Lunch at Fortunata",
-      "line": "Women roll and cut pasta by hand in the front window, and that's the pasta you eat.",
+      "line": "The pasta gets rolled and cut by hand in the front window, and that's what you eat.",
       "board": {
         "to": "DA FORTUNATA"
       },
@@ -2731,7 +2731,6 @@
     "mapTitle": "On the map",
     "mapLabel": "Map of central Rome with your picks",
     "mapCredit": "Map data © OpenStreetMap contributors",
-    "credits": "Photos",
     "creditBy": "by",
     "newTab": "opens in a new tab",
     "jumpNow": "Jump to now",

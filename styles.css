@@ -482,14 +482,6 @@ svg { display: block; }
 /* Before she plans, the footer follows the questions straight away (the stage spans the wide column). */
 main:has(#dep[hidden]) + .footer { padding-top: 40px; }
 main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
-/* One quiet link to the photo credits (credits.html). */
-.footer-credits {
-  position: relative;
-  font-size: 0.8125rem;
-  color: color-mix(in oklch, var(--ink) 62%, transparent);
-  text-underline-offset: 3px;
-}
-.footer-credits::after { content: ""; position: absolute; inset: -14px -10px; }
 
 /* credits.html: a plain list, grouped by the thing each photo shows. */
 .credits-main { padding-top: calc(env(safe-area-inset-top) + 16px); padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
