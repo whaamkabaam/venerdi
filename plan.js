@@ -43,6 +43,7 @@
     EVENING_END: toMin('18:30'),   // nothing but dinner starts at or after this, and nothing ends after it
     DINNER: toMin('19:00'),        // dinner
     CROWDED: 6,                    // more things than this (lunch and dinner not counted) make a full day
+    OVERLAP_MIN: 10,               // an overlap this long or shorter is not called one: it hides inside "around"
     NEAR_M: 1200,                  // "near her day" for More ideas, straight-line metres
   });
   const frameCache = new WeakMap();
@@ -421,12 +422,18 @@
     const squeezed = cardsOn.filter((it) => it.squeezed).map((it) => it.id);
     // The cards whose times overlap because one of them was squeezed in (v8 fold-in, gate F1): each
     // squeezed card against the other cards, the plain lunch line and the bags block. Lunch ideas take
-    // no time. A squeeze that clashes with nothing (a snack a little soon after lunch) is not an overlap.
+    // no time. A squeeze that clashes with nothing (a snack a little soon after lunch) is not an overlap,
+    // and neither is one of OVERLAP_MIN minutes or less: rough times sit on the half hour, so she could
+    // not see it. An evening pick at its own time (Gesù 17:30, the roof 17:55) against the bags block
+    // only makes the break at the flat shorter, and the bags card shows no end (v8 check fixes, N1).
     const timed = items.filter((it) => (it.kind === 'option' && !it.lunchIdea) || it.kind === 'lunch-filler' || it.id === 'bags');
     const clash = new Set();
     for (const q of timed) {
       if (!q.squeezed) continue;
-      for (const o of timed) if (o !== q && q.start < o.end && o.start < q.end) { clash.add(q); clash.add(o); }
+      for (const o of timed) {
+        if (o === q || (o.id === 'bags' && isEvening(q.option))) continue;
+        if (Math.min(q.end, o.end) - Math.max(q.start, o.start) > F.OVERLAP_MIN) { clash.add(q); clash.add(o); }
+      }
     }
     const overlaps = timed.filter((it) => clash.has(it)).map((it) => it.id || 'lunch');
     return {
