@@ -142,20 +142,20 @@
           },
           {
             "id": "street",
-            "label": "Street food",
-            "sub": "Supplì, a food market, gelato that isn't too sweet",
+            "label": "Markets and street food",
+            "sub": "A food market, supplì, gelato that isn't too sweet",
             "photo": "campo-market"
           },
           {
             "id": "lunch",
             "label": "A proper lunch",
-            "sub": "Fresh pasta, rolled by hand in the window",
+            "sub": "Pasta rolled in the window, or lunch inside a hill of broken Roman jars",
             "photoOf": "fortunata"
           },
           {
             "id": "class",
             "label": "Make pasta",
-            "sub": "A three-hour class, then we eat it",
+            "sub": "Fettuccine and a tiramisu with a chef, then we eat it all. In English.",
             "photoOf": "pasta"
           }
         ]
@@ -276,7 +276,7 @@
       "code": "p"
     },
     "street": {
-      "label": "Street food",
+      "label": "Markets and street food",
       "code": "s"
     },
     "lunch": {
