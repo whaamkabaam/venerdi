@@ -21,11 +21,19 @@
    "https://ticketing.colosseo.it/en/categorie/singoli-1-8-persone/",
    "https://ticketing.colosseo.it/en/eventi/percorso-didattico-foro-romano/",
    "https://cultura.gov.it/luogo/parco-archeologico-del-colosseo-foro-romano-e-palatino",
-   "https://colosseo.it/orari-e-biglietti/"
+   "https://colosseo.it/orari-e-biglietti/",
+   "https://colosseo.it/biglietti/forum-pass-super/",
+   "https://colosseo.it/sito/wp-content/uploads/2026/10/Regolamento-Visitatori-Parco-archeologico-del-Colosseo-approvato-dal-CDA-aggiornato-al-8-ottobre-2026.pdf",
+   "https://colosseo.it/en/opening-times-and-tickets/",
+   "https://cultura.gov.it/agevolazioni",
+   "https://musei.cultura.gov.it/faq"
   ],
   "pantheon": [
    "https://direzionemuseiroma.cultura.gov.it/pantheon/",
-   "https://portale.museiitaliani.it/b2c/buyTicketless/33f77159-0acd-40c4-8524-701f33aae108"
+   "https://portale.museiitaliani.it/b2c/buyTicketless/33f77159-0acd-40c4-8524-701f33aae108",
+   "https://direzionemuseiroma.cultura.gov.it/en/pantheon/",
+   "https://cultura.gov.it/agevolazioni",
+   "https://musei.cultura.gov.it/faq"
   ],
   "clemente": [
    "https://www.basilicasanclemente.com/eng/opening-hours-and-info/",
@@ -58,13 +66,17 @@
    "https://vive.cultura.gov.it/it/terrazza-panoramica",
    "https://vive.midaticket.com/",
    "https://vive.midaticket.com/eventi/ingresso/",
-   "https://api.sunrise-sunset.org/json?lat=41.9028&lng=12.4964&date=2026-10-16&formatted=0"
+   "https://api.sunrise-sunset.org/json?lat=41.9028&lng=12.4964&date=2026-10-16&formatted=0",
+   "https://cultura.gov.it/agevolazioni",
+   "https://musei.cultura.gov.it/faq"
   ],
   "castel": [
    "https://direzionemuseiroma.cultura.gov.it/museo-nazionale-di-castel-santangelo/",
    "https://direzionemuseiroma.cultura.gov.it/en/museo-nazionale-di-castel-santangelo/",
    "https://www.museiitaliani.it/musei/8a0b28e3-bbd8-4b9f-9914-d1a994c93746",
-   "https://ticketing.coopculture.it/event/1B1BEF74-7656-EBB1-3EDA-01986293EF71"
+   "https://ticketing.coopculture.it/event/1B1BEF74-7656-EBB1-3EDA-01986293EF71",
+   "https://cultura.gov.it/agevolazioni",
+   "https://musei.cultura.gov.it/faq"
   ],
   "pincio": [
    "https://www.timeanddate.com/sun/italy/rome?month=10&year=2026",
@@ -89,7 +101,8 @@
    "https://galleriaspada.cultura.gov.it/la-prospettiva/",
    "https://cultura.gov.it/agevolazioni",
    "https://www.visititaly.eu/art-and-culture/galleria-spada-rome-borromini-optical-illusion",
-   "https://www.italia.it/it/lazio/roma/palazzo-e-galleria-spada"
+   "https://www.italia.it/it/lazio/roma/palazzo-e-galleria-spada",
+   "https://musei.cultura.gov.it/faq"
   ],
   "gesu": [
    "https://www.chiesadelgesu.org/sec_event/inizio-orario-invernale/",
@@ -118,7 +131,9 @@
    "https://www.gebart.it/musei/galleria-borghese/apollo-e-dafne/",
    "https://www.gebart.it/musei/galleria-borghese/david/",
    "http://shop.gebart.it/",
-   "https://www.tosc.it/en/artist/galleria-borghese/"
+   "https://www.tosc.it/en/artist/galleria-borghese/",
+   "https://cultura.gov.it/agevolazioni",
+   "https://musei.cultura.gov.it/faq"
   ],
   "stpeters": [
    "https://www.basilicasanpietro.va/en/opening-hours",

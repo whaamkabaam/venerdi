@@ -1256,7 +1256,11 @@
     const F = C.day.facts;
     const h = Math.floor(o.minutes / 60), m = o.minutes % 60;
     const d = h ? (m ? fmt(F.hm, { h, m: String(m).padStart(2, '0') }) : fmt(F.h, { h })) : fmt(F.m, { m });
-    const price = typeof o.price === 'number' ? (o.price ? fmt(F.price, { n: o.price }) : F.free) : o.price || '';
+    // v9: where Felix pays less than Sasha (`priceMe`, the EU under-26 tickets), the price says both:
+    // "€18 for you, €2 for me". A whole number prints bare, anything else with two decimals (6.50).
+    const money = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+    const split = typeof o.priceMe === 'number' && o.priceMe !== o.price;
+    const price = typeof o.price === 'number' ? (o.price ? (split ? fmt(F.priceSplit, { you: money(o.price), me: money(o.priceMe) }) : fmt(F.price, { n: money(o.price) })) : F.free) : o.price || '';
     return [fmt(F.about, { d }), price, o.booking === 'required' ? F.needsBooking : '', o.tag || ''].filter(Boolean);
   }
   // As HTML: each fact (with the dot after it) never breaks inside, so a line can't end on "around" and

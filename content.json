@@ -357,6 +357,7 @@
       "h": "{h}h",
       "m": "{m} min",
       "price": "€{n} each",
+      "priceSplit": "€{you} for you, €{me} for me",
       "free": "Free",
       "needsBooking": "Needs booking",
       "join": " · "
@@ -570,6 +571,7 @@
       ],
       "booking": "required",
       "price": 18,
+      "priceMe": 2,
       "serves": {
         "ancient": 2
       }
@@ -613,6 +615,7 @@
       "book": "the Pantheon",
       "booking": "recommended",
       "price": 7,
+      "priceMe": 2,
       "serves": {
         "ancient": 3
       }
@@ -863,6 +866,7 @@
       "book": "the Vittoriano roof",
       "booking": "recommended",
       "price": 18,
+      "priceMe": 5,
       "serves": {
         "view": 1
       }
@@ -938,6 +942,7 @@
       "book": "Castel Sant'Angelo",
       "booking": "recommended",
       "price": 18,
+      "priceMe": 2,
       "serves": {
         "view": 2
       }
@@ -1112,6 +1117,7 @@
       ],
       "booking": "none",
       "price": 6,
+      "priceMe": 2,
       "serves": {
         "odd": 3
       }
@@ -1203,7 +1209,7 @@
         }
       ],
       "booking": "none",
-      "price": 11,
+      "price": 6.5,
       "serves": {
         "odd": 5
       }
@@ -1301,6 +1307,7 @@
       "book": "the Borghese",
       "booking": "required",
       "price": 18,
+      "priceMe": 4,
       "serves": {
         "art": 1
       }
@@ -1521,6 +1528,7 @@
       "book": "the Keith Haring show",
       "booking": "recommended",
       "price": 17,
+      "priceMe": 15,
       "friendTip": true,
       "serves": {
         "art": 5
@@ -2505,7 +2513,7 @@
       ],
       "book": "the Circus Maximus VR",
       "booking": "recommended",
-      "price": 13,
+      "price": 10,
       "tag": "Outdoors, rain cancels",
       "serves": {
         "wild": 1
