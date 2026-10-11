@@ -1861,14 +1861,20 @@
     const dots = pts.map((s) => [s.x - dotR * 1.6, s.y - dotR * 1.6, s.x + dotR * 1.6, s.y + dotR * 1.6]);
     const crowd = (s) => pts.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < s.w * 1.2).length;
     const toBox = (b, x, y) => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
+    // Two dots about 18 px or less apart (the coffee by the Pantheon, 130 m): each label goes on the side
+    // away from the other dot, so neither reads as the other's (v8 fold-in, gate P6).
+    const twins = (s) => pts.filter((o) => o !== s && Math.hypot(o.x - s.x, o.y - s.y) < 18 * u);
     const placed = [];
     [...pts].sort((a, b) => crowd(b) - crowd(a)).forEach((s) => {
       const w = s.w;
       const box = (x, y, anchor) => { const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2; return [x0, y - h / 2, x0 + w, y + h / 2]; };
+      const close = twins(s);
       let best = null;
       cands.forEach(([dx, dy, anchor], ci) => {
         const b = box(s.x + dx, s.y + dy, anchor);
         let score = ci * 0.01 * w * h;
+        const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+        for (const n of close) if ((cx - s.x) * (n.x - s.x) + (cy - s.y) * (n.y - s.y) > 0) score += w * h * 3;
         for (const p of placed) score += overlap(b, p) * 50;
         const own = toBox(b, s.x, s.y);
         dots.forEach((d, i) => { if (pts[i].id === s.id) return; score += overlap(b, d) * 30; if (toBox(b, pts[i].x, pts[i].y) < own + 6 * u) score += w * h * 1.5; });
