@@ -421,7 +421,7 @@
     "dinner": {
       "time": "19:00",
       "title": "Dinner",
-      "bodyNone": "Three pizza places. Pick one, or we decide on the day.",
+      "bodyNone": "Three pizza places. Da Ivo has pasta too, in case it's a pasta day for you :D",
       "bodyPicked": "Pizza at {title}.",
       "hud": "Dinner"
     },
