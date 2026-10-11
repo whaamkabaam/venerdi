@@ -569,7 +569,7 @@
     const st = { y: scrollY };
     gliding = true;
     clearTimeout(glideTimer);
-    gsap.to(st, { y, duration, ease: 'power2.inOut', onUpdate: () => scrollTo(0, st.y), onComplete: () => { glideTimer = setTimeout(() => { gliding = false; mapFollow(itemAt(lastY)); }, 450); if (done) done(); } });
+    gsap.to(st, { y, duration, ease: 'power2.inOut', onUpdate: () => scrollTo(0, st.y), onComplete: () => { glideTimer = setTimeout(() => { gliding = false; render(lastY); }, 450); if (done) done(); } });
   }
   // Where a programmatic scroll lands a section: under the HUD, like an anchor jump. The HUD stays
   // away from the questions, so the stage only keeps a small gap.
@@ -2224,7 +2224,7 @@
     }
     setMarks(list) {
       this.tw?.kill(); this.tw = null;
-      this.svg.innerHTML = list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}"><circle class="mk-hit" r="22"/><circle class="mk-halo"/><circle class="mk-glow"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
+      this.svg.innerHTML = list.map((m) => `<g class="mk${m.kind === 'stop' ? '' : ` is-${m.kind}`}" data-id="${esc(m.id)}">${m.id === 'cannon' ? '<circle class="boom" r="8"/>' : ''}<circle class="mk-hit" r="22"/><circle class="mk-halo"/><circle class="mk-glow"/><path class="mk-ring" d="M0 -10A10 10 0 1 1 0 10A10 10 0 1 1 0 -10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-100)"/><circle class="mk-dot"/><text class="mk-label" dominant-baseline="central">${esc(m.label)}</text></g>`).join('');
       const gs = [...this.svg.children];
       this.marks = list.map((m, i) => ({ ...m, g: gs[i], dot: $('.mk-dot', gs[i]), halo: $('.mk-halo', gs[i]), glow: $('.mk-glow', gs[i]), ring: $('.mk-ring', gs[i]), text: $('.mk-label', gs[i]), state: '', gone: false }));
       this.byId = new Map(this.marks.map((m) => [m.id, m]));
@@ -2323,6 +2323,22 @@
         this.cam.s = Math.max(minS, (from.s + (to.s - from.s) * p) * (1 - dip * Math.sin(Math.PI * p)));
         this.apply();
       }, onComplete: () => { this.tw = null; this.paint(); this.name(); this.el.classList.remove('is-flying'); } });
+    }
+    // Noon (b3.6): one ring leaves the cannon's mark: on the laptop map out to 230 px over 1.6 s, in the pocket to 30 px
+    // over 0.9 s (screen px; the pocket's marks are drawn at 0.7). Reduced motion: a still ring, r 18 at 50 %.
+    boom() {
+      const m = this.byId.get('cannon'), b = m && !m.gone && this.kind !== 'sheet' ? $('.boom', m.g) : null;
+      if (!b) return;
+      const k = this.k;
+      if (reduced || !window.gsap) { b.setAttribute('r', 18 / k); b.style.opacity = '0.5'; return; }
+      const pocket = this.kind === 'pocket';
+      gsap.fromTo(b, { attr: { r: 8 / k }, opacity: 0.75 }, { attr: { r: (pocket ? 30 : 230) / k }, opacity: 0, duration: pocket ? 0.9 : 1.6, ease: 'power1.out', overwrite: true });
+    }
+    clearBoom() {
+      const m = this.byId.get('cannon'), b = m ? $('.boom', m.g) : null;
+      if (!b) return;
+      if (window.gsap) gsap.killTweensOf(b);
+      b.style.opacity = '0';
     }
     // After a resize: the same goal, no flight.
     settle() { if (this.goal) this.goTo(this.goal, 0); else this.apply(); }
@@ -2774,12 +2790,32 @@
     const inDay = sec && sec.id === 'day' && el;
     // Docked with no entry current yet: the first departure, the time that flew up from the board.
     const first = docked && !el ? firstDeparture() : null;
-    setClock(first ? first.time : el ? minToHHMM(+el.dataset.min) : START, !reduced && hud.hasAttribute('data-on'));
+    // Noon (b3.6): the cannon entry becoming current while the bar is on, by her scroll or where a glide lands
+    // (never a glide passing through), once per arrival. It fires when the clock's flaps land on 12:00.
+    const key = el ? el.dataset.key : null;
+    if (key !== noonKey) { if (noonKey === 'cannon') ATLASES.forEach((a) => a.clearBoom()); noonKey = key; noonDone = false; }
+    const fire = key === 'cannon' && !noonDone && !gliding && hud.hasAttribute('data-on');
+    if (fire) noonDone = true;
+    const flipped = setClock(first ? first.time : el ? minToHHMM(+el.dataset.min) : START, !reduced && hud.hasAttribute('data-on'), fire ? noon : null);
+    if (fire && !flipped) noon();
     const place = first ? first.place : inDay ? el.dataset.hudTitle : sec ? sec.name : '';
     if (place !== hudPlaceText) { hudPlaceText = place; hudPlace.textContent = place; }
 
     // The map follows the entry she is on (the laptop map and the pocket).
     mapFollow(el);
+  }
+
+  // Noon at the cannon (b3.6, dir-3): the clock has landed on 12:00. The entry's photo kicks back a little, the
+  // clock jolts, and one ring leaves the Gianicolo on the map. No haptic (nobody tapped). Reduced motion: no kick
+  // or jolt, a still ring while the cannon is current.
+  let noonKey = null, noonDone = false;
+  function noon() {
+    if (noonKey !== 'cannon') return; // she scrolled on before the flaps landed
+    ATLASES.forEach((a) => a.boom());
+    if (reduced || !window.gsap) return;
+    const ph = $('.stop[data-key="cannon"] .stop-photos', slot('day-body'));
+    if (ph) gsap.fromTo(ph, { x: -5, rotation: -0.6 }, { x: 0, rotation: 0, duration: 0.7, ease: 'elastic.out(1, 0.42)', clearProps: 'transform', overwrite: true });
+    gsap.fromTo(hudClock, { x: -3 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.4)', clearProps: 'transform', overwrite: true });
   }
 
   /* ------------------------------------------------------------------ */
@@ -3054,6 +3090,7 @@
     shareText: () => shareText(), dinner: () => dinner,
     // The handover (b3.2): where the bar comes on, and what the clock reads.
     dockY: () => dockY, clock: () => clockText, firstDeparture: () => ({ ...firstDeparture() }),
+    glideTo: (key) => goToEntry(key),
     // The map, for the checks: whether the engraving is in, each atlas's marks in screen px, and a way to put
     // the map on an entry directly (reduced motion, so the camera jumps).
     mapReady: () => INK.day.length > 0 && INK.p === 1,
