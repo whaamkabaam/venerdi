@@ -839,9 +839,11 @@
 
   // Every change to her day goes through here: swap, remove, undo, add. Any change but a removal
   // (which offers its own Undo) ends a pending Undo, so Undo can never push a newer stop out.
+  // Something that can't happen on Friday (only ever from an old or hand-made link) leaves her day
+  // at her next change, and its "Sold out for Friday" line with it (spec 8.7).
   function setPicks(next, { keepUndo = false } = {}) {
     if (!keepUndo) undoDrop();
-    picks = next;
+    picks = next.filter((p) => !OPT[p.id]?.fridayNo);
     fromLink = false;
     saveState();
     update();
