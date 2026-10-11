@@ -421,7 +421,7 @@
     "dinner": {
       "time": "19:00",
       "title": "Dinner",
-      "bodyNone": "Three pizza places. Da Ivo has pasta too, in case it's a pasta day for you :D",
+      "bodyNone": "Three pizza places.",
       "bodyPicked": "Pizza at {title}.",
       "hud": "Dinner"
     },
@@ -473,7 +473,7 @@
         "id": "ivo",
         "title": "Da Ivo",
         "board": "DA IVO",
-        "line": "An old Trastevere pizzeria, open since 1962. They say a table always turns up.",
+        "line": "An old Trastevere pizzeria, open since 1962. They say a table always turns up. They have pasta too, in case it's a pasta day for you :D",
         "area": "Trastevere",
         "booking": "Walk in",
         "price": "around €15 each",
