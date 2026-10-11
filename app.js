@@ -1248,13 +1248,8 @@
     // The egg caption adds a line to the row, so the triggers below re-measure.
     if (t === 'sunday') { DEP.sunEgg = !DEP.sunEgg; flipRowNow(DEP.board.sun, sundayRow(DEP.sunEgg)); refreshSoon(); return; }
     if (t === 'tbc') { slot('free-text').focus(); return; }
-    const el = $(`.plan-item[data-key="${CSS.escape(t)}"]`);
-    if (!el) return;
-    el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
-    el.classList.remove('is-flash');
-    void el.offsetWidth;
-    el.classList.add('is-flash');
-    setTimeout(() => el.classList.remove('is-flash'), 1200);
+    // Her entry: a glide there (the map moves once, where it lands), then the echo (b3.10).
+    goToEntry(t, echo);
   }
   function onHeroClick(e) {
     const hit = e.target.closest('.board-hit');
@@ -1620,12 +1615,13 @@
     // Keyboard: the button she pressed is gone with the re-render; carry on from the room.
     if (!slot('catalogue').open) ($('.room-add', slot('day-body')) || $('[data-action="catalogue"]', slot('day-body')))?.focus({ preventScroll: true });
   }
-  function flash(el) {
+  function flash(el, ms = 1200) {
     if (!el) return;
     el.classList.remove('is-flash');
     void el.offsetWidth;
     el.classList.add('is-flash');
-    setTimeout(() => el.classList.remove('is-flash'), 1200);
+    clearTimeout(el.flashT);
+    el.flashT = setTimeout(() => el.classList.remove('is-flash'), ms);
   }
   // Dots under a photo strip: a tap scrolls to that photo, a swipe moves the dot. Photos may be
   // narrower than the strip (the peek lets the next one show), so positions come from the photos.
@@ -2554,12 +2550,25 @@
   // has landed; then the entry lights up. A tall entry (a place, dinner) lands just under the bar, where its title
   // is in view and it is still the current entry; a short one lands at the middle of the screen, which makes it
   // current (round 1: on a phone the middle left a place's title below the fold, so its flash went unseen).
-  function goToEntry(key) {
+  function goToEntry(key, landed = flash) {
     const el = keyEl(key);
     if (!el) return;
     const gap = scrollGap();
     const y = el.getBoundingClientRect().top + scrollY - (el.offsetHeight > innerHeight * 0.5 - gap ? gap : innerHeight * 0.5 - 2);
-    scrollToY(y, Math.min(1.1, 0.45 + Math.abs(y - scrollY) / 4000), () => flash(el));
+    scrollToY(y, Math.min(1.1, 0.45 + Math.abs(y - scrollY) / 4000), () => landed(el));
+  }
+  // The echo (b3.10): a board row's glide lands on its entry, whose time chip flips once more to the same time and
+  // whose title lights up for 150 ms, so the row and the entry read as the same thing. Reduced motion: the light only.
+  function echo(el) {
+    flash(el, 150);
+    if (reduced || !window.gsap) return;
+    const tl = gsap.timeline();
+    $$('.chip .flap', el).map(flapOf).forEach((f, k) => {
+      const ch = f.cur, at = k * 0.03;
+      if (!ch) return;
+      addFlip(tl, f, randomGlyph(), at, 0.05);
+      addFlip(tl, f, ch, at + 0.1, 0.05);
+    });
   }
   // Laptop: a mark names itself under the pointer, and a click glides to its entry.
   function bindPageMap() {
