@@ -308,8 +308,10 @@
     return { start: firstFeasible(o, F.START) ?? lastStart(o) ?? F.START, loose: true };
   }
 
-  /* build(C, ids) -> plan (spec 8.2). `ids` are her picks in board order. */
-  function build(C, pickIds) {
+  /* build(C, ids, { dinnerAt }) -> plan (spec 8.2). `ids` are her picks in board order. `dinnerAt` is the dinner time
+     she picked (v9c C1f: one of anchors.dinner.times; anything else is the default). It moves only the dinner entry:
+     the frame's DINNER (the snack gap) stays, and nothing but dinner starts at or after 18:30. */
+  function build(C, pickIds, { dinnerAt = null } = {}) {
     const O = optionsById(C);
     const ids = [...new Set(pickIds)].filter((id) => O[id]);
     const picked = C.options.filter((o) => ids.includes(o.id)).sort(byOrder);
@@ -418,7 +420,8 @@
       if (e.loose) it.loose = true;
       items.push(it);
     }
-    items.push({ kind: 'anchor', id: 'dinner', anchor: Anc.dinner, start: F.DINNER, slot: 'evening', rough: hhmm(F.DINNER), exact: false });
+    const at = (Anc.dinner.times || []).includes(dinnerAt) ? dinnerAt : Anc.dinner.time;
+    items.push({ kind: 'anchor', id: 'dinner', anchor: Anc.dinner, start: toMin(at), slot: 'evening', rough: at, exact: false });
 
     // Two pastry stops in one day: the later one is second breakfast.
     const breakfasts = (C.departures && C.departures.breakfasts) || [];
@@ -457,6 +460,7 @@
       bags: { start: B, end: B + F.BAGS_BLOCK },
       idle: A.idle,
       earlyLunch,
+      dinnerAt: at,
     };
   }
 

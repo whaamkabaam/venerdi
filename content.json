@@ -319,6 +319,8 @@
     "noLunch": "Lunch wherever we are.",
     "fromLink": "These are the picks from the link.",
     "backToMine": "Back to my picks",
+    "dinnerTime": "Dinner time",
+    "dinnerEarlier": "Earlier or later?",
     "slots": {
       "morning": "Morning",
       "lunch": "Lunch",
@@ -388,7 +390,8 @@
     "button": "Send to Felix",
     "shareIntro": "My Friday:",
     "shareExtra": "Also:",
-    "shareDinner": "{time} Dinner at {title}"
+    "shareDinner": "{time} Dinner at {title}",
+    "shareDinnerTime": "{time} Dinner"
   },
   "anchors": {
     "arrival": {
@@ -407,7 +410,15 @@
       "title": "Dinner",
       "bodyNone": "Three pizza places. Da Ivo has pasta too, in case it's a pasta day for you :D",
       "bodyPicked": "Pizza at {title}.",
-      "hud": "Dinner"
+      "hud": "Dinner",
+      "times": [
+        "18:30",
+        "19:00",
+        "19:30",
+        "20:00",
+        "20:30",
+        "21:00"
+      ]
     }
   },
   "dinners": {
@@ -2830,7 +2841,6 @@
         "to": "LUGGAGE TO AIRBNB"
       },
       "dinner": {
-        "time": "19:00",
         "to": "DINNER"
       }
     },

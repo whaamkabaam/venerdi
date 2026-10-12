@@ -1129,6 +1129,32 @@ dialog.peek .say-sound { white-space: normal; }
 /* Dinner: the evening entry's three ideas, a hairline between them, no boxes. Each: its name, line, facts
    and the friend's tip, then "This one" and Map (on the right from 640 px). */
 .plan-dinner .plan-text + .dinner-ideas { margin-top: var(--s3); }
+/* Dinner's time is hers to change (v9c C1f): the time row is one button ("around 19:00" and a chevron), 26 px tall
+   like every time row, its hit area 44 px; it opens a strip of six times under it. */
+.when-btn { position: relative; display: inline-flex; align-items: center; gap: var(--s2); min-height: 26px; padding: 0;
+  border: 0; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: scale 150ms var(--ease-out); }
+.when-btn::after { content: ""; position: absolute; inset: -9px -8px; }
+.when-btn .i { width: 14px; height: 14px; color: var(--ink-muted); transition: rotate 200ms var(--ease-out), color 150ms var(--ease-out); }
+.when-btn[aria-expanded="true"] .i { rotate: 180deg; }
+.when-btn:active { scale: 0.96; }
+.when-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: var(--r-chip); }
+@media (hover: hover) { .when-btn:hover .i { color: var(--ink); } }
+.dt-pick { margin-top: var(--s2); }
+.dt-ask { color: var(--ink-muted); margin-bottom: var(--s2); }
+.dt-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); max-width: 22rem; }
+@media (min-width: 640px) { .dt-opts { grid-template-columns: repeat(6, auto); justify-content: start; max-width: none; } }
+.dt-opt { position: relative; min-height: 40px; padding: 0 var(--s4); border: 0; border-radius: var(--r-btn);
+  background-color: var(--fill-quiet); color: inherit; font-size: 0.9375rem; font-weight: 600;
+  font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition-property: scale, background-color, color; transition-duration: 150ms; transition-timing-function: ease-out; }
+.dt-opt::after { content: ""; position: absolute; inset: -2px 0; }
+.dt-opt:active { scale: 0.96; }
+.dt-opt[aria-pressed="true"] { background-color: var(--ink); color: var(--on-ink); }
+@media (hover: hover) { .dt-opt[aria-pressed="false"]:hover { background-color: var(--fill-quiet-hover); } }
+/* their label covers reach as far as their hit areas (C3a's pattern) */
+.hapw > .when-btn + .hap { inset: -9px -8px; }
+.hapw > .dt-opt + .hap { inset: -2px 0; }
 .dinner-ideas { display: grid; }
 .dinner-idea {
   display: grid;
@@ -1566,6 +1592,10 @@ dialog.peek .say-sound { white-space: normal; }
   .stop-top, .plan-time { grid-row: 1 / span 3; flex-direction: column; align-items: flex-start; gap: 6px; margin: 2px 0 0; }
   .stop-top { grid-area: top; }
   .plan-time { grid-column: 1; }
+  /* v9c C1f: dinner's time button in the 104 px gutter: "around" on its own line as on every entry, the chip and its
+     chevron under it (in one line the three ran 40 px past the gutter, over the strip). */
+  .plan-time .when-btn { flex-wrap: wrap; row-gap: 6px; text-align: left; }
+  .plan-time .when-btn .stop-around { flex-basis: 100%; }
   .stop-top .tag--now, .plan-time .tag--now { margin-left: 0; }
   .stop-photos { grid-area: photos; }
   .stop-text { grid-area: text; }
@@ -1636,4 +1666,5 @@ dialog.peek .say-sound { white-space: normal; }
   .hud, .hud[data-on] { transition: none; }
   .stage-foot, .stage.is-foot .stage-foot { transition: none; }
   .say-cap, .say-cap.is-open { transition: none; }
+  .when-btn, .when-btn .i, .dt-opt { transition: none; }
 }

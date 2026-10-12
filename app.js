@@ -722,6 +722,7 @@
   let answers = null;      // her answers as of the last Show me Friday (null until then)
   let picks = [];          // [{ id, reason }]: the order the board fills in; the replay and the link keep it
   let dinner = null;       // the dinner idea she picked (an id of C.dinners.ideas), or null for none
+  let dinnerAt = null;     // the dinner time she picked (v9c C1f: one of anchors.dinner.times), or null for the default
   let freeText = '';
   let fromLink = false;
   let plan = null;
@@ -731,6 +732,8 @@
   // without it (felix-2.md 6: his four ideas were for testing).
   const cleanPicks = (list) => (Array.isArray(list) ? list : []).filter((p) => p && p.reason !== 'felix').map((p) => (p && typeof p.id === 'string' ? { ...p, id: aliasId(p.id) } : p)).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
   const cleanDinner = (id) => (typeof id === 'string' && IDEA[id] ? id : null);
+  // A dinner time other than the default (19:00); anything else, the default itself included, is null.
+  const cleanDinnerAt = (t) => (C.anchors.dinner.times.includes(t) && t !== C.anchors.dinner.time ? t : null);
   // What the answers compose to (kept while the answers stay the same): the build a full replay shows.
   let composedMemo = { key: null, res: null };
   const composed = () => {
@@ -810,20 +813,24 @@
       }
       const linkNote = q.get('n') || '';
       const linkDinner = cleanDinner(q.get('d'));
-      // Keep her own day (and her dinner pick) before adopting the link's, so "Back to my picks" can restore it.
-      const saved = store.get('picks', null), savedNote = store.get('note', ''), savedDinner = cleanDinner(store.get('dinner', null));
+      // `t=2030`: her dinner time, 20:30 (v9c C1f).
+      const tq = q.get('t') || '';
+      const linkAt = cleanDinnerAt(/^\d{4}$/.test(tq) ? `${tq.slice(0, 2)}:${tq.slice(2)}` : null);
+      // Keep her own day (and her dinner pick and time) before adopting the link's, so "Back to my picks" can restore it.
+      const saved = store.get('picks', null), savedNote = store.get('note', ''), savedDinner = cleanDinner(store.get('dinner', null)), savedAt = cleanDinnerAt(store.get('dinnerAt', null));
       const ids = (list) => list.map((p) => p.id).sort().join();
-      const same = Array.isArray(saved) && ids(saved) === ids(linkPicks) && savedNote === linkNote && savedDinner === linkDinner;
+      const same = Array.isArray(saved) && ids(saved) === ids(linkPicks) && savedNote === linkNote && savedDinner === linkDinner && savedAt === linkAt;
       // The same link opened again (from the chat a second time): the day kept from the first time stays.
       if (same && store.get('fromLink', false)) hasBackup = !!store.get('before-link', null);
       else {
         hasBackup = Array.isArray(saved) && !same;
-        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null), dinner: savedDinner } : null);
+        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null), dinner: savedDinner, dinnerAt: savedAt } : null);
       }
       picks = linkPicks;
       answers = linkAnswers || answersFrom(linkPicks);
       freeText = linkNote;
       dinner = linkDinner;
+      dinnerAt = linkAt;
       fromLink = true;
       saveState();
       // A link always replays its build in order, whatever this phone has seen before.
@@ -838,6 +845,7 @@
     if (answers) answers = cleanAnswers(answers);
     freeText = store.get('note', '');
     dinner = cleanDinner(store.get('dinner', null));
+    dinnerAt = cleanDinnerAt(store.get('dinnerAt', null));
     // Someone's link, opened earlier: the note and "Back to my picks" stay until the day changes.
     fromLink = !!store.get('fromLink', false);
     hasBackup = fromLink && !!store.get('before-link', null);
@@ -849,7 +857,7 @@
       saveState();
     }
   }
-  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('fromLink', fromLink); }
+  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('dinnerAt', dinnerAt); store.set('fromLink', fromLink); }
 
   function backToMine() {
     const b = store.get('before-link', null);
@@ -858,6 +866,7 @@
     answers = b.answers ? cleanAnswers(b.answers) : null;
     freeText = b.note || '';
     dinner = cleanDinner(b.dinner);
+    dinnerAt = cleanDinnerAt(b.dinnerAt);
     slot('free-text').value = freeText;
     fromLink = false;
     hasBackup = false;
@@ -870,8 +879,8 @@
 
   // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids, in board
   // order) last, and ! ' ( ) * . are encoded too. `r` has one letter per pick: the answer it came from;
-  // `d` is her dinner pick (absent for none), before `p` so a cut never loses it. The link carries a
-  // capped copy of the note.
+  // `d` is her dinner pick (absent for none), before `p` so a cut never loses it, and `t` her dinner time before it
+  // (absent for the default; v9c C1f). The link carries a capped copy of the note.
   const NOTE_LINK_MAX = 1000;
   const encodeNote = (s) => encodeURIComponent(s).replace(/[!'()*.]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
   function linkURL() {
@@ -879,7 +888,7 @@
     const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
     const a = answers ? encodeAnswers(answers) : null;
     const r = picks.map((p) => (WHY[p.reason] || WHY.added).code).join('');
-    return `${base}?v=8&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
+    return `${base}?v=8&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${dinnerAt ? `t=${dinnerAt.replace(':', '')}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
   }
   // A mini timetable: "around 10:00 Maritozzo" per card on her day (its time as the card shows it:
   // "around" for a rough time, the bare time for an exact one), her dinner pick, then her line, then the
@@ -889,9 +898,12 @@
     const stops = plan.items.filter((it) => it.kind === 'option').map((it) => `${timeOf(it)} ${it.option.title}`);
     const note = freeText.trim();
     // Only a note: send the note and the link, without the timetable frame.
-    if (!stops.length && !dinner) return [note, linkURL()].filter(Boolean).join('\n');
+    if (!stops.length && !dinner && !dinnerAt) return [note, linkURL()].filter(Boolean).join('\n');
     const lines = [C.send.shareIntro, ...stops];
-    if (dinner) lines.push(fmt(C.send.shareDinner, { time: timeOf(plan.items.find((it) => it.id === 'dinner')), title: IDEA[dinner].title }));
+    // Her dinner place at its time; with no place, a time she moved (v9c C1f: "around 20:30 Dinner").
+    const dinnerTime = timeOf(plan.items.find((it) => it.id === 'dinner'));
+    if (dinner) lines.push(fmt(C.send.shareDinner, { time: dinnerTime, title: IDEA[dinner].title }));
+    else if (dinnerAt) lines.push(fmt(C.send.shareDinnerTime, { time: dinnerTime }));
     if (note) lines.push(`${C.send.shareExtra} ${note}`);
     lines.push(linkURL());
     return lines.join('\n');
@@ -933,10 +945,10 @@
   const anchorRow = (key, extra = {}) => ({ key, time: R[key].time, to: R[key].to, kind: 'anchor', ...extra });
   // The bags row: the time comes from the plan.
   const bagsRow = (it) => ({ key: 'bags', time: it.rough, to: R.bags.to, kind: 'anchor', target: 'bags', label: C.anchors.bags.title });
-  // 19:00 DINNER, or the idea she picked (LI RIONI, DA REMO, DA IVO).
-  const dinnerRow = () => anchorRow('dinner', { to: dinner ? IDEA[dinner].board : R.dinner.to, target: 'dinner', label: dinner ? IDEA[dinner].title : C.anchors.dinner.title });
+  // 19:00 DINNER, or the idea she picked (LI RIONI, DA REMO, DA IVO), at the time of the plan's dinner (v9c C1f: hers).
+  const dinnerRow = (it) => anchorRow('dinner', { time: it.rough, to: dinner ? IDEA[dinner].board : R.dinner.to, target: 'dinner', label: dinner ? IDEA[dinner].title : C.anchors.dinner.title });
   // Before her picks land, the board shows the day's frame: the bags and dinner (v9c C1a: the day ends on dinner).
-  const skeletonRows = () => [bagsRow(P.build(C, []).items.find((it) => it.id === 'bags')), dinnerRow()];
+  const skeletonRows = () => { const sk = P.build(C, [], { dinnerAt }).items; return [bagsRow(sk.find((it) => it.id === 'bags')), dinnerRow(sk.find((it) => it.id === 'dinner'))]; };
   // SUN HALF MARATHON; the tap egg flips the TO text to HALBMARATHON with "(half marathon)" under it.
   // The Sunday row knows the day (b3.8): SUN HALF MARATHON until Sunday, TODAY HALF MARATHON from Sunday 00:00
   // Rome time, TODAY HALF MARATHON DONE from 18:00 (any finish and the lunch after are long past by then), SUN
@@ -974,14 +986,14 @@
       else if (it.kind === 'option') rows.push({ key: it.id, time: it.rough, to: it.secondBreakfast ? DEPC.secondBreakfast : it.option.board.to, kind: 'pick', target: it.id, label: it.option.title });
       else if (it.kind === 'anchor' && it.id === 'dinner') {
         if (tbc) rows.push(tbc);
-        rows.push(dinnerRow());
+        rows.push(dinnerRow(it));
       }
     }
     return rows;
   }
 
   const DEP = { board: null, replay: null, seen: store.get('depSeen', null), sunEgg: false, shown: [], pending: false, sunPending: false, stats: null };
-  const depSig = () => `${pickIds().join(',')}|${dinner || ''}|${freeText.trim()}`;
+  const depSig = () => `${pickIds().join(',')}|${dinner || ''}|${dinnerAt || ''}|${freeText.trim()}`;
   const plainRows = (rows) => rows.map((r) => (r ? { time: r.time, to: r.to, kind: r.kind } : null));
   const sameRows = (a, b) => JSON.stringify(plainRows(a)) === JSON.stringify(plainRows(b));
   const gapEl = () => $('.dep-gap', DEP.board.host);
@@ -1457,6 +1469,15 @@
   // its name, its line, "{area} · {booking} · {price}", the friend's tip, Map, and "This one". Tapping
   // "This one" picks it (and lets go of the others); tapping it again goes back to none.
   const dinnerBody = () => (dinner ? fmt(C.anchors.dinner.bodyPicked, { title: IDEA[dinner].title }) : C.anchors.dinner.bodyNone);
+  // Dinner's time is hers to change (v9c C1f, felix-2.md 3): the time row is one button that opens a strip of six
+  // times, 18:30 to 21:00 in half hours, the current one pressed.
+  function dinnerTimeHTML(it) {
+    const D = C.day, A = C.anchors.dinner;
+    const time = fmt(U.around, { time: it.rough });
+    const opts = A.times.map((t) => hap(`<button type="button" class="dt-opt" data-action="dinner-at" data-at="${esc(t)}" aria-pressed="${t === it.rough}">${esc(t)}</button>`, 'opt')).join('');
+    return `<p class="plan-time">${hap(`<button type="button" class="when-btn" data-action="dinner-time" aria-expanded="false" aria-controls="dt-pick"><span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span><span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span>${ICON.chev}<span class="sr-only">${esc(D.dinnerTime)}: ${esc(time)}</span></button>`, 'when')}${nowTag}</p>
+        <div class="dt-pick" id="dt-pick" hidden><p class="dt-ask label">${esc(D.dinnerEarlier)}</p><div class="dt-opts" role="group" aria-label="${esc(D.dinnerTime)}">${opts}</div></div>`;
+  }
   function dinnerHTML(time, attrs, timeRow) {
     const A = C.anchors.dinner;
     const ideas = IDEAS.map((d) => `<li class="dinner-idea">
@@ -1525,7 +1546,7 @@
       const timeRow = `<p class="plan-time">${whenHTML(it)}</p>`;
       if (it.kind === 'option') html += stopHTML(it, time, attrs);
       else if (it.kind === 'lunch-filler') html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
-      else if (it.id === 'dinner') html += dinnerHTML(time, attrs, timeRow);
+      else if (it.id === 'dinner') html += dinnerHTML(time, attrs, dinnerTimeHTML(it));
       else {
         const a = it.anchor;
         html += `<li class="plan-item plan-item--text" ${attrs} data-dot="" data-hud-title="${esc(a.hud || a.title)}">
@@ -1561,6 +1582,36 @@
     gsap.timeline({ onComplete: () => { el.hidden = true; gsap.set(el, { clearProps: 'height,opacity,transform' }); refreshSoon(); } })
       .to(el, { opacity: 0, duration: 0.1, ease: 'power1.in' })
       .to(el, { height: 0, y: -8, duration: 0.18, ease: 'power2.inOut' }, 0.04);
+  }
+  // The dinner time strip opens and closes like Swap's (v9c C1f).
+  function toggleDinnerTime(btn) {
+    const el = document.getElementById('dt-pick');
+    if (!el) return;
+    const open = el.hidden;
+    btn.setAttribute('aria-expanded', String(open));
+    gsap.killTweensOf(el);
+    if (open) {
+      el.hidden = false;
+      if (!reduced) gsap.fromTo(el, { height: 0, opacity: 0, y: -8 }, { height: 'auto', opacity: 1, y: 0, duration: 0.22, ease: 'power2.out', clearProps: 'height,opacity,transform', onComplete: refreshSoon });
+      else refreshSoon();
+      return;
+    }
+    if (reduced) { el.hidden = true; refreshSoon(); return; }
+    gsap.timeline({ onComplete: () => { el.hidden = true; gsap.set(el, { clearProps: 'height,opacity,transform' }); refreshSoon(); } })
+      .to(el, { opacity: 0, duration: 0.1, ease: 'power1.in' })
+      .to(el, { height: 0, y: -8, duration: 0.18, ease: 'power2.inOut' }, 0.04);
+  }
+  // A time from the strip: the day is built again with dinner there (only dinner moves), the strip closes and the
+  // chip flips once from the old time (syncChips); the board's dinner row, the bar's clock, the sky and the map at
+  // dinner, the send text and the link follow. The time she already has just closes the strip.
+  function setDinnerAt(at) {
+    buzz('selection');
+    if (at === plan.dinnerAt) { const b = $('[data-action="dinner-time"]', slot('day-body')); if (b && b.getAttribute('aria-expanded') === 'true') toggleDinnerTime(b); return; }
+    dinnerAt = cleanDinnerAt(at);
+    fromLink = false;
+    saveState();
+    update();
+    $('[data-action="dinner-time"]', slot('day-body'))?.focus({ preventScroll: true });
   }
   // Use this: the stop is replaced in place (same answer), the card fades over to the new one.
   function useAlternative(btn) {
@@ -1690,6 +1741,8 @@
     else if (a === 'undo') undoRemove();
     else if (a === 'add') addPick(b.dataset.id, b.dataset.reason);
     else if (a === 'dinner') setDinner(b.dataset.id);
+    else if (a === 'dinner-time') toggleDinnerTime(b);
+    else if (a === 'dinner-at') setDinnerAt(b.dataset.at);
     else if (a === 'catalogue') openCatalogue();
     else if (a === 'say') toggleSay(b);
   }
@@ -3175,11 +3228,11 @@
 
   let booted = false;
   let refreshTimer = 0;
-  // Send needs something to send: a pick, her dinner pick or a line of text.
-  function syncSend() { slot('send').disabled = !picks.length && !dinner && !freeText.trim(); }
+  // Send needs something to send: a pick, her dinner pick or time, or a line of text.
+  function syncSend() { slot('send').disabled = !picks.length && !dinner && !dinnerAt && !freeText.trim(); }
 
   function update() {
-    plan = P.build(C, pickIds());
+    plan = P.build(C, pickIds(), { dinnerAt });
     roomNow = picks.length || answers ? P.suggestions(C, picks, answers || {}) : [];
     syncSend();
     renderDepNote();
@@ -3367,7 +3420,7 @@
     finishBoard, depRows: () => depRows(plan), boardRows: () => (DEP.board ? DEP.board.rows.map((r) => r.shown) : []), replayStats: () => DEP.stats, plan: () => plan,
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
-    shareText: () => shareText(), dinner: () => dinner,
+    shareText: () => shareText(), dinner: () => dinner, dinnerAt: () => dinnerAt,
     // The handover (b3.2): where the bar comes on, and what the clock reads.
     dockY: () => dockY, clock: () => clockText, firstDeparture: () => ({ ...firstDeparture() }),
     glideTo: (key) => goToEntry(key),
