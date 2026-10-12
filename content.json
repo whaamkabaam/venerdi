@@ -309,12 +309,22 @@
   },
   "day": {
     "title": "Your Friday",
-    "crowded": "That's a full Friday, so we'll pick on the day.",
-    "overlap": {
-      "two": "Two of these overlap, so we'll pick on the day.",
-      "some": "Some of these overlap, so we'll pick on the day."
+    "later": {
+      "title": "If there's time",
+      "swapIn": "Swap in",
+      "needsTime": "Fits with dinner at {time}"
     },
-    "lunchChoice": "We'll only have one of these.",
+    "trip": {
+      "walk": "{min} min walk",
+      "ride": "{min} min, {mode}",
+      "srWalk": "A {min} minute walk there.",
+      "srRide": "{min} minutes there by {mode}."
+    },
+    "live": {
+      "onDay": "{title} is on your day.",
+      "inLater": "{title} is under If there's time.",
+      "moved": "{list} moved to If there's time."
+    },
     "cant": "{title}: {why}.",
     "changeAnswers": "Change answers",
     "empty": "Answer the questions above and your Friday shows up here.",
@@ -393,7 +403,8 @@
     "shareIntro": "My Friday:",
     "shareExtra": "Also:",
     "shareDinner": "{time} Dinner at {title}",
-    "shareDinnerTime": "{time} Dinner"
+    "shareDinnerTime": "{time} Dinner",
+    "shareLater": "If there's time: {list}"
   },
   "anchors": {
     "arrival": {

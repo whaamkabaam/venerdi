@@ -1,6 +1,6 @@
-/* Venerdì v8: Friday ideas, not a plan. Four photo questions turn into a loose sketch of her day
-   (everything she picks goes on it at a rough time, inside the frame: the bags around 3, dinner
-   around 7), played back on a DEPARTURES board (times and places only), then shown as story cards
+/* Venerdì v8: Friday ideas, not a plan. Four photo questions turn into her day (v9d D1: what fits goes on it in
+   the best order, with real bus, metro and walking times between the places; the rest waits under "If there's
+   time"), played back on a DEPARTURES board (times and places only), then shown as story cards
    she can swap, remove and add to, with three dinner ideas on the evening card. Behind every choice,
    one tap away, a peek: the things in it, in photos, and a toggle to ask for one by name.
    Renders from window.SITE (data.js) and plan.js (the composer and the day builder), then wires the
@@ -8,7 +8,7 @@
 (() => {
   'use strict';
 
-  const { content: C, images: IMG = {}, map: MAP } = window.SITE;
+  const { content: C, images: IMG = {}, map: MAP, transit: TRANSIT } = window.SITE;
   const P = window.VenerdiPlan;
   const U = C.ui;
   const DEPC = C.departures;
@@ -913,6 +913,12 @@
   const composedIds = () => composed().picks.map((p) => p.id);
   // "More ideas" as it stands (worked out once per update).
   let roomNow = [];
+  // v9d D1: each "If there's time" row, worked out once per update: { id, ok } where ok says Swap in puts it on her
+  // day, and `needs`, the earliest of her dinner times at which it would fit (only when it cannot go on now).
+  let laterNow = [];
+  // The planner's options for her day: her dinner time and pizza place, and the travel times (data.js).
+  const planOpts = (o = {}) => ({ dinnerAt, dinner, transit: TRANSIT, ...o });
+  const listOf = (titles) => (titles.length < 2 ? titles.join('') : `${titles.slice(0, -1).join(U.listJoin)}${U.listJoinLast}${titles[titles.length - 1]}`);
 
   // Her answers in the link: one group per step, joined by "-": the pick-any steps as their
   // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped. A
@@ -1636,7 +1642,7 @@
     // Only Felix's pick says why it is there: her own answers need no label (design-v9 4.5.2).
     const why = reason === 'felix' ? `<span class="stop-why label">${esc(WHY.felix.label)}</span>` : '';
     return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
-        <article class="stop-card" aria-labelledby="st-${id}">
+        ${tripHTML(it)}<article class="stop-card" aria-labelledby="st-${id}">
           <p class="stop-top">${whenHTML(it, why)}</p>
           ${stripHTML(o, '(min-width: 1024px) 640px, 92vw')}
           <div class="stop-text">
@@ -1649,6 +1655,32 @@
         </article>
         ${alts.length ? swapHTML(o.id, alts) : ''}
       </li>`;
+  }
+  // v9d D1 (design-d1.md 5): the trip into an entry, one quiet grey line at its top: "35 min, Bus 40" or "25 min
+  // walk" (the usual minutes, rounded up to 5). Screen readers hear a sentence instead ("35 minutes there by Bus 40."),
+  // inside the entry and before its heading.
+  function tripHTML(it) {
+    const t = it.trip, D = C.day.trip;
+    if (!t) return '';
+    const shown = t.walk ? fmt(D.walk, { min: t.min }) : fmt(D.ride, { min: t.min, mode: t.mode });
+    const said = t.walk ? fmt(D.srWalk, { min: t.min }) : fmt(D.srRide, { min: t.min, mode: t.mode.replace(/ \+ /g, U.listJoinLast) });
+    return `<p class="plan-trip"><span aria-hidden="true">${esc(shown)}</span><span class="sr-only">${esc(said)}</span></p>`;
+  }
+  // v9d D1 (design-d1.md 4.1): "If there's time" after dinner: her picks that do not fit, in her order, each a small
+  // photo, the title and Swap in (or, when it cannot go on even first, the dinner time it needs). After a Swap in,
+  // its Undo stands where the row was.
+  function laterHTML() {
+    const D = C.day.later;
+    const rows = plan.later.map((l) => {
+      const o = l.option, f = laterNow.find((x) => x.id === o.id) || { ok: true };
+      const act = f.ok ? hap(`<button type="button" class="btn btn--quiet later-in" data-action="swapin" data-id="${esc(o.id)}">${esc(D.swapIn)}<span class="sr-only">: ${esc(o.title)}</span></button>`, 'add')
+        : f.needs ? `<span class="later-why">${esc(fmt(D.needsTime, { time: f.needs }))}</span>` : '';
+      return `<li class="later-row" data-key="${esc(o.id)}">${thumbHTML(o.photos?.[0], 'later-photo', '56px')}<span class="later-name">${esc(o.title)}</span>${act}</li>`;
+    });
+    const back = undo && undo.list ? undoHTML() : '';
+    if (!rows.length) return back;
+    if (back) rows.splice(Math.min(undo.at, rows.length), 0, back);
+    return `<li class="plan-group plan-group--later"><h3 class="label" id="later-h">${esc(D.title)}</h3></li><li class="plan-later"><ul class="later-list" aria-labelledby="later-h">${rows.join('')}</ul></li>`;
   }
   // "More ideas" after the day (design-v9 4.5.7): a group label (only when there is something to offer),
   // then the ideas and "See everything". An idea is its photo (a button that opens it), the answer it
@@ -1686,7 +1718,7 @@
     return `<p class="plan-time">${hap(`<button type="button" class="when-btn" data-action="dinner-time" aria-expanded="false" aria-controls="dt-pick"><span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span><span class="chip${dinner ? '' : ' chip--frame'}" aria-hidden="true">${FLAP.repeat(5)}</span>${ICON.chev}<span class="sr-only">${esc(D.dinnerTime)}: ${esc(time)}</span></button>`, 'when')}${nowTag}</p>
         <div class="dt-pick" id="dt-pick" hidden><p class="dt-ask label">${esc(D.dinnerEarlier)}</p><div class="dt-opts" role="group" aria-label="${esc(D.dinnerTime)}">${opts}</div></div>`;
   }
-  function dinnerHTML(time, attrs, timeRow) {
+  function dinnerHTML(it, time, attrs, timeRow) {
     const A = C.anchors.dinner;
     const ideas = IDEAS.map((d) => `<li class="dinner-idea">
           <div class="dinner-text">
@@ -1701,42 +1733,43 @@
           </div>
         </li>`).join('');
     return `<li class="plan-item plan-item--text plan-dinner" ${attrs} data-dot="${dinner ? 'dinner' : ''}" data-hud-title="${esc(A.hud || A.title)}">
-        <div class="plan-text">${timeRow}<h4 class="plan-title" id="dinner-h"><span class="sr-only">${esc(time)}, </span>${esc(A.title)}</h4><p class="plan-line dinner-body">${esc(dinnerBody())}</p></div>
+        ${tripHTML(it)}<div class="plan-text">${timeRow}<h4 class="plan-title" id="dinner-h"><span class="sr-only">${esc(time)}, </span>${esc(A.title)}</h4><p class="plan-line dinner-body">${esc(dinnerBody())}</p></div>
         <ul class="dinner-ideas" aria-labelledby="dinner-h">${ideas}</ul>
       </li>`;
   }
-  // A dinner pick changes the card in place (so the toggle keeps focus and its transition), the
-  // board's 19:00 row (one diff wave), the map's dinner dot and the share text. The plan does not
-  // depend on dinner, so the day is not built again.
-  function setDinner(id) {
+  // A dinner pick builds the day again (v9d D1: the last trip goes to her pizza place, so the day may change), with
+  // the board's dinner row (one diff wave), the map's dinner dot and the share text. The toggle she pressed stays
+  // where it was on screen (the trip line above dinner comes and goes), keeps focus (its ring only from the keyboard)
+  // and still eases into its new state. The live region names anything that moved to "If there's time".
+  function setDinner(id, byKey = false) {
     buzz('selection');
+    const was = dinner;
     dinner = dinner === id ? null : cleanDinner(id);
     fromLink = false;
     saveState();
-    const li = $('.plan-dinner', slot('day-body'));
-    if (li) {
-      $$('.dinner-toggle', li).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === dinner)));
-      $('.dinner-body', li).textContent = dinnerBody();
-      li.dataset.dot = dinner ? 'dinner' : '';
-      $('.chip', li)?.classList.toggle('chip--frame', !dinner); // v9c C1m: her pizza place is hers
-    }
-    renderDepNote();
-    syncMap();
-    syncDepBoard();
-    syncSend();
-    refreshSoon();
+    const toggle = () => $(`.dinner-toggle[data-id="${CSS.escape(id)}"]`, slot('day-body'));
+    const y0 = toggle()?.getBoundingClientRect().top;
+    const prev = plan;
+    update();
+    const b = toggle();
+    if (!b) return;
+    if (y0 !== undefined) { const dy = b.getBoundingClientRect().top - y0; if (dy) scrollBy({ top: dy, behavior: 'instant' }); }
+    // The re-rendered toggles start from the old state, so their transition still plays.
+    const flip = $$('.dinner-toggle', slot('day-body')).filter((t) => t.dataset.id === was || t.dataset.id === dinner);
+    flip.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.id === was)));
+    void b.offsetWidth;
+    flip.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.id === dinner)));
+    b.focus({ preventScroll: true, focusVisible: byKey });
+    announceMoved(prev);
   }
 
   function renderDay() {
     const D = C.day;
     const body = slot('day-body');
     hideCtl(slot('change-answers'), !answers);
-    // Under "Your Friday": the full-day line (more than six things), else a line when cards overlap in
-    // time ("Two of these overlap", or "Some" for three or more), and one line per pick that can't
-    // happen on Friday.
+    // Under "Your Friday": one line per pick that can't happen on Friday (v9d D1: nothing overlaps any more, and
+    // what does not fit waits under "If there's time").
     const lines = [];
-    if (plan.crowded) lines.push(`<p class="day-crowded">${esc(D.crowded)}</p>`);
-    else if (plan.overlaps.length) lines.push(`<p class="day-crowded day-overlap">${esc(plan.overlaps.length === 2 ? D.overlap.two : D.overlap.some)}</p>`);
     plan.didntFit.forEach((d) => lines.push(`<p class="day-cant">${esc(fmt(D.cant, { title: d.option.title, why: d.why }))}</p>`));
     slot('day-lines').innerHTML = lines.join('');
     slot('day-lines').hidden = !lines.length;
@@ -1746,8 +1779,6 @@
       if (it.slot !== group) {
         group = it.slot;
         html += `<li class="plan-group"><h3 class="label">${esc(D.slots[group])}</h3></li>`;
-        // Two or more lunch cards: "We'll only have one of these." right under the Lunch heading.
-        if (group === 'lunch' && plan.lunchIdeas.length) html += `<li class="plan-choice"><p>${esc(D.lunchChoice)}</p></li>`;
       }
       const time = it.exact ? it.rough : fmt(U.around, { time: it.rough });
       const key = it.kind === 'lunch-filler' ? 'lunch' : it.id;
@@ -1755,18 +1786,20 @@
       // The plain lunch line and the luggage are the day's own lines (v9c C1m: grey chips); dinner sets its own.
       const timeRow = `<p class="plan-time">${whenHTML(it, '', it.kind === 'lunch-filler' || it.id === 'bags' ? 'frame' : '')}</p>`;
       if (it.kind === 'option') html += stopHTML(it, time, attrs);
-      else if (it.kind === 'lunch-filler') html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
-      else if (it.id === 'dinner') html += dinnerHTML(time, attrs, dinnerTimeHTML(it));
+      else if (it.kind === 'lunch-filler') html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}">${tripHTML(it)}<div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
+      else if (it.id === 'dinner') html += dinnerHTML(it, time, attrs, dinnerTimeHTML(it));
       else {
         const a = it.anchor;
         html += `<li class="plan-item plan-item--text" ${attrs} data-dot="" data-hud-title="${esc(a.hud || a.title)}">
-          <div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(a.title)}</h4>${a.body ? `<p class="plan-line">${esc(a.body)}</p>` : ''}</div>
+          ${tripHTML(it)}<div class="plan-text">${timeRow}<h4 class="plan-title"><span class="sr-only">${esc(time)}, </span>${esc(a.title)}</h4>${a.body ? `<p class="plan-line">${esc(a.body)}</p>` : ''}</div>
         </li>`;
       }
-      if (undo && !undoShown && key === undo.after) { html += undoHTML(); undoShown = true; }
+      if (undo && !undo.list && !undoShown && key === undo.after) { html += undoHTML(); undoShown = true; }
     });
-    if (undo && !undoShown) html = undoHTML() + html;
-    // More ideas and See everything come after the day, so it reads morning to night without a detour.
+    if (undo && !undo.list && !undoShown) html = undoHTML() + html;
+    // If there's time, then More ideas and See everything come after the day, so it reads morning to night
+    // without a detour.
+    html += laterHTML();
     html += roomHTML();
     body.innerHTML = `<ol class="plan">${html}</ol>`;
     watchKeyhole();
@@ -1820,12 +1853,15 @@
     dinnerAt = cleanDinnerAt(at);
     fromLink = false;
     saveState();
+    const prev = plan;
     update();
+    announceMoved(prev); // v9d D1 (ruling S6): an earlier dinner can move something to If there's time
     // Focus goes back to the time; its ring shows only for the keyboard (after a finger or a mouse, a ring would sit
     // around the time as if it were still being chosen).
     $('[data-action="dinner-time"]', slot('day-body'))?.focus({ preventScroll: true, focusVisible: byKey });
   }
-  // Use this: the stop is replaced in place (same answer), the card fades over to the new one.
+  // Use this: the stop is replaced (same answer) and goes to the front of her list, so it lands on her day (v9d D1);
+  // the card fades over to the new one, and the live region names anything that moved to "If there's time".
   // Focus goes on to the new card; its ring shows only for the keyboard (v9c merge fix: after a finger on the cover,
   // WebKit would otherwise draw it, which live 24e46f2 did not). The same for Remove, Undo and Add below.
   function useAlternative(btn, byKey = false) {
@@ -1833,9 +1869,11 @@
     const i = picks.findIndex((p) => p.id === li.dataset.key);
     const id = btn.dataset.id;
     if (i < 0 || !OPT[id]) return;
-    const next = picks.map((p, j) => (j === i ? { id, reason: p.reason } : p));
+    const next = [{ id, reason: picks[i].reason }, ...picks.filter((_, j) => j !== i)];
     const land = () => {
+      const prev = plan;
       setPicks(next);
+      announceMoved(prev);
       const nl = stopEl(id);
       if (!nl) return;
       if (!inView(nl)) nl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
@@ -1870,7 +1908,12 @@
       if (i < 0) return;
       undoDrop();
       undo = { pick: picks[i], index: i, after: prev ? prev.dataset.key : null, title: OPT[picks[i].id].title, timer: setTimeout(() => undoDrop(true), 6000) };
+      const waiting = plan.later.map((l) => l.id);
       setPicks(picks.filter((_, j) => j !== i), { keepUndo: true });
+      // v9d D1: the time it frees can bring the top of "If there's time" onto her day; that entry lights up.
+      const pulled = plan.options.filter((o) => waiting.includes(o.id));
+      pulled.forEach((o) => flash(stopEl(o.id)));
+      if (pulled.length) announce(pulled.map((o) => fmt(C.day.live.onDay, { title: o.title })).join(' '));
       $('.undo-btn', slot('day-body'))?.focus({ preventScroll: true, focusVisible: ev?.detail === 0 });
     };
     if (reduced) { go(); return; }
@@ -1889,8 +1932,9 @@
     if (!fade || reduced) { el.remove(); refreshSoon(); return; }
     gsap.to(el, { opacity: 0, duration: 0.2, onComplete: () => { el.remove(); refreshSoon(); } });
   }
-  function undoRemove(byKey = false) {
+  function undoRemove(byKey = false, ev = null) {
     if (!undo) return;
+    if (undo.list) { undoSwapIn(byKey, ev); return; }
     const { pick, index } = undo;
     undoDrop();
     const next = [...picks];
@@ -1901,11 +1945,52 @@
     if (!reduced) gsap.from(nl, { opacity: 0, duration: 0.22, ease: 'power1.out', clearProps: 'opacity' });
     $('[data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: byKey });
   }
-  // Add (More ideas, the catalogue): the new card lights up briefly where it lands.
+  // v9d D1 (design-d1.md 4.2): Swap in puts a pick from "If there's time" first in her list, so it goes on her day;
+  // whatever no longer fits moves to the list. The new entry lights up (and comes into view), focus goes to its
+  // Remove (the ring only from the keyboard), the live region says what happened, and Undo stands where the row was
+  // for 6 s: it puts her list back exactly as it was. A double tap's second tap, landing on that Undo, does nothing
+  // (Remove's guard).
+  let lastSwapIn = null;
+  function swapIn(btn, ev) {
+    const id = btn.dataset.id;
+    const i = picks.findIndex((p) => p.id === id);
+    if (i < 0 || (ev && ev.detail > 1)) return;
+    const pointer = !!ev && ev.detail > 0;
+    lastSwapIn = pointer ? { t: performance.now(), x: ev.clientX, y: ev.clientY } : null;
+    const prev = plan, list = picks.map((p) => ({ ...p }));
+    undoDrop();
+    undo = { list, id, at: prev.later.findIndex((l) => l.id === id), title: OPT[id].title, timer: setTimeout(() => undoDrop(true), 6000) };
+    setPicks([picks[i], ...picks.filter((_, j) => j !== i)], { keepUndo: true });
+    const on = plan.options.some((o) => o.id === id);
+    announceMoved(prev, fmt(on ? C.day.live.onDay : C.day.live.inLater, { title: OPT[id].title }));
+    const nl = stopEl(id);
+    if (!nl) return;
+    flash(nl);
+    if (!inView(nl)) nl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    $('[data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: !pointer });
+  }
+  function undoSwapIn(byKey, ev) {
+    const now = performance.now();
+    if (ev && (ev.detail > 1 || (ev.detail > 0 && lastSwapIn && now - lastSwapIn.t < 500 && Math.hypot(ev.clientX - lastSwapIn.x, ev.clientY - lastSwapIn.y) < 24))) return;
+    const { list, id } = undo;
+    undoDrop();
+    setPicks(list);
+    $(`.later-row[data-key="${CSS.escape(id)}"] .later-in`, slot('day-body'))?.focus({ preventScroll: true, focusVisible: byKey });
+  }
+  // The live region (design-d1.md 4.2): `lead`, then the picks that were on her day before and now wait.
+  function announceMoved(prev, lead = '') {
+    const moved = plan.later.filter((l) => prev && prev.options.some((o) => o.id === l.id)).map((l) => l.option.title);
+    announce([lead, moved.length ? fmt(C.day.live.moved, { list: listOf(moved) }) : ''].filter(Boolean).join(' '));
+  }
+  function announce(text) { const el = document.getElementById('day-live'); if (el) el.textContent = text; }
+  // Add (More ideas, the catalogue): the new card lights up briefly where it lands (v9d D1: on her day, or under
+  // "If there's time" when it does not fit), and the live region says which.
   function addPick(id, reason, byKey = false) {
     if (!OPT[id] || picks.some((p) => p.id === id)) return;
     setPicks([...picks, { id, reason }]);
-    flash(stopEl(id));
+    const on = plan.options.some((o) => o.id === id);
+    announce(fmt(on ? C.day.live.onDay : C.day.live.inLater, { title: OPT[id].title }));
+    flash(on ? stopEl(id) : $(`.later-row[data-key="${CSS.escape(id)}"]`, slot('day-body')));
     // Keyboard: the button she pressed is gone with the re-render; carry on from the room.
     if (!slot('catalogue').open) ($('.room-add', slot('day-body')) || $('[data-action="catalogue"]', slot('day-body')))?.focus({ preventScroll: true, focusVisible: byKey });
   }
@@ -1952,9 +2037,10 @@
     else if (a === 'swap') toggleSwap(b);
     else if (a === 'use') useAlternative(b, e.detail === 0);
     else if (a === 'remove') removeStop(b, e);
-    else if (a === 'undo') undoRemove(e.detail === 0);
+    else if (a === 'undo') undoRemove(e.detail === 0, e);
+    else if (a === 'swapin') swapIn(b, e);
     else if (a === 'add') addPick(b.dataset.id, b.dataset.reason, e.detail === 0);
-    else if (a === 'dinner') setDinner(b.dataset.id);
+    else if (a === 'dinner') setDinner(b.dataset.id, e.detail === 0);
     else if (a === 'dinner-time') toggleDinnerTime(b);
     else if (a === 'dinner-at') setDinnerAt(b.dataset.at, e.detail === 0);
     else if (a === 'catalogue') openCatalogue();
@@ -3473,8 +3559,13 @@
   function syncSend() { slot('send').disabled = !picks.length && !dinner && !dinnerAt && !freeText.trim(); }
 
   function update() {
-    plan = P.build(C, pickIds(), { dinnerAt });
-    roomNow = picks.length || answers ? P.suggestions(C, picks, answers || {}) : [];
+    plan = P.build(C, pickIds(), planOpts());
+    // v9d D1: More ideas offers only what would go on her day as it is, and each "If there's time" row knows whether
+    // Swap in can put it on (else the dinner time it needs). All of it in the tap (at most a few ms on her longest
+    // day, gate-d1-spec browser-timing.txt), so the day and its buttons render once.
+    roomNow = picks.length || answers ? P.suggestionsFit(C, picks, answers || {}, planOpts(), plan).ideas : [];
+    laterNow = plan.later.map((l) => (P.canSwapIn(C, l.id, planOpts()) ? { id: l.id, ok: true }
+      : { id: l.id, ok: false, needs: C.anchors.dinner.times.find((t) => P.canSwapIn(C, l.id, planOpts({ dinnerAt: t }))) || null }));
     syncSend();
     renderDepNote();
     renderDay();
