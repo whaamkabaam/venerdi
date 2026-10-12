@@ -966,7 +966,8 @@
   // The bags row: the time comes from the plan.
   const bagsRow = (it) => ({ key: 'bags', time: it.rough, to: R.bags.to, kind: 'anchor', target: 'bags', label: C.anchors.bags.title });
   // 19:00 DINNER, or the idea she picked (LI RIONI, DA REMO, DA IVO), at the time of the plan's dinner (v9c C1f: hers).
-  const dinnerRow = (it) => anchorRow('dinner', { time: it.rough, to: dinner ? IDEA[dinner].board : R.dinner.to, target: 'dinner', label: dinner ? IDEA[dinner].title : C.anchors.dinner.title });
+  // Her pizza place is hers (v9c C1m): the row speaks in her picks' colours once she picks one.
+  const dinnerRow = (it) => anchorRow('dinner', { time: it.rough, to: dinner ? IDEA[dinner].board : R.dinner.to, target: 'dinner', label: dinner ? IDEA[dinner].title : C.anchors.dinner.title, ...(dinner ? { kind: 'pick' } : {}) });
   // SUN HALF MARATHON; the tap egg flips the TO text to HALBMARATHON with "(half marathon)" under it.
   // The Sunday row knows the day (b3.8): SUN HALF MARATHON until Sunday, TODAY HALF MARATHON from Sunday 00:00
   // Rome time, TODAY HALF MARATHON DONE from 18:00 (any finish and the lunch after are long past by then), SUN
@@ -1389,8 +1390,9 @@
   const mapLink = (o) => (o.links?.[0] ? `<a class="stop-map" href="${esc(o.links[0].url)}" target="_blank" rel="noopener">${esc(o.links[0].label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>` : '');
   // On an entry every link of the option sits at the right: Map, and for the class its Class page too.
   const linksHTML = (o) => (o.links || []).map((l) => `<a class="stop-map tbtn" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>`).join('');
-  // A time chip with "around" before a rough time (the board's language), and the Now tag on the day.
-  const whenHTML = (it, extra = '') => `${it.exact ? '' : `<span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span>`}<span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span>${extra}${nowTag}`;
+  // A time chip with "around" before a rough time (the board's language), and the Now tag on the day. v9c C1m: the chip
+  // speaks the board's colours: her picks in yellow, the day's own lines in grey (`frame`).
+  const whenHTML = (it, extra = '', tone = '') => `${it.exact ? '' : `<span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span>`}<span class="chip${tone ? ` chip--${tone}` : ''}" aria-hidden="true">${FLAP.repeat(5)}</span>${extra}${nowTag}`;
 
   // Each alternative: its photo, its title and its facts line (fold-in, design gate N3: its line, cut to two lines,
   // read as an unfinished sentence).
@@ -1512,7 +1514,7 @@
     const D = C.day, A = C.anchors.dinner;
     const time = fmt(U.around, { time: it.rough });
     const opts = A.times.map((t) => hap(`<button type="button" class="dt-opt" data-action="dinner-at" data-at="${esc(t)}" aria-pressed="${t === it.rough}">${esc(t)}</button>`, 'opt')).join('');
-    return `<p class="plan-time">${hap(`<button type="button" class="when-btn" data-action="dinner-time" aria-expanded="false" aria-controls="dt-pick"><span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span><span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span>${ICON.chev}<span class="sr-only">${esc(D.dinnerTime)}: ${esc(time)}</span></button>`, 'when')}${nowTag}</p>
+    return `<p class="plan-time">${hap(`<button type="button" class="when-btn" data-action="dinner-time" aria-expanded="false" aria-controls="dt-pick"><span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span><span class="chip${dinner ? '' : ' chip--frame'}" aria-hidden="true">${FLAP.repeat(5)}</span>${ICON.chev}<span class="sr-only">${esc(D.dinnerTime)}: ${esc(time)}</span></button>`, 'when')}${nowTag}</p>
         <div class="dt-pick" id="dt-pick" hidden><p class="dt-ask label">${esc(D.dinnerEarlier)}</p><div class="dt-opts" role="group" aria-label="${esc(D.dinnerTime)}">${opts}</div></div>`;
   }
   function dinnerHTML(time, attrs, timeRow) {
@@ -1547,6 +1549,7 @@
       $$('.dinner-toggle', li).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === dinner)));
       $('.dinner-body', li).textContent = dinnerBody();
       li.dataset.dot = dinner ? 'dinner' : '';
+      $('.chip', li)?.classList.toggle('chip--frame', !dinner); // v9c C1m: her pizza place is hers
     }
     renderDepNote();
     syncMap();
@@ -1580,7 +1583,8 @@
       const time = it.exact ? it.rough : fmt(U.around, { time: it.rough });
       const key = it.kind === 'lunch-filler' ? 'lunch' : it.id;
       const attrs = `data-min="${toMin(it.rough)}" data-key="${esc(key)}"`;
-      const timeRow = `<p class="plan-time">${whenHTML(it)}</p>`;
+      // The plain lunch line and the luggage are the day's own lines (v9c C1m: grey chips); dinner sets its own.
+      const timeRow = `<p class="plan-time">${whenHTML(it, '', it.kind === 'lunch-filler' || it.id === 'bags' ? 'frame' : '')}</p>`;
       if (it.kind === 'option') html += stopHTML(it, time, attrs);
       else if (it.kind === 'lunch-filler') html += `<li class="plan-item plan-item--text" ${attrs} data-hud-title="${esc(D.noLunch)}"><div class="plan-text">${timeRow}<h4 class="plan-line"><span class="sr-only">${esc(time)}, </span>${esc(D.noLunch)}</h4></div></li>`;
       else if (it.id === 'dinner') html += dinnerHTML(time, attrs, dinnerTimeHTML(it));

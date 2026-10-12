@@ -922,8 +922,11 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* ---------- Departures ---------- */
 
 .section--dep > .board-wrap { max-width: 860px; }
-.section--dep .is-pick .c--who .flap { color: var(--solari); }
-.section--dep .is-sun .flap { color: var(--solari); }
+/* v9c C1m (dir-3): two voices on the board. Her picks (her pizza place and her own words too): a white time and a
+   yellow name. The day's own lines (lunch, the luggage, dinner with no place, the Sunday row): a quiet grey. */
+.section--dep .board-row .flap { color: var(--flap-frame); }
+.section--dep :is(.is-pick, .is-tbc) .c--time .flap { color: var(--flap-ink); }
+.section--dep :is(.is-pick, .is-tbc) .c--who .flap { color: var(--solari); }
 .board-sun .board-row { border-top: 0; }
 @container (max-width: 559px) {
   .section--dep .board-colheads { display: none; }
@@ -1006,6 +1009,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stop-around { margin-right: -4px; font-size: 0.8125rem; font-weight: 600; font-stretch: 87.5%; letter-spacing: 0.02em; color: var(--ink-muted); }
 .chip { display: inline-flex; flex: none; gap: 2px; padding: 4px; border-radius: var(--r-chip); background: #0B0B0C; --fw: 11px; }
 .chip .flap { color: var(--solari); }
+.chip.chip--frame .flap { color: var(--flap-frame); } /* v9c C1m: the day's own lines */
 .stop-why { color: var(--ink-muted); }
 .stop-strip {
   display: grid;
