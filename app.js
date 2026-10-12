@@ -604,7 +604,10 @@
       // Out: tiles fade and rise 8 px, staggered; in: tiles rise from 12 px; the title cross-fades.
       tl.to($$('.tile-cell', out), { opacity: 0, y: -8, duration: 0.15, stagger: 0.02, ease: 'power1.in' }, 0);
       tl.to(parts(out), { opacity: 0, duration: 0.15, ease: 'power1.in' }, 0);
-      tl.call(() => { out.hidden = true; gsap.set([...$$('.tile-cell', out), ...parts(out)], { clearProps: 'opacity,transform' }); land(); });
+      // The new step shows before the old one hides: with neither shown the page is one screen tall, and the browser
+      // put her back at its top (fold-in, gates B1: on a phone the next step's tiles, the Aventine keyhole too, were
+      // below the fold).
+      tl.call(() => { land(); out.hidden = true; gsap.set([...$$('.tile-cell', out), ...parts(out)], { clearProps: 'opacity,transform' }); });
       tl.fromTo(parts(inn), { opacity: 0 }, { opacity: 1, duration: 0.24, ease: 'power2.out', clearProps: 'opacity' });
       tl.fromTo($$('.tile-cell', inn), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out', stagger: 0.04, clearProps: 'opacity,transform' }, '<');
     };
