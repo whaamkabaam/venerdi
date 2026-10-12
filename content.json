@@ -252,7 +252,7 @@
     "pick": "This one",
     "done": "Done",
     "close": "Close",
-    "tip": "A friend from Rome says go",
+    "tip": "Suggested by a friend from Rome",
     "wanted": "You picked: {list}"
   },
   "pickReasons": {
