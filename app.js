@@ -1778,7 +1778,9 @@
     $('[data-action="dinner-time"]', slot('day-body'))?.focus({ preventScroll: true, focusVisible: byKey });
   }
   // Use this: the stop is replaced in place (same answer), the card fades over to the new one.
-  function useAlternative(btn) {
+  // Focus goes on to the new card; its ring shows only for the keyboard (v9c merge fix: after a finger on the cover,
+  // WebKit would otherwise draw it, which live 24e46f2 did not). The same for Remove, Undo and Add below.
+  function useAlternative(btn, byKey = false) {
     const li = btn.closest('.stop');
     const i = picks.findIndex((p) => p.id === li.dataset.key);
     const id = btn.dataset.id;
@@ -1790,7 +1792,7 @@
       if (!nl) return;
       if (!inView(nl)) nl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
       if (!reduced) gsap.from($('.stop-card', nl), { opacity: 0, duration: 0.2, ease: 'power1.out', clearProps: 'opacity' });
-      $('[data-action="swap"], [data-action="remove"]', nl).focus({ preventScroll: true });
+      $('[data-action="swap"], [data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: byKey });
     };
     if (reduced) { land(); return; }
     gsap.to([$('.stop-card', li), $('.swap', li)], { opacity: 0, duration: 0.14, ease: 'power1.in', onComplete: land });
@@ -1821,7 +1823,7 @@
       undoDrop();
       undo = { pick: picks[i], index: i, after: prev ? prev.dataset.key : null, title: OPT[picks[i].id].title, timer: setTimeout(() => undoDrop(true), 6000) };
       setPicks(picks.filter((_, j) => j !== i), { keepUndo: true });
-      $('.undo-btn', slot('day-body'))?.focus({ preventScroll: true });
+      $('.undo-btn', slot('day-body'))?.focus({ preventScroll: true, focusVisible: ev?.detail === 0 });
     };
     if (reduced) { go(); return; }
     gsap.set(li, { overflow: 'hidden' });
@@ -1839,7 +1841,7 @@
     if (!fade || reduced) { el.remove(); refreshSoon(); return; }
     gsap.to(el, { opacity: 0, duration: 0.2, onComplete: () => { el.remove(); refreshSoon(); } });
   }
-  function undoRemove() {
+  function undoRemove(byKey = false) {
     if (!undo) return;
     const { pick, index } = undo;
     undoDrop();
@@ -1849,15 +1851,15 @@
     const nl = stopEl(pick.id);
     if (!nl) return;
     if (!reduced) gsap.from(nl, { opacity: 0, duration: 0.22, ease: 'power1.out', clearProps: 'opacity' });
-    $('[data-action="remove"]', nl).focus({ preventScroll: true });
+    $('[data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: byKey });
   }
   // Add (More ideas, the catalogue): the new card lights up briefly where it lands.
-  function addPick(id, reason) {
+  function addPick(id, reason, byKey = false) {
     if (!OPT[id] || picks.some((p) => p.id === id)) return;
     setPicks([...picks, { id, reason }]);
     flash(stopEl(id));
     // Keyboard: the button she pressed is gone with the re-render; carry on from the room.
-    if (!slot('catalogue').open) ($('.room-add', slot('day-body')) || $('[data-action="catalogue"]', slot('day-body')))?.focus({ preventScroll: true });
+    if (!slot('catalogue').open) ($('.room-add', slot('day-body')) || $('[data-action="catalogue"]', slot('day-body')))?.focus({ preventScroll: true, focusVisible: byKey });
   }
   function flash(el, ms = 1200) {
     if (!el) return;
@@ -1900,10 +1902,10 @@
     const a = b.dataset.action;
     if (a === 'photos') openPeek(b, 'one', { id: b.dataset.id });
     else if (a === 'swap') toggleSwap(b);
-    else if (a === 'use') useAlternative(b);
+    else if (a === 'use') useAlternative(b, e.detail === 0);
     else if (a === 'remove') removeStop(b, e);
-    else if (a === 'undo') undoRemove();
-    else if (a === 'add') addPick(b.dataset.id, b.dataset.reason);
+    else if (a === 'undo') undoRemove(e.detail === 0);
+    else if (a === 'add') addPick(b.dataset.id, b.dataset.reason, e.detail === 0);
     else if (a === 'dinner') setDinner(b.dataset.id);
     else if (a === 'dinner-time') toggleDinnerTime(b);
     else if (a === 'dinner-at') setDinnerAt(b.dataset.at, e.detail === 0);
