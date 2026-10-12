@@ -1379,8 +1379,14 @@
   }
   // The respelling in brackets never breaks across lines (round 1: "(oon" was left at the end of a line).
   // The respelling breaks only at its spaces, never at a hyphen inside a word (fold-in, gates S1: in the pastry sheet's
-  // narrow column it ran past the edge as one unbreakable piece).
-  const howHTML = (how) => { const i = how.lastIndexOf('('); return i > 0 ? `${esc(how.slice(0, i))}<span class="say-sound">${how.slice(i).split(' ').map((w) => `<span class="say-w">${esc(w)}</span>`).join(' ')}</span>` : esc(how); };
+  // narrow column it ran past the edge as one unbreakable piece). Its first two words are one piece, so the opening
+  // bracket's word never ends a line on its own (v9c P4: on a laptop the sheet broke after "(oon").
+  const howHTML = (how) => {
+    const i = how.lastIndexOf('(');
+    if (i <= 0) return esc(how);
+    const ws = how.slice(i).split(' '), parts = ws.length > 1 ? [`${ws[0]} ${ws[1]}`, ...ws.slice(2)] : ws;
+    return `${esc(how.slice(0, i))}<span class="say-sound">${parts.map((w) => `<span class="say-w">${esc(w)}</span>`).join(' ')}</span>`;
+  };
   function toggleSay(b) {
     const cap = document.getElementById(b.getAttribute('aria-controls'));
     if (!cap) return;
