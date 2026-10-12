@@ -514,19 +514,26 @@
     // v9c C2a (dir-3): the pill never lies over the first screen. It comes up once she has scrolled (more than 24 px
     // since load) with the first step's photos risen past 55 % of the screen, at her first tap on a tile, or when
     // focus enters the stage (the keyboard). A tall phone waits for her scroll or her tap; a tap shows Next at once.
+    // A window the page cannot scroll that far (a big monitor, an iPad upright: fold-in, gate-mechanics S1) counts as
+    // scrolled: the pill comes up at its resting place under the photos, over nothing. The room is read again on a
+    // scroll, a resize and once the fonts are in (the page is a little taller before).
     let gridIn = false, moved = false;
     const y0 = scrollY;
     const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { gridIn = true; show(); } }, { rootMargin: '0px 0px -45% 0px' }) : null;
-    const onScroll = () => { if (Math.abs(scrollY - y0) > 24) { moved = true; show(); } };
+    const onScroll = () => { if (Math.abs(scrollY - y0) > 24) moved = true; show(); };
     function show() {
+      if (!moved && document.documentElement.scrollHeight - innerHeight <= 24) moved = true;
       if (!gridIn || !moved || host.classList.contains('is-foot')) return;
       host.classList.add('is-foot');
       removeEventListener('scroll', onScroll);
+      removeEventListener('resize', show);
       host.removeEventListener('focusin', stage.showFoot);
       if (io) io.disconnect();
     }
     stage.showFoot = () => { gridIn = moved = true; show(); };
     addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', show, { passive: true });
+    if (document.fonts) document.fonts.ready.then(show);
     host.addEventListener('focusin', stage.showFoot);
     if (io) io.observe($('.step .tiles', host)); else gridIn = true;
   }
