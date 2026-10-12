@@ -108,6 +108,15 @@ html {
   pointer-events: none;
   will-change: transform;
 }
+/* v9d D3, behind ?sky=2 (app.js sets data-sky2 on html): the sky is part of the page, as tall as it (app.js sets the
+   height on every measure), instead of fixed to the viewport. iOS 26 Safari ends the fixed containing block above its
+   floating bar and shows the page's own content and root background under and around the bar; the root background
+   follows --sky, which trails the layer while she scrolls. Still one solid-colour composited layer. */
+[data-sky2] .sky-bg {
+  position: absolute;
+  height: auto;
+  min-height: 100lvh;
+}
 body {
   margin: 0;
   font-family: var(--font-body);
