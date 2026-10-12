@@ -226,6 +226,7 @@ svg { display: block; }
     -webkit-appearance: auto;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; /* her finger lands here, not on the control: no double-tap zoom (fold-in, mechanics N4) */
   }
   .hapw > :disabled + .hap { display: none; }
   /* The press the control would show under a finger, shown while the finger is on its switch (app.js). */
