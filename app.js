@@ -1980,15 +1980,16 @@
     $('.sheet-body', dlg).scrollTop = 0;
     sheetIn(dlg);
   }
-  function closeCatalogue(fromY = 0) {
+  function closeCatalogue(fromY = 0, byKey = false) {
     const dlg = slot('catalogue');
     if (!dlg.open || dlg.classList.contains('is-closing')) return;
+    sheetByKey = byKey;
     sheetOut(dlg, fromY, () => dlg.close());
   }
   // Adding from here carries ADDED; tapping the check takes it off the day again. Photos opens the peek.
   function onCatalogueClick(e) {
     if (e.target === slot('catalogue')) { closeCatalogue(); return; } // the backdrop
-    if (e.target.closest('[data-action="close"]')) { closeCatalogue(); return; }
+    if (e.target.closest('[data-action="close"]')) { closeCatalogue(0, e.detail === 0); return; }
     const ph = e.target.closest('[data-action="photos"]');
     if (ph) { openPeek(ph, 'one', { id: ph.dataset.id }); return; }
     const b = e.target.closest('.cat-add');
@@ -2008,6 +2009,11 @@
   // scale, 260 ms in, 160 ms out. Reduced motion: a fade, 200 / 150 ms. Web Animations, so the compositor runs them.
   // From 768 px the sheets are centred panels (styles.css), so they fade instead of rising, and do not drag.
   const sheetWide = () => matchMedia('(min-width: 768px)').matches;
+  // Focus goes back to the control that opened a sheet with its ring only when the sheet was closed from the keyboard
+  // (Escape, or Enter or Space on Done, X or Close): WebKit drew it after a finger too (fold-in, gate-mechanics N1).
+  // A control the dialog has already handed focus back to is focused again, so the choice applies.
+  let sheetByKey = false;
+  const refocus = (el) => { if (document.activeElement === el) el.blur(); el.focus({ preventScroll: true, focusVisible: sheetByKey }); };
   function sheetIn(dlg) {
     dlg.classList.remove('is-closing');
     dlg.style.transform = '';
@@ -2186,12 +2192,13 @@
     gsap.to(el, { height: 0, opacity: 0, duration: 0.2, ease: 'power2.inOut', onComplete: () => { el.hidden = true; gsap.set(el, { clearProps: 'height,opacity' }); } });
   }
   // Out: the sheet's exit (sheetOut). Escape, X, Done, the backdrop and a drag all close.
-  function closePeek(fromY = 0) {
+  function closePeek(fromY = 0, byKey = false) {
     const dlg = slot('peek');
     if (!dlg.open || peek.closing) return;
     peek.closing = true;
+    sheetByKey = byKey;
     // Focus goes back right after close(), so the browser's own focus restore cannot land elsewhere.
-    sheetOut(dlg, fromY, () => { const o = peek.opener; dlg.close(); if (o && o.isConnected) o.focus({ preventScroll: true }); });
+    sheetOut(dlg, fromY, () => { const o = peek.opener; dlg.close(); if (o && o.isConnected) refocus(o); });
   }
   function onPeekClick(e) {
     const dlg = slot('peek');
@@ -2205,7 +2212,7 @@
     if (ph) { pageStrip(ph); return; }
     const b = e.target.closest('[data-action]');
     if (!b) return;
-    if (b.dataset.action === 'peek-close') closePeek();
+    if (b.dataset.action === 'peek-close') closePeek(0, e.detail === 0);
     else if (b.dataset.action === 'expand') toggleStrip(b);
     else if (b.dataset.action === 'want' || b.dataset.action === 'pick') onPeekToggle(b);
     else if (b.dataset.action === 'say') toggleSay(b);
@@ -2219,7 +2226,7 @@
     root.classList.remove('is-locked');
     peek.kind = null;
     peek.closing = false;
-    if (peek.opener && peek.opener.isConnected) peek.opener.focus({ preventScroll: true });
+    if (peek.opener && peek.opener.isConnected && document.activeElement !== peek.opener) refocus(peek.opener);
     peek.opener = null;
   }
 
@@ -2956,9 +2963,10 @@
     sheetIn(dlg);
     loadNolli();
   }
-  function closeMapSheet(fromY = 0) {
+  function closeMapSheet(fromY = 0, byKey = false) {
     const dlg = slot('mapsheet');
     if (!dlg.open || dlg.classList.contains('is-closing')) return;
+    sheetByKey = byKey;
     sheetOut(dlg, fromY, () => dlg.close());
   }
   function bindSheetMap() {
@@ -2994,7 +3002,7 @@
   }
   function onMapSheetClick(e) {
     const dlg = slot('mapsheet');
-    if (e.target === dlg || e.target.closest('[data-action="map-close"]')) closeMapSheet();
+    if (e.target === dlg || e.target.closest('[data-action="map-close"]')) closeMapSheet(0, e.detail === 0);
   }
   function onMapSheetClosed() {
     const dlg = slot('mapsheet');
@@ -3002,7 +3010,7 @@
     dlg.classList.remove('is-closing');
     dlg.style.transform = '';
     root.classList.remove('is-locked');
-    slot('hud-map').focus({ preventScroll: true });
+    refocus(slot('hud-map'));
   }
 
   /* ------------------------------------------------------------------ */
@@ -3540,13 +3548,13 @@
   slot('peek').addEventListener('click', onPeekClick);
   slot('peek').addEventListener('scroll', onStripScroll, true);
   // Escape plays the same exit as Done.
-  slot('peek').addEventListener('cancel', (e) => { e.preventDefault(); closePeek(); });
+  slot('peek').addEventListener('cancel', (e) => { e.preventDefault(); closePeek(0, true); });
   slot('peek').addEventListener('close', onPeekClosed);
   bindDrag(slot('peek'), closePeek);
   bindDrag(slot('catalogue'), closeCatalogue);
-  slot('catalogue').addEventListener('cancel', (e) => { e.preventDefault(); closeCatalogue(); });
+  slot('catalogue').addEventListener('cancel', (e) => { e.preventDefault(); closeCatalogue(0, true); });
   // Closing the sheet (Close, Escape, the backdrop) returns focus to "See everything".
-  slot('catalogue').addEventListener('close', () => $('[data-action="catalogue"]', slot('day-body'))?.focus({ preventScroll: true }));
+  slot('catalogue').addEventListener('close', () => { const b = $('[data-action="catalogue"]', slot('day-body')); if (b) refocus(b); });
   let textTimer = 0;
   slot('free-text').addEventListener('input', (e) => {
     freeText = e.target.value;
@@ -3604,7 +3612,7 @@
   wideMQ.addEventListener('change', () => { ensureAtlases(); ScrollTrigger.refresh(); });
   slot('hud-map').addEventListener('click', openMapSheet);
   slot('mapsheet').addEventListener('click', onMapSheetClick);
-  slot('mapsheet').addEventListener('cancel', (e) => { e.preventDefault(); closeMapSheet(); });
+  slot('mapsheet').addEventListener('cancel', (e) => { e.preventDefault(); closeMapSheet(0, true); });
   slot('mapsheet').addEventListener('close', onMapSheetClosed);
   bindDrag(slot('mapsheet'), closeMapSheet);
   // The engraving loads after her first tile tap or Show me Friday; a visit that already has a day loads it once
