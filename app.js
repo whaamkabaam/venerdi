@@ -54,16 +54,21 @@
   // The three dinner ideas (spec 4): she picks one, or none.
   const IDEAS = C.dinners.ideas;
   const IDEA = Object.fromEntries(IDEAS.map((d) => [d.id, d]));
-  // Haptics (web-haptics): a tick on a tile or a toggle, a firmer one on Show me Friday. Called inside the tap,
-  // and only where the browser can vibrate (Android): on an iPhone the switch under her finger already ticked
-  // (b3.4), so a second, script-fired tick would only be silent or doubled. Never on load or scroll.
-  const haptics = window.WebHaptics ? new window.WebHaptics() : null;
-  const buzz = (p) => { if (!navigator.vibrate) return; try { haptics?.trigger(p)?.catch?.(() => {}); } catch { /* no haptics here */ } };
-  // Haptics on the iPhone (b3.4; brief 12, row A of the test page): Safari ticks only when a real finger toggles
-  // a native switch, so each control she taps on purpose has an invisible <input switch> laid over it (touch
-  // screens only, styles.css). Her tap toggles the switch, which ticks, and onHapClick passes the tap on to the
-  // control, so every handler and focus return works as before.
-  const HAP = '<input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true">';
+  // Haptics on Android: a tick on a tile or a toggle, a firmer one on Show me Friday, a light one on every other
+  // deliberate tap. Called inside the tap, and only where the browser can vibrate: an iPhone has no
+  // navigator.vibrate, and its tick comes from the switch her finger toggles (below). Plain pulses of 22 to 30 ms
+  // (v9c C3a: web-haptics' presets cut pulses below what many Android motors can feel, research.md 4). Never on load
+  // or scroll.
+  const BUZZ = { light: 22, selection: 24, medium: 30 };
+  const buzz = (p) => { if (!navigator.vibrate) return; try { navigator.vibrate(BUZZ[p]); } catch { /* not allowed here */ } };
+  // Haptics on the iPhone (v9c C3a, research.md 1 to 3): Safari ticks only when a real finger toggles a native
+  // switch. Each control she taps on purpose has a see-through <label> laid over it (touch screens only,
+  // styles.css) holding a hidden switch. A label has no touch handling of its own, so a swipe that starts on it
+  // scrolls the page and sends no click; a tap on it is a real click, which the label hands to its switch (the
+  // tick), and the page passes the tap on to the control once (the click listener at the end of this file). The
+  // label and its switch are aria-hidden and out of the tab order: the keyboard, the focus ring and screen
+  // readers stay with the control.
+  const HAP = '<label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>';
   // No :has() in these rules (a final perf pass found that `.hapw:has(...)` selectors cost the board's replay every
   // other frame in Chromium at 390 px): the wrapper carries its control's role as a class, and is hidden with it.
   const hap = (html, mod = '', hidden = false) => `<span class="hapw${mod ? ` hapw--${mod}` : ''}"${hidden ? ' hidden' : ''}>${html}${HAP}</span>`;
@@ -3296,23 +3301,41 @@
   slot('send').addEventListener('click', send);
   nowBtns.forEach((b) => b.addEventListener('click', jumpToNow));
   slot('hud-clock').addEventListener('click', backToBoard);
-  // Her tap toggled a switch (the tick): the control under it gets the tap, at the same spot and with the same
-  // count, so Remove's double-tap guard still sees it; focus moves to the control (b3.4). A disabled or hidden
-  // control gets nothing (its switch is off in styles.css anyway). Capture phase: the switch's own click never
-  // reaches the page's handlers.
-  document.addEventListener('click', (e) => {
-    const sw = e.target;
-    if (!sw.classList || !sw.classList.contains('hap')) return;
-    e.stopPropagation();
-    const ctl = sw.parentElement.firstElementChild;
-    if (!ctl || ctl === sw || ctl.disabled || ctl.hidden) return;
-    // Android (b3.4): the tiles, the toggles, the word and Show me Friday buzz in their own handlers; every other
-    // deliberate tap gets a light one here. (An iPhone has no navigator.vibrate: its switch already ticked.)
-    if (!ctl.matches('.tile, .peek-toggle, .say, [data-action="none"]') && !(ctl.matches('.stage-next') && stage.step === STEPS.length - 1)) buzz('light');
+  // Her finger on a control's label cover (v9c C3a). The label's click is her real tap; the label then hands a
+  // click to its hidden switch (the tick on an iPhone), and that click passes the tap on to the control: focus,
+  // then one click at the same spot and with the same count, so Remove's double-tap guard still sees a finger. One
+  // token per tap: whichever comes first, the switch's click or the fallback timer (a browser that did not hand
+  // the click on), runs the control's action, and only once. Neither click reaches the page's own handlers.
+  // A disabled or hidden control gets nothing (its cover is off in styles.css anyway).
+  let pending = null;
+  function forwardTap(tap) {
+    const ctl = tap.ctl;
+    if (!ctl || ctl.classList.contains('hap') || ctl.disabled || ctl.hidden) return;
+    // Android: the tiles, the toggles, the word, the none answers, the dinner times and Show me Friday buzz in their
+    // own handlers; every other deliberate tap gets a light one here. (An iPhone has no navigator.vibrate.)
+    if (!ctl.matches('.tile, .peek-toggle, .say, [data-action="none"], .dt-opt') && !(ctl.matches('.stage-next') && stage.step === STEPS.length - 1)) buzz('light');
     try { ctl.focus({ preventScroll: true, focusVisible: false }); } catch { /* focus options unsupported */ }
-    ctl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, detail: e.detail, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY }));
+    ctl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, detail: tap.detail, clientX: tap.clientX, clientY: tap.clientY, screenX: tap.screenX, screenY: tap.screenY }));
+  }
+  const fireTap = (tap) => { if (tap.done) return; tap.done = true; if (pending === tap) pending = null; forwardTap(tap); };
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (!t || !t.matches) return;
+    if (t.matches('label.hap')) {
+      // Never preventDefault here: that would cancel the switch's click, and with it the tick.
+      e.stopPropagation();
+      const tap = { ctl: t.parentElement.firstElementChild, done: false, detail: e.detail, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY };
+      pending = tap;
+      setTimeout(() => fireTap(tap), 0);
+      return;
+    }
+    if (t.matches('label.hap > input')) {
+      e.stopPropagation();
+      const ctl = t.parentElement.parentElement.firstElementChild;
+      if (pending && pending.ctl === ctl) fireTap(pending);
+    }
   }, true);
-  // The press her finger would give the control (0.96), shown while it is on the control's switch (b3.4).
+  // The press her finger would give the control (0.96), shown while it is on the control's label cover (b3.4).
   const press = (e, on) => { const sw = e.target; if (sw.classList && sw.classList.contains('hap') && sw.previousElementSibling) sw.previousElementSibling.classList.toggle('is-pressed', on); };
   document.addEventListener('pointerdown', (e) => press(e, true), { passive: true });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => document.addEventListener(t, (e) => press(e, false), { passive: true, capture: t === 'pointerleave' }));

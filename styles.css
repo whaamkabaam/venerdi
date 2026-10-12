@@ -201,12 +201,13 @@ svg { display: block; }
 @media (hover: hover) { .btn.btn--quiet:not(:disabled):hover { background-color: var(--fill-quiet-hover); } }
 .btn .i { width: 14px; height: 14px; flex: none; }
 
-/* ---------- Haptics on the iPhone (v9b B2c, design-v9 amendments b3.4) ---------- */
-/* Each control she taps on purpose sits in a .hapw with an invisible native switch laid over it (the test
-   page's row A, the one route that ticked on Felix's iPhone). On touch screens her finger lands on the switch,
-   which ticks, and app.js passes the tap on to the control. Everywhere else the switch is not there at all, and
-   this rule is also the one switch that turns every overlay off. The wrapper takes the control's place in the
-   layout: the control's margins move onto the wrapper, so the switch covers the control exactly. */
+/* ---------- Haptics on the iPhone (v9c C3a; research.md 1 to 3) ---------- */
+/* Each control she taps on purpose sits in a .hapw with a see-through <label> laid over it, holding a hidden
+   native switch. A label has no touch handling of its own: a swipe that starts on it scrolls the page, and a tap
+   on it is a real click that the label hands to its switch (Safari's tick); app.js then passes the tap on to the
+   control. Nothing of it is painted. Off a touch screen the cover is not there at all, and this rule is also the
+   one switch that turns every cover off. The wrapper takes the control's place in the layout: the control's
+   margins move onto the wrapper, so the cover lies over the control exactly. */
 .hapw { position: relative; display: inline-grid; }
 .hapw > :first-child { margin: 0 !important; }
 .hapw--block { display: grid; justify-self: stretch; }
@@ -218,20 +219,26 @@ svg { display: block; }
     position: absolute;
     inset: 0;
     z-index: 1;
-    width: 100%;
-    height: 100%;
     margin: 0;
-    opacity: 0.02;
-    appearance: auto;
-    -webkit-appearance: auto;
+    background: transparent;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation; /* her finger lands here, not on the control: no double-tap zoom (fold-in, mechanics N4) */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
+  .hap > input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; visibility: hidden; }
   .hapw > :disabled + .hap { display: none; }
-  /* The press the control would show under a finger, shown while the finger is on its switch (app.js). */
+  /* The press the control would show under a finger, shown while the finger is on its cover (app.js). */
   .hapw > .is-pressed:not(:disabled) { scale: 0.96; }
 }
+/* The cover reaches as far as the control's own hit area (its ::after) does. By the control's class, no :has(). */
+.hapw > .tile-more + .hap { inset: -7px -10px -20px; }
+.hapw > .btn--small + .hap { inset: -4px 0; }     /* Change, Back to my picks, Now, the catalogue's Close */
+.hapw > .btn--quiet + .hap { inset: -2px 0; }     /* Use this, Add */
+.hapw > .stop-dot + .hap { inset: -10px 0; }
+.hapw > .day-change + .hap { inset: -12px -8px; }
 /* Where a control sat in its row: its own margins and its place in the grid or the flex line (by class: a
    `.hapw:has(...)` selector cost the board's replay frames in Chromium, final perf pass). */
 .hapw--more { margin-top: var(--s1); z-index: 2; } /* its hit area still reaches a little into the tile's sub above it */

@@ -37,10 +37,10 @@
 <div class="sky-bg" aria-hidden="true"></div>
 <aside class="hud" data-slot="hud">
   <div class="hud-inner">
-    <span class="hapw hapw--clock"><button class="hud-clock" type="button" data-slot="hud-clock"></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
+    <span class="hapw hapw--clock"><button class="hud-clock" type="button" data-slot="hud-clock"></button><label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label></span>
     <p class="hud-place"><span class="sr-only" data-slot="hud-time"></span><span data-slot="hud-place"></span></p>
     <button class="btn btn--small hud-now" type="button" hidden><span class="now-long" data-slot="now-long"></span><span class="now-short" data-slot="now-short"></span></button>
-    <span class="hapw hapw--pocket" hidden><button class="hud-map" type="button" data-slot="hud-map" aria-haspopup="dialog" hidden></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
+    <span class="hapw hapw--pocket" hidden><button class="hud-map" type="button" data-slot="hud-map" aria-haspopup="dialog" hidden></button><label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label></span>
   </div>
 </aside>
 
@@ -85,7 +85,7 @@
       <div class="send">
         <label class="send-label" id="free-label" for="free-text" data-slot="free-label"></label>
         <textarea id="free-text" class="send-text" rows="2" maxlength="1000" data-slot="free-text"></textarea>
-        <span class="hapw hapw--send"><button class="btn btn--primary send-btn" type="button" data-slot="send"></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
+        <span class="hapw hapw--send"><button class="btn btn--primary send-btn" type="button" data-slot="send"></button><label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label></span>
       </div>
     </section>
   </section>
@@ -103,7 +103,6 @@
 <script src="plan.js"></script>
 <script src="vendor/gsap.min.js"></script>
 <script src="vendor/ScrollTrigger.min.js"></script>
-<script src="vendor/web-haptics.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
