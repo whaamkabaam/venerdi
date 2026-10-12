@@ -933,8 +933,8 @@
   const bagsRow = (it) => ({ key: 'bags', time: it.rough, to: R.bags.to, kind: 'anchor', target: 'bags', label: C.anchors.bags.title });
   // 19:00 DINNER, or the idea she picked (LI RIONI, DA REMO, DA IVO).
   const dinnerRow = () => anchorRow('dinner', { to: dinner ? IDEA[dinner].board : R.dinner.to, target: 'dinner', label: dinner ? IDEA[dinner].title : C.anchors.dinner.title });
-  // Before her picks land, the board shows the day's frame: the bags, dinner, the early night.
-  const skeletonRows = () => [bagsRow(P.build(C, []).items.find((it) => it.id === 'bags')), dinnerRow(), anchorRow('end', { target: 'end', label: C.anchors.end.title })];
+  // Before her picks land, the board shows the day's frame: the bags and dinner (v9c C1a: the day ends on dinner).
+  const skeletonRows = () => [bagsRow(P.build(C, []).items.find((it) => it.id === 'bags')), dinnerRow()];
   // SUN HALF MARATHON; the tap egg flips the TO text to HALBMARATHON with "(half marathon)" under it.
   // The Sunday row knows the day (b3.8): SUN HALF MARATHON until Sunday, TODAY HALF MARATHON from Sunday 00:00
   // Rome time, TODAY HALF MARATHON DONE from 18:00 (any finish and the lunch after are long past by then), SUN
@@ -962,7 +962,7 @@
   }
 
   // The board for a plan: every card of the day in display order (the plain lunch line as LUNCH), the
-  // bags, her TBC line, dinner, the early night. Something that can't happen on Friday gets no row.
+  // bags, her TBC line, dinner (v9c C1a: the day ends on dinner). Something that can't happen on Friday gets no row.
   function depRows(pl, { tbc = tbcRow() } = {}) {
     const rows = [];
     for (const it of pl.items) {
@@ -973,8 +973,6 @@
       else if (it.kind === 'anchor' && it.id === 'dinner') {
         if (tbc) rows.push(tbc);
         rows.push(dinnerRow());
-      } else if (it.kind === 'anchor' && it.id === 'end') {
-        rows.push(anchorRow('end', { target: 'end', label: C.anchors.end.title }));
       }
     }
     return rows;
@@ -2809,6 +2807,7 @@
     [C.meta.sunset, '#E9785F'], [C.meta.civilDusk, '#3A4A8E'], ['21:00', '#121833'],
   ].map(([t, hex]) => ({ t: toMin(t), lch: rgbToOklch(hexRgb(hex)) }));
   const DUSK = 5; // tramonto -> ora blu
+  const SKY_NIGHT = SKY[SKY.length - 1].t; // 21:00, night: where the page's end scrolls to (v9c C1a)
   // Between sunset and blue hour the light drops fast. A steep curve also keeps the page
   // out of the mid-luminance band where neither ink nor lampione reaches 4.5:1.
   const steep = (p) => { const f = (x) => 1 / (1 + Math.exp(-30 * (x - 0.5))); return (f(p) - f(0)) / (f(1) - f(0)); };
@@ -2998,6 +2997,11 @@
     const top = (el) => el.getBoundingClientRect().top + scrollY;
     anchors = [{ y: 0, t: START_MIN }];
     itemEls.forEach((el) => anchors.push({ y: Math.max(top(el) - mid, anchors[anchors.length - 1].y + 1), t: +el.dataset.min, el }));
+    // v9c C1a: the day ends on dinner, and the page past it (More ideas, See everything, Send) scrolls on into the
+    // night, so the page end is dark and every mark a lamp whatever time dinner is. The anchor keeps dinner's entry
+    // as its own, so the entry under it stays dinner.
+    const last = anchors[anchors.length - 1];
+    if (dayShown && last.el && last.t < SKY_NIGHT) anchors.push({ y: Math.max(maxY, last.y + 1), t: SKY_NIGHT, el: last.el });
     sectionMarks = $$('main > section')
       .filter((sec) => sec.offsetParent !== null)
       .map((sec) => ({ y: top(sec) - mid, id: sec.id, name: sec.dataset.hud || '' }));
@@ -3020,7 +3024,7 @@
   const minToHHMM = (m) => P.hhmm(m);
 
   // The entry at a page position. At the very bottom the last entry is current, however little page there is
-  // below it, so Early night and the night map always come (dir-2's last-entry fix, b2.5).
+  // below it, so Dinner and the night map always come (dir-2's last-entry fix, b2.5).
   function itemAt(y) {
     let idx = -1;
     for (let i = 1; i < anchors.length; i++) if (y >= anchors[i].y) idx = i - 1;
@@ -3031,7 +3035,8 @@
     lastY = y;
     const el = itemAt(y);
     const end = !!el && el === itemEls[itemEls.length - 1] && y >= maxY - 2;
-    applySky(reduced || end ? (el ? +el.dataset.min : START_MIN) : timeAt(y));
+    // At the page end it is night (v9c C1a); the clock still reads the entry (dinner's time).
+    applySky(end ? SKY_NIGHT : reduced ? (el ? +el.dataset.min : START_MIN) : timeAt(y));
 
     let sec = null;
     for (const s of sectionMarks) if (y >= s.y) sec = s;

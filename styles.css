@@ -588,7 +588,7 @@ button.hud-clock:active { scale: 0.96; }
 .mk.is-current .mk-ring { visibility: visible; }
 .mk.is-current .mk-halo { fill: none; stroke: var(--mk-bg); stroke-width: 5; }
 /* After dark (B1c, design-v9 amendments b3.1) every mark of her day is a street lamp: the dot fills sodium with
-   one glow twice its size at 22 %, no blur. At dinner and Early night the map is the night recap of her day. */
+   one glow twice its size at 22 %, no blur. At dinner and the page end the map is the night recap of her day. */
 .mk-glow { fill: var(--sodium); opacity: 0; }
 :root[data-dark] .mk:not(.is-idea) .mk-glow { opacity: 0.22; }
 /* The glow does the halo's work after dark: no dark ring between the lamp and its light. */

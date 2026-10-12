@@ -426,11 +426,6 @@
       "bodyNone": "Three pizza places.",
       "bodyPicked": "Pizza at {title}.",
       "hud": "Dinner"
-    },
-    "end": {
-      "time": "21:30",
-      "title": "Early night",
-      "hud": "Night"
     }
   },
   "dinners": {
@@ -2855,10 +2850,6 @@
       "dinner": {
         "time": "19:00",
         "to": "DINNER"
-      },
-      "end": {
-        "time": "21:30",
-        "to": "EARLY NIGHT"
       }
     },
     "sunday": {

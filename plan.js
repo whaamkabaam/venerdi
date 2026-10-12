@@ -411,7 +411,6 @@
       items.push(it);
     }
     items.push({ kind: 'anchor', id: 'dinner', anchor: Anc.dinner, start: F.DINNER, slot: 'evening', rough: hhmm(F.DINNER), exact: false });
-    items.push({ kind: 'anchor', id: 'end', anchor: Anc.end, start: toMin(Anc.end.time), slot: 'evening', rough: Anc.end.time, exact: true });
 
     // Two pastry stops in one day: the later one is second breakfast.
     const breakfasts = (C.departures && C.departures.breakfasts) || [];
