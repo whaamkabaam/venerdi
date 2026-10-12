@@ -416,9 +416,9 @@
       "hud": "Landing"
     },
     "bags": {
-      "title": "Bags to the flat",
-      "body": "We take the bags to the flat in Pigneto and have a break.",
-      "hud": "Flat"
+      "title": "Luggage to the Airbnb",
+      "body": "We drop the luggage at the Airbnb in Pigneto and take a break.",
+      "hud": "Airbnb"
     },
     "dinner": {
       "time": "19:00",
@@ -2845,7 +2845,7 @@
         "to": "LUNCH"
       },
       "bags": {
-        "to": "BAGS TO THE FLAT"
+        "to": "LUGGAGE TO AIRBNB"
       },
       "dinner": {
         "time": "19:00",
