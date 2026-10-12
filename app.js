@@ -3303,6 +3303,7 @@
     ScrollTrigger.create({ trigger: host, start: 'bottom bottom', onEnter: maybeSun });
   }
 
+  let skyTween = null;
   function setupMotion() {
     const mm = gsap.matchMedia();
 
@@ -3322,7 +3323,7 @@
 
       // Sky scrub: smoothed scroll position drives the time of day.
       const st = { y: scrollY };
-      gsap.fromTo(st, { y: 0 }, {
+      skyTween = gsap.fromTo(st, { y: 0 }, {
         y: () => ScrollTrigger.maxScroll(window),
         ease: 'none',
         onUpdate: () => render(st.y),
@@ -3355,7 +3356,10 @@
     // The HUD stays off the hero, the questions and the top of the board: it comes on when the board's
     // first row passes under it (syncDock, b3.2). A refresh (a resize, a font, a new day) re-measures that
     // point and puts the bar right without a flight.
-    ScrollTrigger.addEventListener('refresh', () => { measure(); syncDock(false); render(reduced ? scrollY : lastY); });
+    // v9c C1k (dir-3's fix): after a refresh the sky goes straight to where she is. When Show me Friday makes the page
+    // longer she was at the bottom of the short page, and the smoothed sky caught up from the new bottom (night) for a
+    // frame: a night flash under the glide.
+    ScrollTrigger.addEventListener('refresh', () => { measure(); syncDock(false); const tw = skyTween?.scrollTrigger?.getTween?.(); if (tw) tw.progress(1); render(reduced ? scrollY : lastY); });
     ScrollTrigger.addEventListener('scrollEnd', syncSkyVar);
   }
 
