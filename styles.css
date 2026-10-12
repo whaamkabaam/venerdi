@@ -888,6 +888,8 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 .stage-answers { flex: 1 1 14rem; font-weight: 500; text-wrap: pretty; }
 
+/* Send sits inside #day (it closes the day's column); the day section already carries the side padding. */
+.section--day > .section--send { padding-left: 0; padding-right: 0; }
 .send { display: grid; gap: var(--s3); margin-top: var(--s5); }
 .send-label { font-weight: 600; }
 .send-text {
@@ -1585,9 +1587,12 @@ dialog.peek .say-sound { white-space: normal; }
    (design-v9 amendments b2); the pocket map steps aside. */
 @media (min-width: 1280px) {
   .hud-map, .hapw--pocket { display: none; }
-  /* Send sits in the day's column (design-v9 4.7), so the page keeps one left edge to the end. */
-  .section--send { display: grid; grid-template-columns: 440px minmax(0, 760px); justify-content: center; column-gap: var(--s7); }
-  .section--send > .send { grid-column: 2; max-width: none; margin-left: 0; margin-right: 0; }
+  /* Send sits in the day's column (design-v9 4.7), so the page keeps one left edge to the end; it is the day
+     section's last row, so the map beside it stays whole down to the bottom of the page (fold-in, design gate S3).
+     The footer's space moves into Send, inside the day, so the map's sticky range reaches the page's end. */
+  .section--day > .section--send { width: 100%; max-width: none; margin: 0; padding-bottom: calc(var(--s8) + var(--s7) + env(safe-area-inset-bottom)); }
+  .section--send > .send { max-width: none; margin-left: 0; margin-right: 0; }
+  main:has(#day:not([hidden])) + .footer { padding-top: 0; padding-bottom: 0; }
   .section--day {
     display: grid;
     grid-template-columns: 440px minmax(0, 760px);
@@ -1603,7 +1608,7 @@ dialog.peek .say-sound { white-space: normal; }
     flex-direction: column;
     gap: var(--s2);
     grid-column: 1;
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 5;
     position: sticky;
     top: var(--anchor-gap);
     /* The cap bounds the canvas's backing store (2000 device px at DPR 2). */

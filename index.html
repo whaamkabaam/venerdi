@@ -80,14 +80,14 @@
     <p id="map-credit" class="sr-only" data-slot="map-credit"></p>
     <div class="day-body" data-slot="day-body"></div>
     <dialog class="sheet catalogue" data-slot="catalogue" aria-labelledby="cat-h"></dialog>
-  </section>
-
-  <section class="section section--send" id="send" aria-labelledby="free-label" hidden>
-    <div class="send">
-      <label class="send-label" id="free-label" for="free-text" data-slot="free-label"></label>
-      <textarea id="free-text" class="send-text" rows="2" maxlength="1000" data-slot="free-text"></textarea>
-      <span class="hapw hapw--send"><button class="btn btn--primary send-btn" type="button" data-slot="send"></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
-    </div>
+    <!-- Send closes the day's column inside #day, so the laptop's sticky map holds beside it to the end. -->
+    <section class="section section--send" id="send" aria-labelledby="free-label" hidden>
+      <div class="send">
+        <label class="send-label" id="free-label" for="free-text" data-slot="free-label"></label>
+        <textarea id="free-text" class="send-text" rows="2" maxlength="1000" data-slot="free-text"></textarea>
+        <span class="hapw hapw--send"><button class="btn btn--primary send-btn" type="button" data-slot="send"></button><input type="checkbox" switch class="hap" tabindex="-1" aria-hidden="true"></span>
+      </div>
+    </section>
   </section>
 
 </main>
