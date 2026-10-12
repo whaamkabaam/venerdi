@@ -667,7 +667,9 @@
     if (a === 'next') { if (last) planFriday(); else goStep(stage.step + 1); }
     else if (a === 'back') goStep(stage.step - 1);
     else if (a === 'none') {
-      buzz('selection'); // an answer, like a tile (Android; an iPhone's switch already ticked)
+      // An answer, like a tile (Android; an iPhone's switch already ticked). On the last step Show me Friday's own
+      // buzz is the one call (v9c P5: two calls in one tap, the second cutting the first short).
+      if (!last) buzz('selection');
       stage.draft[STEPS[stage.step].id] = null;
       syncStage();
       if (last) planFriday(); else goStep(stage.step + 1);
