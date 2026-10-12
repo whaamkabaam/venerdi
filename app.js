@@ -2464,10 +2464,14 @@
       const s = Math.min(maxS, (this.vw - 2 * pad) / Math.max(1, x1 - x0), (this.vh - 2 * pad) / Math.max(1, y1 - y0));
       return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, s };
     }
-    // The plan never shrinks to a stamp (coverK), and the window runs a little past the engraving's dissolving edge.
+    // The zoom floor: the plan never shrinks to a stamp (coverK). On the phone's sheet a window taller than 3:4 counts
+    // as 3:4, so on a tall phone the floor follows the sheet's width and her whole day fits across it, as on a 390 x 664
+    // phone (v9c P1: at 390 x 844 the floor came from the height, and St Peter's, the aqueducts, Coppedè or the cannon
+    // fell 13 to 59 px outside the window, so neither ring nor name showed).
+    minS() { return Math.max(this.vw / NOL.w, (this.kind === 'sheet' ? Math.min(this.vh, (this.vw * 4) / 3) : this.vh) / NOL.h) * this.coverK; }
+    // The window runs a little past the engraving's dissolving edge.
     cover(c) {
-      const min = Math.max(this.vw / NOL.w, this.vh / NOL.h) * this.coverK;
-      const s = Math.max(c.s, min);
+      const s = Math.max(c.s, this.minS());
       const hx = this.vw / 2 / s, hy = this.vh / 2 / s, mx = hx * 0.4, my = hy * 0.4;
       const clamp = (v, lo, hi) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, v)));
       return { s, x: clamp(c.x, hx - mx, NOL.w - hx + mx), y: clamp(c.y, hy - my, NOL.h - hy + my) };
@@ -2483,7 +2487,7 @@
       const from = { ...this.cam }, st = { p: 0 };
       const dist = Math.hypot(to.x - from.x, to.y - from.y) * from.s;
       const dip = Math.min(0.4, Math.max(0, (dist - this.vw * 0.5) / (this.vw * 3)));
-      const minS = Math.max(this.vw / NOL.w, this.vh / NOL.h) * this.coverK;
+      const minS = this.minS();
       this.el.classList.add('is-flying');
       this.tw = gsap.to(st, { p: 1, duration: dur, ease: 'power3.inOut', onUpdate: () => {
         const p = st.p;
