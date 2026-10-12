@@ -33,6 +33,9 @@
   --sodium: #FFB547;
   --flap: #1B1B1D;
   --flap-ink: #EDEAE2;
+  --flap-off: #101012;      /* v9c C1g: a module resting blank, unlit */
+  --flap-off-top: #121214;
+  --flap-frame: #8E8A82;    /* v9c C1m: the day's own lines on the board, quieter than her picks */
   --solari: #FFC94A;
   --travertine: #F4F1EA;
 
@@ -922,16 +925,30 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .section--dep .is-pick .c--who .flap { color: var(--solari); }
 .section--dep .is-sun .flap { color: var(--solari); }
 .board-sun .board-row { border-top: 0; }
-.dep-gap { border-top: 1px dashed #3A3A3E; margin-top: 10px; transform-origin: 0 50%; }
-/* The spare last row (kept so her TBC line never moves the page) reads as board, not a dead row. */
-.section--dep .board-rows > .board-row.is-empty:last-child { border-top-color: transparent; }
-.section--dep .board-rows > .board-row.is-empty:last-child .cells { visibility: hidden; }
 @container (max-width: 559px) {
   .section--dep .board-colheads { display: none; }
-  .section--dep .board-row { padding: 6px 0; }
   /* No column heads on a phone, so the first row's top rule would double the head's rule (design-v9 4.4). */
   .section--dep .board-rows > .board-row:first-child { border-top-color: transparent; }
 }
+/* v9c C1g (dir-3): calm boards. A module resting blank is unlit, so the words read and the empties recede. */
+.flap.is-off > span { background: var(--flap-off); }
+.flap.is-off > .ft, .flap.is-off > .lt { background: var(--flap-off-top); }
+.flap.is-off::after { background: rgb(0 0 0 / 0.25); }
+/* ARRIVALS on a phone: no column heads (the rows speak for themselves, as on DEPARTURES). */
+@container (max-width: 559px) {
+  .hero .board-colheads { display: none; }
+  .hero .board-rows > .board-row:first-child { border-top-color: transparent; }
+}
+/* DEPARTURES: every row a 44 px target, the text in its middle; flaps at most 15 px on a phone; no spare row. On a
+   laptop the board is as wide as its columns (TO fits the longest text on her board; --dep-n is TIME + TO, app.js),
+   not 860 px of mostly empty flaps; the weather line keeps its left edge. */
+.section--dep .board-row { min-height: 44px; padding: 6px 0; align-content: center; }
+.section--dep .board-grid--two { --fw: min(15px, calc((100cqi - (var(--n1) + var(--n2) - 2) * 2px - 10px) / (var(--n1) + var(--n2)))); }
+@media (min-width: 640px) {
+  .section--dep > .board-wrap, .section--dep > .dep-weather { max-width: min(860px, calc(var(--dep-n, 25) * 28px + 58px)); }
+  .section--dep .board-row { padding: 9px 0; }
+}
+.dep-gap { border-top: 1px dashed #333337; margin-top: 4px; transform-origin: 0 50%; }
 
 /* ---------- Your day ---------- */
 

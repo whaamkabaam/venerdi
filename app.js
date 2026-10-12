@@ -129,7 +129,7 @@
     let f = flaps.get(el);
     if (!f) {
       const [ft, fb, lt, lb] = el.children;
-      f = { ft: ft.firstChild, fb: fb.firstChild, lt: lt.firstChild, lb: lb.firstChild, ltEl: lt, lbEl: lb, cur: '' };
+      f = { el, ft: ft.firstChild, fb: fb.firstChild, lt: lt.firstChild, lb: lb.firstChild, ltEl: lt, lbEl: lb, cur: '', off: false };
       flaps.set(el, f);
     }
     return f;
@@ -137,7 +137,12 @@
   function setFlap(f, ch) {
     f.ft.textContent = f.fb.textContent = f.lt.textContent = f.lb.textContent = ch;
     f.cur = ch;
+    dimFlap(f, !ch);
   }
+  // v9c C1g (dir-3): a module resting blank is unlit (a darker flap), so a row reads as its words, not as a run of
+  // empty modules. It lights the moment a flip toward a glyph starts, and goes dark again only when a write leaves it
+  // blank. One class, toggled only when the state changes.
+  function dimFlap(f, on) { if (f.off !== on) { f.off = on; f.el.classList.toggle('is-off', on); } }
   // Where a leaf rests (measured, qa/v6/perf.md). Blink pays for every composited layer, so in Chrome a
   // leaf that has landed drops its transform and only flaps mid-flip are 3D. WebKit (Safari, every
   // iPhone browser) pays more to repaint the board around flat leaves than to keep each leaf on its own
@@ -215,7 +220,7 @@
     row.data = d;
     KINDS.forEach((k) => row.el.classList.remove(k));
     if (d && d.kind) row.el.classList.add('is-' + d.kind);
-    // A row with nothing on it (the spare one kept for her TBC line): the board shows plain black there.
+    // A row with nothing on it (a row the replay has not written yet): the board shows plain black there.
     row.el.classList.toggle('is-empty', !d);
     const t = rowTexts(d, row.widths);
     const caption = d && d.en && d.enOn ? ` ${d.en}` : '';
@@ -246,8 +251,10 @@
         const a = cellChar(prev, k), b = cellChar(next, k);
         if (a === b) return;
         let when = at + k * stagger + (c === 2 ? 0.05 : 0);
+        tl.call(() => dimFlap(f, false), null, when);
         for (let s = 0; s < scramble; s++) { addFlip(tl, f, randomGlyph(), when, D); when += 2 * D; }
         addFlip(tl, f, b, when, D);
+        if (!b) tl.call(() => dimFlap(f, true), null, when + 2 * D);
       });
       row.shown[c] = next;
     });
@@ -319,9 +326,11 @@
         rowTexts(now[ri], row.widths).forEach((s, c) => {
           row.cols[c].forEach((f, k) => {
             let at = start + ri * 0.12 + Math.random() * 0.05;
+            tl.call(() => dimFlap(f, false), null, at);
             const n = 3 + Math.floor(Math.random() * 4);
             for (let j = 0; j < n; j++) { addFlip(tl, f, randomGlyph(), at, D); at += 2 * D; }
             addFlip(tl, f, cellChar(s, k), at, D);
+            if (!cellChar(s, k)) tl.call(() => dimFlap(f, true), null, at + 2 * D);
           });
           row.shown[c] = s;
         });
@@ -936,10 +945,10 @@
   /* DEPARTURES: rows (times and places only), the replay, the eggs     */
   /* ------------------------------------------------------------------ */
 
-  // Two columns, TIME and TO (spec 6.2). TO gets 20 cells while the board is phone-narrow and 30 once
-  // its grid is 560 px or wider (the container breakpoint the CSS uses), so the flaps stay about 10.7 px
-  // on a phone and about 21 px on a laptop. `DW` follows the board's width (renderDepBoard, resizes).
-  const DEP_WIDE = 560;
+  // Two columns, TIME and TO (spec 6.2). v9c C1g (dir-3): TO is as wide as the longest text on her board (her rows,
+  // the Sunday row and its egg), at least 12 cells and at most the room the board has: 20 while its section is
+  // narrower than 600 px, 30 from there. LUGGAGE TO AIRBNB is on every day, so TO is never under 17. On a laptop the
+  // board hugs its columns (styles.css, --dep-n). `DW` follows her day (renderDepBoard, fitDepBoard).
   let DW = [5, 20];
   const R = DEPC.rows;
   const anchorRow = (key, extra = {}) => ({ key, time: R[key].time, to: R[key].to, kind: 'anchor', ...extra });
@@ -966,12 +975,12 @@
 
   // Her free text as a TBC row: her words on the board, cut at the last space that fits. Emoji and other
   // glyphs a flap lacks drop out and the spaces around them collapse (a single long word is cut hard).
-  function tbcRow() {
+  function tbcRow(w = DW[1]) {
     const text = freeText.trim();
     if (!text) return null;
     const all = boardText(text, text.length).replace(/ +/g, ' ').trim();
     let to = all;
-    if (all.length > DW[1]) { const cut = all.lastIndexOf(' ', DW[1]); to = cut > 0 ? all.slice(0, cut) : all.slice(0, DW[1]); }
+    if (all.length > w) { const cut = all.lastIndexOf(' ', w); to = cut > 0 ? all.slice(0, cut) : all.slice(0, w); }
     return { key: 'tbc', time: DEPC.tbc.time, to: to || DEPC.tbc.blank, kind: 'tbc', target: 'tbc', label: text, hitLabel: `${DEPC.tbc.time}, ${text}` };
   }
 
@@ -998,44 +1007,38 @@
   const sameRows = (a, b) => JSON.stringify(plainRows(a)) === JSON.stringify(plainRows(b));
   const gapEl = () => $('.dep-gap', DEP.board.host);
 
-  // The TO width the board wants at its current size (the grid's own width, as the container query reads it).
-  const depCells = () => {
-    const grid = DEP.board && $('.board-grid', DEP.board.host);
-    return grid && grid.clientWidth >= DEP_WIDE ? 30 : 20;
-  };
+  // The TO width her day wants (v9c C1g): her TBC words count as cut to the room.
+  const depRoom = () => (slot('dep-board').parentElement.clientWidth < 600 ? 20 : 30);
+  function depCells() {
+    const room = depRoom();
+    const texts = [...(plan ? depRows(plan, { tbc: tbcRow(room) }) : skeletonRows()).map((r) => r.to), sundayRow(false).to, sundayRow(true).to];
+    return Math.min(room, Math.max(12, ...texts.map((t) => boardText(t, room).length)));
+  }
   function renderDepBoard() {
-    const build = () => {
-      DEP.board = makeBoard(slot('dep-board'), {
-        title: DEPC.title, sub: DEPC.sub, label: `${DEPC.title}, ${DEPC.sub}`,
-        columns: DEPC.columns, widths: DW, rows: 0, sun: true,
-      });
-    };
-    build();
-    const want = depCells();
-    if (want !== DW[1]) { DW = [5, want]; build(); }
+    DW = [5, depCells()];
+    slot('dep-board').closest('section').style.setProperty('--dep-n', DW[0] + DW[1]);
+    DEP.board = makeBoard(slot('dep-board'), {
+      title: DEPC.title, sub: DEPC.sub, label: `${DEPC.title}, ${DEPC.sub}`,
+      columns: DEPC.columns, widths: DW, rows: 0, sun: true,
+    });
   }
-  // When the board crosses the breakpoint (a rotated phone, a resized window), it is built again with
-  // the other cell count and shows its final rows at once (no replay).
-  function resizeDepBoard() {
-    if (!DEP.board) return;
-    const want = depCells();
-    if (want === DW[1]) return;
-    const r = DEP.replay;
+  // Her day needs another TO width (a longer name, her note, Sunday's DONE, a rotated phone): the board is built again
+  // at that width showing exactly what it showed (its rows, the Sunday row, the dashed rule). Returns whether it did.
+  function fitDepBoard() {
+    if (!DEP.board || depCells() === DW[1]) return false;
     stopReplay();
-    const n = DEP.board.rows.length;
-    DW = [5, want];
+    const shown = DEP.board.rows.map((r) => r.data), sun = DEP.board.sun.data, rule = gsap.getProperty(gapEl(), 'scaleX');
     renderDepBoard();
-    if (r && r.done) r.done();
-    if (!plan) return;
-    const finalRows = depRows(plan);
-    DEP.board.ensure(Math.max(n, finalRows.length + spare()));
-    setBoardNow(finalRows);
-    setSunNow(true);
-    DEP.sunPending = false;
-    DEP.pending = false;
-    markSeen(r && r.fullPicks);
+    DEP.board.ensure(shown.length);
+    DEP.board.rows.forEach((row, i) => setRowNow(row, shown[i]));
+    setRowNow(DEP.board.sun, sun);
+    gsap.set(gapEl(), { scaleX: rule });
     refreshSoon();
+    return true;
   }
+  function resizeDepBoard() { if (fitDepBoard()) refreshSoon(); }
+  // The board has exactly her rows (v9c C1g: no spare row); a change of row count re-measures the triggers.
+  const fitRows = (n) => { if (DEP.board.rows.length !== n) { DEP.board.ensure(n); refreshSoon(); } };
   // Before she plans, the page is the Arrivals board, the note and the questions. Her first Show me
   // Friday (or a link, or a day kept from an earlier visit) shows the rest and builds the board.
   let dayShown = false;
@@ -1070,9 +1073,6 @@
     setRowNow(DEP.board.sun, on ? sundayRow(DEP.sunEgg) : null);
     gsap.set(gapEl(), { scaleX: on ? 1 : 0 });
   }
-  // A spare row while her note is empty, so her TBC line takes it and the page never moves.
-  const spare = () => (freeText.trim() ? 0 : 1);
-  const slotsFor = (states) => Math.max(...states.map((s) => s.length)) + spare();
   // What the board last showed, and the composition last replayed in full (an array, empty for a light day
   // with no picks: v9c C1d).
   function markSeen(fullPicks = null) {
@@ -1087,8 +1087,9 @@
     return !!answers && (!s || !Array.isArray(s.fullPicks) || s.fullPicks.join() !== composedIds().join());
   }
   function primeFull() {
+    fitDepBoard();
     const states = replayStates();
-    DEP.board.ensure(Math.max(DEP.board.rows.length, slotsFor(states)));
+    fitRows(Math.max(...states.map((x) => x.length)));
     setBoardNow(states[0]);
     setSunNow(false);
     DEP.sunPending = false;
@@ -1116,8 +1117,9 @@
     if (!DEP.board) return;
     const r = DEP.replay;
     stopReplay();
+    fitDepBoard();
     const finalRows = depRows(plan);
-    DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + spare()));
+    fitRows(finalRows.length);
     setBoardNow(finalRows);
     setSunNow(true);
     DEP.sunPending = false;
@@ -1169,6 +1171,8 @@
       DEP.board.rows.forEach((row, j) => flipRow(tl, row, states[s][j] || null, at + j * 0.05, { scramble }));
     }
     tl.call(() => {
+      // The board ends with exactly her rows (a row a removal emptied goes once the wave is done; v9c C1g).
+      if (!r.stopping) fitRows(states[states.length - 1].length);
       markSeen(r.stopping ? null : r.fullPicks);
       if (full) {
         DEP.sunPending = true;
@@ -1219,8 +1223,9 @@
     if (needsFull()) {
       playStates(primeFull(), { full: true });
     } else {
+      fitDepBoard();
       const finalRows = depRows(plan);
-      DEP.board.ensure(Math.max(DEP.board.rows.length, finalRows.length + spare()));
+      fitRows(Math.max(DEP.board.rows.length, finalRows.length));
       playStates([DEP.shown, finalRows], { full: false });
     }
   }
@@ -1230,19 +1235,20 @@
   // on the next visit.
   function syncDepBoard({ initial = false } = {}) {
     if (!DEP.board) return;
+    fitDepBoard();
     const finalRows = depRows(plan);
     const sig = depSig();
     if (initial) {
       const full = !reduced && needsFull();
       if (reduced || (!full && DEP.seen && DEP.seen.sig === sig)) {
-        DEP.board.ensure(finalRows.length + spare());
+        fitRows(finalRows.length);
         setBoardNow(finalRows);
         setSunNow(true);
         if (reduced) markSeen();
         DEP.pending = false;
       } else if (!full) {
         const old = DEP.seen ? DEP.seen.rows : [];
-        DEP.board.ensure(Math.max(old.length, finalRows.length) + spare());
+        fitRows(Math.max(old.length, finalRows.length));
         setBoardNow(old);
         setSunNow(true);
         DEP.pending = true;
@@ -3137,7 +3143,7 @@
     if (HERO && HERO.rows[0].data) heroTick();
     // The Sunday row turns to TODAY at midnight and to DONE at 18:00, with one quiet flip (b3.8).
     const sun = DEP.board && DEP.board.sun;
-    if (sun && sun.data && !DEP.replay) { const d = sundayRow(DEP.sunEgg); if (d.time !== sun.data.time || d.to !== sun.data.to) flipRowNow(sun, d); }
+    if (sun && sun.data && !DEP.replay) { const d = sundayRow(DEP.sunEgg); if (d.time !== sun.data.time || d.to !== sun.data.to) { fitDepBoard(); flipRowNow(DEP.board.sun, d); } } // DONE may need a wider TO (v9c C1g)
     const items = $$('.plan-item');
     let nowEl = null;
     jumpEl = null;
