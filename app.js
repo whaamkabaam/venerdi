@@ -2205,7 +2205,8 @@
           ${tipHTML(o, 'peek-tip')}
         </div>`;
   // A row: thumbnail, title, line, facts, the friend's line and "This one". The thumbnail opens the
-  // row's photo strip in place; the first five rows' strips load with the peek, the rest on opening.
+  // row's photo strip in place; the first five rows' strips load with the peek, the rest on opening. The list a tile's
+  // tap opens (v9d D5, on every pick) loads none of them until she opens one (v9d fold-in, gate-small S1).
   // On a phone the strip takes the 800 px files (about 2.6 px per CSS px at DPR 3, which looks the
   // same), so a peek costs a fraction of the 1600s and its first photo is the thumbnail's own file.
   const PEEK_ROW_SIZES = '(min-width: 1024px) 400px, (min-width: 640px) 80vw, 260px';
@@ -2214,7 +2215,7 @@
     return `<article class="peek-row" aria-labelledby="pk-${id}">
         ${hap(`<button type="button" class="peek-thumb" data-action="expand" aria-expanded="false" aria-controls="pp-${id}">${thumbHTML(o.photos?.[0], 'peek-thumb-img', '(min-width: 1024px) 160px, 112px')}<span class="sr-only">${esc(PK.openPhotos)}: ${esc(o.title)}</span></button>`, 'thumb')}
         ${peekTextHTML(o)}
-        <div class="peek-strip" id="pp-${id}" hidden>${stripHTML(o, PEEK_ROW_SIZES, '', k < 5 ? 'eager' : 'lazy')}</div>
+        <div class="peek-strip" id="pp-${id}" hidden>${stripHTML(o, PEEK_ROW_SIZES, '', k < 5 && !peek.ask ? 'eager' : 'lazy')}</div>
         ${toggleHTML(o, 'want')}
       </article>`;
   }
@@ -2323,6 +2324,8 @@
     gsap.killTweensOf(el);
     if (open) {
       el.hidden = false;
+      // A strip that waited (lazy) loads all its photos now, so a swipe along it never meets an empty frame.
+      $$('img[loading="lazy"]', el).forEach((im) => { im.loading = 'eager'; });
       if (!reduced) gsap.fromTo(el, { height: 0, opacity: 0 }, { height: 'auto', opacity: 1, duration: 0.2, ease: 'power2.out', clearProps: 'height,opacity' });
       return;
     }
