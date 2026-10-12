@@ -387,7 +387,7 @@
   "send": {
     "label": "Anything else?",
     "placeholder": "Padel, shopping, anything…",
-    "button": "Send to Felix",
+    "button": "Send it to me",
     "shareIntro": "My Friday:",
     "shareExtra": "Also:",
     "shareDinner": "{time} Dinner at {title}",
