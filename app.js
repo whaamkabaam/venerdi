@@ -2247,13 +2247,44 @@
       x.globalAlpha = 1;
     }
     scr(x, y, c = this.cam) { return [(x - c.x) * c.s + this.vw / 2, (y - c.y) * c.s + this.vh / 2]; }
+    // The phone's sheet (fold-in, gates S2): at its whole-day zoom a ring for a place off the engraving landed on the
+    // window's rim, where its name had no room, and two rings 36 engraving px apart sat 9 px apart on screen. Here
+    // each ring near the window keeps 24 px inside it, and the later of two rings closer than 24 px slides 24 px
+    // along the window's nearest rim, away from the other. Screen px, for this camera; a ring panned further out
+    // than 24 px still steps off.
+    edgeSpots() {
+      const E = 24, out = new Map();
+      if (this.kind !== 'sheet') return out;
+      const es = this.marks.filter((m) => m.kind === 'edge' && !m.gone);
+      const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+      es.forEach((m, i) => {
+        let [X, Y] = this.scr(m.x, m.y);
+        if (X > -E && X < this.vw + E && Y > -E && Y < this.vh + E) { X = clamp(X, E, this.vw - E); Y = clamp(Y, E, this.vh - E); }
+        for (let n = 0; n < 6; n++) {
+          const o = es.slice(0, i).map((q) => out.get(q)).find((q) => Math.hypot(q[0] - X, q[1] - Y) < E);
+          if (!o) break;
+          if (Math.min(Y, this.vh - Y) <= Math.min(X, this.vw - X)) {
+            let d = Math.sign(X - o[0]) || 1;
+            if (o[0] + d * E < E || o[0] + d * E > this.vw - E) d = -d;
+            X = o[0] + d * E;
+          } else {
+            let d = Math.sign(Y - o[1]) || 1;
+            if (o[1] + d * E < E || o[1] + d * E > this.vh - E) d = -d;
+            Y = o[1] + d * E;
+          }
+        }
+        out.set(m, [X, Y]);
+      });
+      return out;
+    }
     apply() {
       if (this.vw <= 1) return;
       this.paint();
       const k = this.k !== 1 ? ` scale(${this.k})` : '';
+      const spots = this.edgeSpots();
       for (const m of this.marks) {
         if (m.gone) continue;
-        const [X, Y] = this.scr(m.x, m.y);
+        const [X, Y] = spots.get(m) || this.scr(m.x, m.y);
         m.g.setAttribute('transform', `translate(${X.toFixed(1)} ${Y.toFixed(1)})${k}`);
         // A mark at or past the window's edge steps out (no half dots at the rim).
         const off = X < 4 || X > this.vw - 4 || Y < 4 || Y > this.vh - 4;
@@ -2477,7 +2508,8 @@
     // name and dot and stays inside the window. A name that fits nowhere stays hidden (it shows under the pointer).
     name() {
       if (this.kind === 'pocket' || this.vw <= 1) return;
-      const pts = this.marks.filter((m) => !m.gone).map((m) => { const [x, y] = this.scr(m.x, m.y); return { m, x, y }; });
+      const spots = this.edgeSpots();
+      const pts = this.marks.filter((m) => !m.gone).map((m) => { const [x, y] = spots.get(m) || this.scr(m.x, m.y); return { m, x, y }; });
       const inView = (p) => p.x > 8 && p.x < this.vw - 8 && p.y > 8 && p.y < this.vh - 8;
       const M = 8;
       const fits = (b) => b[0] >= M && b[2] <= this.vw - M && b[1] >= M && b[3] <= this.vh - M;
@@ -2511,9 +2543,14 @@
         placed.push(box(cur, w, h, c));
       }
       const crowd = (p) => pts.filter((q) => q !== p && Math.hypot(q.x - p.x, q.y - p.y) < 90).length;
-      pts.filter((p) => p !== cur && !p.m.g.classList.contains('is-under')).sort((a, b) => crowd(b) - crowd(a)).forEach((p) => {
+      // On the sheet the rings for places off the engraving are named first: the ring alone does not say which place
+      // lies that way (fold-in, gates S2; Felix was shown "a ring with the name at the map's edge").
+      const first = (p) => (this.kind === 'sheet' && p.m.kind === 'edge' ? 1000 : 0) + crowd(p);
+      pts.filter((p) => p !== cur && !p.m.g.classList.contains('is-under')).sort((a, b) => first(b) - first(a)).forEach((p) => {
         const { w, h } = labelSize(p.m.text), d = +p.m.dot.getAttribute('r') + 5;
         const cands = [[d, 0, 'start'], [-d, 0, 'end'], [0, -(d + 5), 'middle'], [0, d + 5, 'middle'], [d - 2, -(d + 4), 'start'], [-(d - 2), d + 4, 'end']];
+        // A ring off the engraving on the sheet also tries the other two corners, and a step further out.
+        if (this.kind === 'sheet' && p.m.kind === 'edge') for (const e of [d, d + 12]) cands.push([-(e - 2), -(e + 4), 'end'], [e - 2, e + 4, 'start'], ...(e > d ? [[e, 0, 'start'], [-e, 0, 'end'], [0, -(e + 5), 'middle'], [0, e + 5, 'middle']] : []));
         const c = inView(p) ? cands.find((k) => { const b = box(p, w, h, k); return fits(b) && clear(p, b); }) : null;
         p.m.g.classList.toggle('is-named', !!c);
         p.m.spot = c || cands.find((k) => fits(box(p, w, h, k))) || cands[0];
