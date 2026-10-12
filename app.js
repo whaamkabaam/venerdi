@@ -835,7 +835,8 @@
     // Answers with no day yet (read over from v7 or v6): compose it, then put back what she added in v7.
     if (answers && store.get('picks', null) === null) {
       picks = cleanPicks(P.compose(C, answers).picks);
-      carried.forEach((id) => { if (OPT[id] && !OPT[id].fridayNo && !picks.some((p) => p.id === id)) picks.push({ id, reason: 'added' }); });
+      // A v7 day's added coffee comes over as Barnum, like every other old coffee (fold-in, mechanics gate N3).
+      carried.map(aliasId).forEach((id) => { if (OPT[id] && !OPT[id].fridayNo && !picks.some((p) => p.id === id)) picks.push({ id, reason: 'added' }); });
       saveState();
     }
   }
