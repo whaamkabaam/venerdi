@@ -3606,7 +3606,9 @@
   // The triggers watch the board's host, which stays put when the board is rebuilt at its breakpoint.
   function depTriggers() {
     const host = slot('dep-board');
-    ScrollTrigger.create({ trigger: host, start: 'top 45%', onEnter: maybePlay, onEnterBack: maybePlay });
+    // It ends where boardInView() stops (the board's bottom 80 px under the top), so a wave a change queued while the
+    // board sat just above the window plays when she scrolls back to it (v9d fold-in, gate-d1 S2).
+    ScrollTrigger.create({ trigger: host, start: 'top 45%', end: 'bottom 80px', onEnter: maybePlay, onEnterBack: maybePlay });
     ScrollTrigger.create({ trigger: host, start: 'top bottom', end: 'bottom top+=64', onLeave: pauseReplay, onLeaveBack: pauseReplay, onEnter: resumeReplay, onEnterBack: resumeReplay });
     ScrollTrigger.create({ trigger: host, start: 'bottom bottom', onEnter: maybeSun });
   }
