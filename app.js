@@ -162,8 +162,6 @@
     tl.fromTo(f.lbEl, { rotationX: 90 }, { rotationX: 0, duration: d, ease: 'power1.out', immediateRender: false }, at + d);
     tl.call(() => { f.fb.textContent = next; f.cur = next; if (!LEAF_LAYERS) { f.lt.textContent = next; restFlat([f.ltEl, f.lbEl]); } }, null, at + 2 * d);
   }
-  const GLYPHS = 'ABCDEFGHIJKLMNOPRSTUVZ0123456789';
-  const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
   // Board text: uppercase, accents dropped, only glyphs a flap carries (A-Z 0-9 space ' , . : + -).
   const boardText = (s, w) => Array.from(String(s || '').normalize('NFD').replace(/\p{M}/gu, '').toUpperCase())
     .filter((ch) => /[A-Z0-9 ',.:+-]/.test(ch)).slice(0, w).join('');
@@ -241,30 +239,14 @@
     t.forEach((s, c) => { row.cols[c].forEach((f, k) => setFlap(f, cellChar(s, k))); row.shown[c] = s; });
     applyRowMeta(row, d);
   }
-  // Flip a row to new data on a timeline, touching only the cells whose character changes.
-  function flipRow(tl, row, d, at, { scramble = 1, D = 0.045, stagger = 0.012 } = {}) {
-    tl.call(() => applyRowMeta(row, d), null, at);
-    rowTexts(d, row.widths).forEach((next, c) => {
-      const prev = row.shown[c];
-      if (prev === next) return;
-      row.cols[c].forEach((f, k) => {
-        const a = cellChar(prev, k), b = cellChar(next, k);
-        if (a === b) return;
-        let when = at + k * stagger + (c === 2 ? 0.05 : 0);
-        tl.call(() => dimFlap(f, false), null, when);
-        for (let s = 0; s < scramble; s++) { addFlip(tl, f, randomGlyph(), when, D); when += 2 * D; }
-        addFlip(tl, f, b, when, D);
-        if (!b) tl.call(() => dimFlap(f, true), null, when + 2 * D);
-      });
-      row.shown[c] = next;
-    });
-  }
   // v9c C1h, C1i (dir-3's write): how a board writes a row. Only its final text ever shows: in a column that changes,
   // every lit module first turns to blank (and goes dark), then, once the last one has landed, each module of the new
   // text lights and turns to its glyph, left to right, the time column leading. With `rolls` (ARRIVALS' write-in) a
   // module turns one or two blank leaves first (the drum moving, nothing printed), fixed per place, never random.
   // A column that does not change does not move. Returns the time its last flip lands.
   const HERO_W = { D: 0.04, cell: 0.014, row: 0.14, lead: 0.04, clearCell: 0.008, clear: 0.2 };
+  // DEPARTURES (v9c C1i, dir-2's replay): one flip per module, no blank leaves, rows 0.13 s apart top to bottom.
+  const DEP_W = { start: 0.15, row: 0.13, cell: 0.014, lead: 0.04, D: 0.045, clearCell: 0.008, clear: 0.2, sunPause: 0.25, rule: 0.3, sunLead: 0.22 };
   const rollsAt = (j, c, k) => ((j * 7 + c * 3 + k * 5) % 3 === 0 ? 2 : 1);
   function writeRow(tl, row, d, at, j = 0, { rolls = false, W = HERO_W } = {}) {
     const texts = rowTexts(d, row.widths);
@@ -302,12 +284,11 @@
   }
   // A single quiet write of one row, outside any replay (ARRIVALS' live statuses and egg; on DEPARTURES the egg and the
   // Sunday row's TODAY and DONE).
-  function flipRowNow(row, d, opts = { scramble: 0, D: 0.07, stagger: 0.02 }) {
+  function flipRowNow(row, d) {
     if (reduced) { setRowNow(row, d); return; }
     const tl = gsap.timeline({ onComplete: () => { row.tls = row.tls.filter((x) => x !== tl); } });
     row.tls.push(tl);
-    if (HERO && HERO.rows.includes(row)) writeRow(tl, row, d, 0, 0, { rolls: false, W: HERO_W });
-    else flipRow(tl, row, d, 0, opts);
+    writeRow(tl, row, d, 0, 0, { rolls: false, W: HERO && HERO.rows.includes(row) ? HERO_W : DEP_W });
   }
 
   /* ------------------------------------------------------------------ */
@@ -985,8 +966,6 @@
   const bagsRow = (it) => ({ key: 'bags', time: it.rough, to: R.bags.to, kind: 'anchor', target: 'bags', label: C.anchors.bags.title });
   // 19:00 DINNER, or the idea she picked (LI RIONI, DA REMO, DA IVO), at the time of the plan's dinner (v9c C1f: hers).
   const dinnerRow = (it) => anchorRow('dinner', { time: it.rough, to: dinner ? IDEA[dinner].board : R.dinner.to, target: 'dinner', label: dinner ? IDEA[dinner].title : C.anchors.dinner.title });
-  // Before her picks land, the board shows the day's frame: the bags and dinner (v9c C1a: the day ends on dinner).
-  const skeletonRows = () => { const sk = P.build(C, [], { dinnerAt }).items; return [bagsRow(sk.find((it) => it.id === 'bags')), dinnerRow(sk.find((it) => it.id === 'dinner'))]; };
   // SUN HALF MARATHON; the tap egg flips the TO text to HALBMARATHON with "(half marathon)" under it.
   // The Sunday row knows the day (b3.8): SUN HALF MARATHON until Sunday, TODAY HALF MARATHON from Sunday 00:00
   // Rome time, TODAY HALF MARATHON DONE from 18:00 (any finish and the lunch after are long past by then), SUN
@@ -1030,7 +1009,7 @@
     return rows;
   }
 
-  const DEP = { board: null, replay: null, seen: store.get('depSeen', null), sunEgg: false, shown: [], pending: false, sunPending: false, stats: null };
+  const DEP = { board: null, replay: null, seen: store.get('depSeen', null), sunEgg: false, shown: [], pending: false, sunPending: false, stats: null, settle: false, tapped: false };
   const depSig = () => `${pickIds().join(',')}|${dinner || ''}|${dinnerAt || ''}|${freeText.trim()}`;
   const plainRows = (rows) => rows.map((r) => (r ? { time: r.time, to: r.to, kind: r.kind } : null));
   const sameRows = (a, b) => JSON.stringify(plainRows(a)) === JSON.stringify(plainRows(b));
@@ -1040,7 +1019,7 @@
   const depRoom = () => (slot('dep-board').parentElement.clientWidth < 600 ? 20 : 30);
   function depCells() {
     const room = depRoom();
-    const texts = [...(plan ? depRows(plan, { tbc: tbcRow(room) }) : skeletonRows()).map((r) => r.to), sundayRow(false).to, sundayRow(true).to];
+    const texts = [...(plan ? depRows(plan, { tbc: tbcRow(room) }) : []).map((r) => r.to), sundayRow(false).to, sundayRow(true).to];
     return Math.min(room, Math.max(12, ...texts.map((t) => boardText(t, room).length)));
   }
   function renderDepBoard() {
@@ -1056,10 +1035,11 @@
   function fitDepBoard() {
     if (!DEP.board || depCells() === DW[1]) return false;
     stopReplay();
-    const shown = DEP.board.rows.map((r) => r.data), sun = DEP.board.sun.data, rule = gsap.getProperty(gapEl(), 'scaleX');
+    // What each row shows (DEP.shown: blank while a wave waits) and its data (screen readers, the tap).
+    const shown = DEP.board.rows.map((r, i) => [DEP.shown[i] || null, r.data]), sun = DEP.board.sun.data, rule = gsap.getProperty(gapEl(), 'scaleX');
     renderDepBoard();
     DEP.board.ensure(shown.length);
-    DEP.board.rows.forEach((row, i) => setRowNow(row, shown[i]));
+    DEP.board.rows.forEach((row, i) => { setRowNow(row, shown[i][0]); if (!shown[i][0] && shown[i][1]) applyRowMeta(row, shown[i][1]); });
     setRowNow(DEP.board.sun, sun);
     gsap.set(gapEl(), { scaleX: rule });
     refreshSoon();
@@ -1115,21 +1095,21 @@
     const s = DEP.seen;
     return !!answers && (!s || !Array.isArray(s.fullPicks) || s.fullPicks.join() !== composedIds().join());
   }
-  function primeFull() {
-    fitDepBoard();
-    const states = replayStates();
-    fitRows(Math.max(...states.map((x) => x.length)));
-    setBoardNow(states[0]);
+  // v9c C1i (dir-2's replay, dir-3's write): the board waits dark with exactly her rows, every module unlit (the rows'
+  // data for screen readers is there at once), the Sunday row blank and the dashed rule undrawn. Nothing of the old
+  // day, no frame-only board, no partial days. Returns the two states the wave runs between.
+  function blankBoard(finalRows) {
+    fitRows(finalRows.length);
+    DEP.board.rows.forEach((row, i) => { setRowNow(row, null); applyRowMeta(row, finalRows[i] || null); });
+    DEP.shown = finalRows.map(() => null);
     setSunNow(false);
     DEP.sunPending = false;
-    return states;
   }
-  // The replay: one state per pick, in board order, each wave re-sorting the board as the day takes shape.
-  function replayStates() {
-    const order = pickIds();
+  function primeFull() {
+    fitDepBoard();
     const finalRows = depRows(plan);
-    if (!order.length) return [skeletonRows(), finalRows];
-    return [skeletonRows(), ...order.map((_, i) => (i === order.length - 1 ? finalRows : depRows(P.build(C, order.slice(0, i + 1)), { tbc: null })))];
+    blankBoard(finalRows);
+    return [DEP.shown, finalRows];
   }
   function stopReplay() {
     const r = DEP.replay;
@@ -1147,6 +1127,7 @@
     const r = DEP.replay;
     stopReplay();
     fitDepBoard();
+    DEP.settle = false;
     const finalRows = depRows(plan);
     fitRows(finalRows.length);
     setBoardNow(finalRows);
@@ -1156,100 +1137,89 @@
     markSeen(r && r.fullPicks);
     DEP.pending = false;
   }
-  // One replay run: its timelines plus an rAF frame meter for the stats and the slow-phone fallback.
+  // One replay run: its timelines plus an rAF frame meter for the stats. `rows`: seconds until her rows were whole.
   const pct = (xs, q) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length * q)] : 0; };
   // `key`: where the stats go (the Sunday row on its own keeps them apart from the replay's).
   function newReplay(key = 'stats') {
-    const r = { tls: [], frames: [], meterOn: true, scramble: 1, stopping: false };
+    const r = { tls: [], frames: [], meterOn: true, stopping: false, rowsAt: null };
     let last = performance.now();
     const t0 = last;
     const meter = (t) => { if (!r.meterOn) return; if (!r.paused) r.frames.push(t - last); last = t; requestAnimationFrame(meter); };
     requestAnimationFrame(meter);
+    r.rowsDone = () => { r.rowsAt = +((performance.now() - t0) / 1000).toFixed(2); };
     r.done = () => {
       if (!r.meterOn) return;
       r.meterOn = false;
       const f = r.frames;
-      DEP[key] = f.length ? { frames: f.length, p50: +pct(f, 0.5).toFixed(1), p90: +pct(f, 0.9).toFixed(1), max: +Math.max(...f).toFixed(1), seconds: +((performance.now() - t0) / 1000).toFixed(2), scramble: r.scramble } : null;
+      DEP[key] = f.length ? { frames: f.length, p50: +pct(f, 0.5).toFixed(1), p90: +pct(f, 0.9).toFixed(1), max: +Math.max(...f).toFixed(1), seconds: +((performance.now() - t0) / 1000).toFixed(2), rows: r.rowsAt } : null;
     };
     DEP.replay = r;
     return r;
   }
   // The Sunday row counts as on screen once it is fully visible (or she has scrolled past it).
   const sunInView = () => DEP.board.sun.el.getBoundingClientRect().bottom <= innerHeight;
-  // The Sunday row, after a short pause. It plays straight after the replay when it is on screen,
-  // otherwise its own trigger plays it when she scrolls down to it (long boards).
+  // The Sunday row, after a short pause: the dashed rule draws, then the row writes like the others. It plays straight
+  // after a full replay when it is on screen, otherwise its own trigger plays it when she scrolls down to it.
   function playSun(r, pause) {
     DEP.sunPending = false;
     r = r || newReplay('sunStats');
     DEP.replay = r;
     const tl = gsap.timeline();
     r.tls.push(tl);
-    tl.fromTo(gapEl(), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: 'power2.out', immediateRender: false }, pause);
-    flipRow(tl, DEP.board.sun, sundayRow(DEP.sunEgg), pause + 0.3, { scramble: 4, D: 0.06, stagger: 0.012 });
-    tl.call(() => { r.done(); DEP.replay = null; markSeen(r.fullPicks); });
+    tl.fromTo(gapEl(), { scaleX: 0 }, { scaleX: 1, duration: DEP_W.rule, ease: 'power2.out', immediateRender: false }, pause);
+    const end = writeRow(tl, DEP.board.sun, sundayRow(DEP.sunEgg), pause + DEP_W.sunLead, 0, { rolls: false, W: DEP_W });
+    tl.call(() => { r.done(); DEP.replay = null; markSeen(r.fullPicks); }, null, Math.max(end, tl.duration()));
   }
-  // Waves `from`.. of the replay on one timeline, built before it plays. Row models track the
-  // state as each wave is added, so later waves only flip what actually changes.
-  function buildWaves(r, states, from, scramble, startAt, full) {
-    const waves = states.length - 1;
-    const wave = Math.min(0.6, 3.2 / Math.max(1, waves));
-    const tl = gsap.timeline({ paused: true });
-    r.tls.push(tl);
-    for (let s = from; s <= waves; s++) {
-      const at = startAt + (s - from) * wave;
-      DEP.board.rows.forEach((row, j) => flipRow(tl, row, states[s][j] || null, at + j * 0.05, { scramble }));
-    }
-    tl.call(() => {
-      // The board ends with exactly her rows (a row a removal emptied goes once the wave is done; v9c C1g).
-      if (!r.stopping) fitRows(states[states.length - 1].length);
-      markSeen(r.stopping ? null : r.fullPicks);
-      if (full) {
-        DEP.sunPending = true;
-        if (!r.stopping && sunInView()) { playSun(r, 0.4); return; }
-      }
-      r.done();
-      DEP.replay = null;
-    }, null, Math.max(startAt + (waves - from + 1) * wave, tl.duration()));
-    return { tl, wave };
-  }
-  function playStates(states, { full }) {
+  // v9c C1i: one wave between two states of the board, built before it plays. A full replay (after Show me Friday, a
+  // changed answer, a link, or the return visit's settle) writes every row of her final day from dark, top to bottom,
+  // each module straight to its final glyph: nothing else is ever on the board. A change (a swap, a removal, Undo, Add,
+  // a dinner pick or time, her note) writes only the rows that change, one after the other, through the same write
+  // (a changed column clears, then writes). Rows past her day are cleared, then dropped.
+  function playStates([from, to], { full }) {
     stopReplay();
     warmBoard();
     const r = newReplay();
     if (full) r.fullPicks = composedIds();
     DEP.pending = false;
-    const { tl, wave } = buildWaves(r, states, 1, 1, 0.3, full);
-    DEP.shown = states[states.length - 1];
-    // Safety net for slow phones: if the first wave runs heavy (p90 over 40 ms, or barely any frames), the rest flips without scramble.
-    if (states.length > 2) {
-      tl.call(() => {
-        if (r.stopping || (r.frames.length >= 6 && pct(r.frames, 0.9) <= 40)) return;
-        tl.pause().kill();
-        r.tls.splice(r.tls.indexOf(tl), 1);
-        r.scramble = 0;
-        // After this render pass: flips already under way in it may still write a glyph, so settle
-        // every cell on wave 1 (leaves at rest) before the plain waves start.
-        queueMicrotask(() => {
-          if (r.stopping) return;
-          gsap.set(boardLeaves(), { rotationX: 0 });
-          restFlat(boardLeaves());
-          setBoardNow(states[1]);
-          buildWaves(r, states, 2, 0, 0.02, full).tl.play(0);
-          DEP.shown = states[states.length - 1];
-        });
-      }, null, 0.3 + wave - 0.02);
-    }
+    const tl = gsap.timeline({ paused: true });
+    r.tls.push(tl);
+    let k = 0, end = 0;
+    DEP.board.rows.forEach((row, j) => {
+      const d = to[j] || null;
+      const moves = rowTexts(d, row.widths).some((t, c) => t !== row.shown[c]);
+      const at = DEP_W.start + k * DEP_W.row;
+      if (moves) k++;
+      end = Math.max(end, writeRow(tl, row, d, moves ? at : 0, j, { rolls: false, W: DEP_W }));
+    });
+    DEP.shown = to;
+    tl.call(() => r.rowsDone(), null, end);
+    tl.call(() => {
+      if (!r.stopping) fitRows(to.length);
+      markSeen(r.stopping ? null : r.fullPicks);
+      if (full) {
+        DEP.sunPending = true;
+        if (!r.stopping && sunInView()) { playSun(r, DEP_W.sunPause); return; }
+      }
+      r.done();
+      DEP.replay = null;
+    }, null, Math.max(end, tl.duration()));
     tl.play(0);
   }
   // Off screen the replay waits, so a flick past the board does not spend it.
   function pauseReplay() { const r = DEP.replay; if (r && !r.paused) { r.paused = true; r.tls.forEach((t) => t.pause()); } }
   function resumeReplay() { const r = DEP.replay; if (r && r.paused) { r.paused = false; r.tls.forEach((t) => t.resume()); } }
   function maybeSun() { if (DEP.sunPending && !DEP.replay && !reduced) playSun(null, 0); }
-  // When the board comes into view: replay her build the first time, one diff wave after a change.
+  // When the board comes into view: her day in full the first time, the return visit's settle once per load, one
+  // diff wave after a change.
   function maybePlay() {
     if (DEP.replay || !DEP.pending) return;
     if (reduced) { finishBoard(); return; }
     if (needsFull()) {
+      playStates(primeFull(), { full: true });
+    } else if (DEP.settle) {
+      // v9c C1i (dir-2's settle): a return visit's board waited dark below the fold; it writes her day in once per
+      // load, the same wave as a full replay (with the Sunday row), with no haptic.
+      DEP.settle = false;
       playStates(primeFull(), { full: true });
     } else {
       fitDepBoard();
@@ -1269,12 +1239,18 @@
     const sig = depSig();
     if (initial) {
       const full = !reduced && needsFull();
-      if (reduced || (!full && DEP.seen && DEP.seen.sig === sig)) {
+      if (reduced) {
         fitRows(finalRows.length);
         setBoardNow(finalRows);
         setSunNow(true);
-        if (reduced) markSeen();
+        markSeen();
         DEP.pending = false;
+      } else if (!full && DEP.seen && DEP.seen.sig === sig) {
+        // v9c C1i (dir-2's settle): a return visit with the same day: the board waits dark below the fold and writes
+        // itself in once, when she first scrolls to it.
+        blankBoard(finalRows);
+        DEP.settle = true;
+        DEP.pending = true;
       } else if (!full) {
         const old = DEP.seen ? DEP.seen.rows : [];
         fitRows(Math.max(old.length, finalRows.length));
@@ -1289,7 +1265,7 @@
     }
     if (DEP.replay) stopReplay();
     if (reduced) { finishBoard(); return; }
-    // A full replay waiting: the board goes back to its skeleton now, while she is in the picker.
+    // A full replay waiting: the board goes dark now, while she is in the picker (v9c C1i).
     if (needsFull()) primeFull();
     else if (sameRows(DEP.shown, finalRows)) {
       DEP.shown = finalRows;
@@ -2770,7 +2746,7 @@
     $$('.chip .flap', el).map(flapOf).forEach((f, k) => {
       const ch = f.cur, at = k * 0.03;
       if (!ch) return;
-      addFlip(tl, f, randomGlyph(), at, 0.05);
+      addFlip(tl, f, '', at, 0.05); // v9c C1i: one blank leaf, never a random glyph
       addFlip(tl, f, ch, at + 0.1, 0.05);
     });
   }
@@ -3465,7 +3441,7 @@
   window.__venerdi = {
     finishBoard, depRows: () => depRows(plan), boardRows: () => (DEP.board ? DEP.board.rows.map((r) => r.shown) : []), replayStats: () => DEP.stats, plan: () => plan,
     introDone: () => !HERO.intro || HERO.intro.progress() === 1,
-    state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
+    state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, settle: DEP.settle, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
     shareText: () => shareText(), dinner: () => dinner, dinnerAt: () => dinnerAt,
     // The handover (b3.2): where the bar comes on, and what the clock reads.
