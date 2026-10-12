@@ -2134,9 +2134,22 @@
   const INKS = { day: 0.42, night: 0.36 };
   const INK = { day: [], night: [], dark: false, p: 0, ready: null, failed: false };
   const ATLASES = [];
+  // When createImageBitmap fails (seen during quick reloads), the file goes through an <img> on an object URL, freed
+  // once decoded. Never while the page is hidden or going away: WebKit then refuses the URL ("due to access control
+  // checks", v9c audit), and the engraving loads again when the page is shown.
+  let leaving = false;
+  addEventListener('pagehide', () => { leaving = true; });
+  addEventListener('pageshow', () => { leaving = false; });
+  const HIDDEN = 'hidden';
   const bitmapOf = async (src, opts) => {
     try { return opts ? await createImageBitmap(src, opts) : await createImageBitmap(src); } catch { /* fall through */ }
-    if (src instanceof Blob) { const img = new Image(); img.src = URL.createObjectURL(src); await img.decode(); return img; }
+    if (src instanceof Blob) {
+      if (leaving || document.visibilityState === 'hidden') throw new Error(HIDDEN);
+      const img = new Image(), u = URL.createObjectURL(src);
+      img.src = u;
+      try { await img.decode(); } finally { URL.revokeObjectURL(u); }
+      return img;
+    }
     const c = document.createElement('canvas'); c.width = opts.resizeWidth; c.height = opts.resizeHeight;
     const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, c.width, c.height);
     return c;
@@ -2187,7 +2200,20 @@
         if (bm.width > 1200) idle(() => bitmapOf(bm, { resizeWidth: bm.width >> 1, resizeHeight: bm.height >> 1, resizeQuality: 'high' }).then((half) => { INK.day.push({ bm: half, k: NOL.w / half.width }); nights(); }), 2000);
         else nights();
       })
-      .catch(() => { INK.failed = true; });
+      .catch((e) => {
+        if (e?.message !== HIDDEN) { INK.failed = true; return; }
+        // Put off while the page was hidden: the next time it is shown, the engraving loads again.
+        INK.ready = null;
+        const again = () => {
+          if (leaving || document.visibilityState === 'hidden') return;
+          document.removeEventListener('visibilitychange', again);
+          removeEventListener('pageshow', again);
+          loadNolli();
+        };
+        document.addEventListener('visibilitychange', again);
+        addEventListener('pageshow', again);
+        again();
+      });
     return INK.ready;
   }
   // At dusk the engraving swaps to its lamplight copies (nothing is recoloured on the scroll path) and every mark
