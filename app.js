@@ -1917,12 +1917,14 @@
       if (i < 0) return;
       undoDrop();
       undo = { pick: picks[i], index: i, after: prev ? prev.dataset.key : null, title: OPT[picks[i].id].title, timer: setTimeout(() => undoDrop(true), 6000) };
-      const waiting = plan.later.map((l) => l.id);
+      const before = plan, waiting = plan.later.map((l) => l.id);
       setPicks(picks.filter((_, j) => j !== i), { keepUndo: true });
-      // v9d D1: the time it frees can bring the top of "If there's time" onto her day; that entry lights up.
+      // v9d D1: the time it frees can bring a pick from "If there's time" onto her day; that entry lights up. A pick
+      // higher in her list that now fits (often the lunch place) can move a lower one to the list; the live region
+      // names both.
       const pulled = plan.options.filter((o) => waiting.includes(o.id));
       pulled.forEach((o) => flash(stopEl(o.id)));
-      if (pulled.length) announce(pulled.map((o) => fmt(C.day.live.onDay, { title: o.title })).join(' '));
+      announceMoved(before, pulled.map((o) => fmt(C.day.live.onDay, { title: o.title })).join(' '));
       $('.undo-btn', slot('day-body'))?.focus({ preventScroll: true, focusVisible: ev?.detail === 0 });
     };
     if (reduced) { go(); return; }
