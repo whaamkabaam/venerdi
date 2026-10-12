@@ -245,7 +245,6 @@ svg { display: block; }
 /* Where a control sat in its row: its own margins and its place in the grid or the flex line (by class: a
    `.hapw:has(...)` selector cost the board's replay frames in Chromium, final perf pass). */
 .hapw--more { margin-top: var(--s1); z-index: 2; } /* its hit area still reaches a little into the tile's sub above it */
-.hapw--back { margin-left: -14px; }
 .peek-row > .hapw--toggle { grid-area: toggle; justify-self: start; align-self: start; margin-top: var(--s3); }
 .peek--one .peek-foot > .hapw--toggle { flex: 1 1 auto; display: grid; }
 .hapw--done { margin-left: auto; }
@@ -819,10 +818,9 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   .tile-more:hover .i { translate: 2px 0; }
 }
 /* Not really / No thanks: under the grid on a phone (full width), with its own switch (the wrapper takes its place
-   in the grid); on a laptop the foot's quiet button instead (fold-in, design gate S2). */
+   in the grid); on a laptop plain words in the glass pill instead (fold-in, design gate S2; v9c C2a). */
 .hapw--none { display: grid; grid-column: 1 / -1; margin-top: 2px; }
 .hapw--snone { display: none; }
-.stage-none { min-height: 44px; font-size: 0.9375rem; }
 .step-none {
   grid-column: 1 / -1;
   display: block;
@@ -844,49 +842,77 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 @media (hover: hover) {
   .step-none:hover { background-color: color-mix(in oklch, currentColor 8%, transparent); }
 }
-/* Phone: the buttons stick to the bottom on a solid sky backdrop. They sit in the stage's flow, so
-   at the end of a step nothing is left behind them. */
+/* v9c C2a (dir-3 at the judge's numbers): the step's controls float in one small glass pill, centred, 12 px above
+   the bottom, the same on a phone and a laptop. The pill itself is sticky inside the questions, so it never covers
+   the board or the day, and at the end of a step it comes to rest 24 px under the grid, so the last tiles scroll
+   clear of it. On iOS 26/27 Safari a bottom of 0 already sits above the floating address bar (WebKit bug 297779):
+   the pill floats over Safari's own pill with the page around both. One glass surface only: a 16 px blur and 170 %
+   saturation over a near-white 58 % fill, a 1 px light rim, a brighter top edge and a soft shadow. The blur is never
+   animated; the pill comes and goes with opacity and a 12 px move. Next is the one tinted thing, always rightmost. */
+:root {
+  --glass-fill: rgb(236 244 250 / 0.58);       /* the morning sky mixed with white, 58 % */
+  --glass-fill-solid: rgb(236 244 250 / 0.94);
+  --glass-fill-night: rgb(28 30 52 / 0.6);
+}
 .stage-foot {
   position: sticky;
-  bottom: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  margin-top: var(--s5);
-  padding: var(--s3) 0 calc(var(--s3) + env(safe-area-inset-bottom));
-  background-color: var(--sky);
+  display: flex; align-items: center; justify-content: flex-end; gap: var(--s1);
+  width: fit-content; max-width: 100%;
+  margin: var(--s5) auto 0;
+  padding: 6px;
+  border-radius: 28px;                          /* 22 (Next, Back) + 6 */
+  overflow: hidden;                             /* the width ease clips, never the focus ring (2 + 2 px < 6 px) */
+  background-color: var(--glass-fill);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);   /* values written out: no custom property here */
+  backdrop-filter: blur(16px) saturate(170%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.5),                                   /* the 1 px light rim */
+    inset 0 1px 0 rgb(255 255 255 / 0.85),                                    /* the top highlight */
+    0 0 0 0.5px color-mix(in srgb, var(--inchiostro) 12%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--inchiostro) 16%, transparent),
+    0 12px 32px -12px color-mix(in srgb, var(--inchiostro) 38%, transparent);
+  visibility: hidden; opacity: 0; translate: 0 12px;
+  transition: opacity 240ms var(--ease-out), translate 240ms var(--ease-out), visibility 0s linear 240ms;
 }
-/* What she picked on this step, as small photos beside Next (dir-3; design-v9 amendments b1.1): 30 px
-   squares, a 2 px sky ring, overlapping by 8 px; the newest pops in. Decorative (aria-hidden). */
-.picked { display: flex; align-items: center; margin-left: auto; padding-right: var(--s1); }
-.picked-ph {
-  display: block; flex: none; width: 30px; height: 30px; margin-left: -8px; border-radius: 8px; overflow: hidden;
-  background-color: var(--ph, #6b665e); box-shadow: 0 0 0 2px var(--sky);
-  animation: pop-in 220ms var(--ease-out) both;
-}
+.stage.is-foot .stage-foot { visibility: visible; opacity: 1; translate: 0 0; transition: opacity 240ms var(--ease-out), translate 240ms var(--ease-out), visibility 0s linear 0s; }
+:root[data-dark] .stage-foot { background-color: var(--glass-fill-night); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.16), 0 12px 32px -12px rgb(0 0 0 / 0.6); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .stage-foot { background-color: var(--glass-fill-solid); } }
+@media (prefers-reduced-transparency: reduce) { .stage-foot { background-color: var(--glass-fill-solid); } }
+.stage-foot .hapw--back { margin-left: 0; }
+.stage button { touch-action: manipulation; }
+/* Back: the arrow in a 44 px circle (its name is "Back" for screen readers), from step 2. */
+.stage-back { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: scale 150ms var(--ease-out), background-color 150ms var(--ease-out); }
+.stage-back .i { width: 20px; height: 20px; }
+.stage-back:active { scale: 0.96; }
+.stage-back:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (hover: hover) { .stage-back:hover { background-color: var(--fill-quiet); } }
+/* Laptop only (from 1024 px): Not really / No thanks as plain words in the pill, between Back and the picks. */
+.stage-none { min-height: 44px; padding: 0 var(--s4); border: 0; border-radius: 22px; background: transparent;
+  color: var(--ink-muted); font-size: 0.9375rem; font-weight: 500; cursor: pointer;
+  transition: scale 150ms var(--ease-out), background-color 150ms var(--ease-out), color 150ms var(--ease-out); }
+.stage-none:active { scale: 0.96; }
+@media (hover: hover) { .stage-none:hover { background-color: var(--fill-quiet); color: var(--ink); } }
+/* What she picked on this step, as small photos beside Next (dir-3; design-v9 amendments b1.1): 32 px squares with
+   a white ring, plain photos on the glass (no glass on glass), overlapping by 10 px; the newest pops in.
+   Decorative (aria-hidden). */
+.picked { display: flex; align-items: center; padding: 0 var(--s2) 0 var(--s1); }
+.picked:empty { display: none; }
+.picked-ph { display: block; flex: none; width: 32px; height: 32px; margin-left: -10px; border-radius: 9px; overflow: hidden;
+  background-color: var(--ph, #6b665e); box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9); animation: pop-in 220ms var(--ease-out) both; }
 .picked-ph:first-child { margin-left: 0; }
 .picked-ph img { width: 100%; height: 100%; object-fit: cover; }
 @keyframes pop-in { from { opacity: 0; scale: 0.25; filter: blur(4px); } }
-/* Hidden (not removed, so nothing moves) until the first step's tiles are in view. */
-.stage-foot { visibility: hidden; opacity: 0; transition: opacity 200ms var(--ease-out), visibility 0s linear 200ms; }
-.stage.is-foot .stage-foot { visibility: visible; opacity: 1; transition: opacity 200ms var(--ease-out), visibility 0s linear 0s; }
-.stage button { touch-action: manipulation; }
-.stage-back { box-shadow: none; gap: 8px; padding: 0 14px; margin-left: -14px; }
-.stage-back .i { width: 16px; height: 16px; }
-/* Next and Show me Friday in the primary style; Skip quiet, with a hairline ring. */
-.stage-next {
-  margin-left: 0;
-  min-width: 136px;
-  min-height: 52px;
-  padding: 0 22px;
-  justify-content: center;
-  box-shadow: inset 0 0 0 1px var(--hairline);
-  font-size: 1rem;
-  font-weight: 600;
-  transition-property: scale, background-color, color, box-shadow;
-}
-.stage-next.btn--primary { box-shadow: none; }
+/* Next and Show me Friday: the pill's one tinted thing (44 px, radius 22, concentric with the pill's 28 = 22 + 6).
+   Skip is plain words on the glass at the same size, so the pill does not jump when one turns into the other. */
+.stage-next { margin-left: 0; min-width: 112px; min-height: 44px; padding: 0 20px; border-radius: 22px;
+  justify-content: center; box-shadow: none; font-size: 1rem; font-weight: 600;
+  transition-property: scale, background-color, color; }
+.stage-next:not(.btn--primary) { color: var(--ink); }      /* Skip: plain words on the glass, the same size */
+@media (hover: hover) { .stage-next:not(.btn--primary):hover { background-color: var(--fill-quiet); } }
 .stage-closed {
   display: flex;
   flex-wrap: wrap;
@@ -1577,8 +1603,8 @@ dialog.peek .say-sound { white-space: normal; }
   .sheet-grab { display: none; }
   .sheet-head, .peek-head { touch-action: auto; padding-top: var(--s5); }
 }
-/* Laptop: the questions span the wide column, four across, the buttons inline under the grid. On
-   the pick-one steps the none button is a quiet button beside Back. */
+/* Laptop: the questions span the wide column, four across, the glass pill under the grid (sticky, as on a phone).
+   On the pick-one steps the none button is plain words in the pill beside Back. */
 @media (min-width: 1024px) {
   /* The note sits beside the board, and the board, the note's column and the questions share one left
      edge (design-v9 4.1). The question follows the hero (two classes: `.section` below sets 96 px). */
@@ -1594,7 +1620,6 @@ dialog.peek .say-sound { white-space: normal; }
   /* The none answer leaves the photo grid for the foot, beside Back (fold-in, design gate S2). */
   .tiles > .hapw--none { display: none; }
   .hapw--snone { display: inline-grid; }
-  .stage-foot { position: static; margin-top: var(--s5); padding: 0; background: none; }
   .peek, .catalogue {
     width: min(1040px, 100% - 48px);
     max-width: none;
@@ -1704,7 +1729,7 @@ dialog.peek .say-sound { white-space: normal; }
   .picked-ph, .sheet::backdrop { animation: none; }
   .note-en.is-on { animation: none; }
   .hud, .hud[data-on] { transition: none; }
-  .stage-foot, .stage.is-foot .stage-foot { transition: none; }
+  .stage-foot, .stage.is-foot .stage-foot { transition: none; translate: none; }
   .say-cap, .say-cap.is-open { transition: none; }
   .when-btn, .when-btn .i, .dt-opt { transition: none; }
 }

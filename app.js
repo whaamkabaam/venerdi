@@ -467,7 +467,7 @@
   // A tile is the photo, then its label and sub under it; the whole tile selects. Under the sub, a
   // sibling text button (never inside the tile) opens the peek: "See all 8" on the pick-any steps,
   // "Photos" on the pick-one steps. On the pick-one steps the none button sits under the grid on a phone; on a
-  // laptop it is a quiet button in the stage's foot beside Back (renderStage), never a cell in the photo grid.
+  // laptop it is plain words in the glass pill beside Back (renderStage, v9c C2a), never a cell in the photo grid.
   function stepHTML(s, i) {
     const lid = `ask-${esc(s.id)}-t`;
     const tiles = s.tiles.map((t, k) => {
@@ -502,22 +502,33 @@
         <div class="stage-count" aria-hidden="true">${FLAP.repeat(Array.from(counterText(STEPS.length - 1)).length)}</div>
         <div class="stage-steps">${STEPS.map(stepHTML).join('')}</div>
         <div class="stage-foot">
-          ${hap(`<button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>`, 'back')}
-          ${hap('<button type="button" class="btn btn--quiet stage-none" data-action="none" hidden></button>', 'snone', true)}
+          ${hap(`<button type="button" class="stage-back" data-action="back" aria-label="${esc(ASK.back)}">${ICON.back}</button>`, 'back')}
+          ${hap('<button type="button" class="stage-none" data-action="none" hidden></button>', 'snone', true)}
           <span class="picked" aria-hidden="true"></span>
-          ${hap('<button type="button" class="btn stage-next" data-action="next"></button>')}
+          ${hap('<button type="button" class="btn stage-next" data-action="next"></button>', 'next')}
         </div>
       </div>
       <div class="stage-closed"><p class="stage-answers"></p><button type="button" class="btn btn--small" data-action="change">${esc(ASK.change)}</button></div>`;
     stage.count = $$('.stage-count .flap', host).map(flapOf);
     setCount(0, false);
-    // The buttons appear once the first step's tiles are well in view (about 170 px of them), so the
-    // first screen offers photos to tap, not a lone "Skip". (v7: the two-row ARRIVALS board is
-    // shorter, so v6's 120 px would show the bar over the photos on load.)
-    const showFoot = () => host.classList.add('is-foot');
-    if (!('IntersectionObserver' in window)) { showFoot(); return; }
-    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { showFoot(); io.disconnect(); } }, { rootMargin: '0px 0px -168px 0px' });
-    io.observe($('.step .tiles', host));
+    // v9c C2a (dir-3): the pill never lies over the first screen. It comes up once she has scrolled (more than 24 px
+    // since load) with the first step's photos risen past 55 % of the screen, at her first tap on a tile, or when
+    // focus enters the stage (the keyboard). A tall phone waits for her scroll or her tap; a tap shows Next at once.
+    let gridIn = false, moved = false;
+    const y0 = scrollY;
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { gridIn = true; show(); } }, { rootMargin: '0px 0px -45% 0px' }) : null;
+    const onScroll = () => { if (Math.abs(scrollY - y0) > 24) { moved = true; show(); } };
+    function show() {
+      if (!gridIn || !moved || host.classList.contains('is-foot')) return;
+      host.classList.add('is-foot');
+      removeEventListener('scroll', onScroll);
+      host.removeEventListener('focusin', stage.showFoot);
+      if (io) io.disconnect();
+    }
+    stage.showFoot = () => { gridIn = moved = true; show(); };
+    addEventListener('scroll', onScroll, { passive: true });
+    host.addEventListener('focusin', stage.showFoot);
+    if (io) io.observe($('.step .tiles', host)); else gridIn = true;
   }
   // The counter's flaps flip only where a character changes (D 0.07, like the HUD clock).
   function setCount(i, animate) {
@@ -582,7 +593,7 @@
     next.textContent = last ? ASK.plan : any ? ASK.next : ASK.skip;
     next.classList.toggle('btn--primary', last || any);
     hideCtl($('.stage-back', host), stage.step === 0);
-    // The laptop's none button (the foot's), for the steps that have one: "Not really", "No thanks".
+    // The laptop's none button (in the pill), for the steps that have one: "Not really", "No thanks".
     const sn = $('.stage-none', host);
     if (s.none && sn.textContent !== s.none) sn.textContent = s.none;
     hideCtl(sn, !s.none);
@@ -668,6 +679,7 @@
   }
   function onTile(b) {
     buzz('selection');
+    stage.showFoot();
     loadNolli();
     const s = STEPS[+b.dataset.step];
     const v = b.dataset.value, d = stage.draft;
@@ -2222,8 +2234,9 @@
     io.observe(ph);
   }
   function watchKeyhole() { watchKeyholeAt('entry', $('.stop[data-key="keyhole"] .stop-photo[data-n="0"]', slot('day-body')), 0); }
-  // The phone's step foot sticks to the screen's bottom; on a laptop it sits in the stage's flow.
-  function footCover() { const f = $('.stage-foot', slot('stage')); return f && getComputedStyle(f).position === 'sticky' ? f.offsetHeight : 0; }
+  // v9c C2a: the pill sticks 12 px above the screen's bottom, on a phone and on a laptop; what it covers is its
+  // height and that gap.
+  function footCover() { const f = $('.stage-foot', slot('stage')); return f && getComputedStyle(f).position === 'sticky' ? f.offsetHeight + 12 : 0; }
 
   /* ------------------------------------------------------------------ */
   /* Map: Nolli's Rome in 1748 under her day (design-v9 amendments b2)  */
