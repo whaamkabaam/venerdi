@@ -728,10 +728,15 @@
     loadNolli();
     const s = STEPS[+b.dataset.step];
     const v = b.dataset.value, d = stage.draft;
+    const picked = s.multi && !d[s.id].includes(v);
     if (s.multi) {
       if (d[s.id].includes(v)) { dropWants(d, v); d[s.id] = d[s.id].filter((x) => x !== v); } else d[s.id] = [...d[s.id], v];
     } else d[s.id] = d[s.id] === v ? null : v;
     syncStage();
+    // v9d D5 (felix-6.md, "Ask right after the tap"): a tap that picks a sight or a food opens its list at once, asking
+    // "Anything in particular?", so she sees there are things to choose under it; "Any is fine" (or any other close)
+    // keeps the pick and the planner chooses, as before. An unpick opens nothing, nor does a food with one thing.
+    if (picked && servedBy(v).length > 1) openPeek(b, 'vibe', { step: +b.dataset.step, value: v, ask: true });
   }
   // Arrow keys move through the radios and select as they go.
   function onStageKey(e) {
@@ -2082,7 +2087,8 @@
   // look"), `pick` ("Have a look" under an area or a wild card: the place, with "This one"), and `one`
   // (a More ideas photo or See everything: the place, no toggle). A bottom sheet on a phone, a centred
   // panel on a laptop; a single thing shows its photos, line, facts and details, "This one" in the foot.
-  const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false };
+  // `ask` (v9d D5): the list opened by the tile's own tap, titled "Anything in particular?".
+  const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false, ask: false };
   // "This one". For something that can't happen on Friday, its reason shows in place of the toggle (the
   // toggle stays for screen readers, disabled and described by the reason).
   const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}${hap(`<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`, 'toggle')}`;
@@ -2128,19 +2134,22 @@
           ${tipHTML(o, 'peek-tip')}
         </div>
       </article>`;
-  function openPeek(opener, kind, { step = -1, value = null, id = null } = {}) {
+  function openPeek(opener, kind, { step = -1, value = null, id = null, ask = false } = {}) {
     const dlg = slot('peek');
     if (dlg.open) return;
     // A sight or a food with one thing behind it (the class) opens that thing alone, with "This one"
     // naming it under the food (design-v9 2.4); the list is for two or more.
     const single = kind === 'vibe' && servedBy(value).length === 1 ? servedBy(value)[0] : null;
-    Object.assign(peek, { kind, step, value, id: single ? single.id : id, opener, closing: false });
-    let title, hint = '', body, foot;
+    Object.assign(peek, { kind, step, value, id: single ? single.id : id, opener, closing: false, ask: ask && !single });
+    let title, hint = '', body, foot, over = '';
     if (kind === 'vibe' && !single) {
-      title = tileLabel(tileOf(STEPS[step], value));
+      // v9d D5: opened by the tile's tap, it asks "Anything in particular?" under the sight or food's name, and its foot
+      // reads "Any is fine" until she names a thing here, then Done (syncPeek). Either one only closes it.
+      title = peek.ask ? PK.askTitle : tileLabel(tileOf(STEPS[step], value));
+      if (peek.ask) over = `<p class="peek-over label">${esc(tileLabel(tileOf(STEPS[step], value)))}</p>`;
       hint = PK.vibeHint;
       body = `<div class="peek-list">${servedBy(value).map(peekRowHTML).join('')}</div>`;
-      foot = hap(`<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(PK.done)}</button>`, 'done');
+      foot = hap(`<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(peek.ask ? PK.anyFine : PK.done)}</button>`, 'done');
     } else {
       const o = single || OPT[id];
       title = o.title;
@@ -2148,10 +2157,10 @@
       const action = single ? 'want' : kind === 'pick' ? 'pick' : '';
       foot = action ? toggleHTML(o, action) : '';
     }
-    dlg.className = `sheet peek peek--${kind === 'vibe' && !single ? 'list' : 'one'}`;
+    dlg.className = `sheet peek peek--${kind === 'vibe' && !single ? 'list' : 'one'}${peek.ask ? ' peek--ask' : ''}`;
     dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
       <div class="peek-head">
-        <div class="peek-titles"><h2 id="peek-h" tabindex="-1">${esc(title)}</h2>${hint ? `<p class="peek-hint">${esc(hint)}</p>` : ''}</div>
+        <div class="peek-titles">${over}<h2 id="peek-h" tabindex="-1">${esc(title)}</h2>${hint ? `<p class="peek-hint">${esc(hint)}</p>` : ''}</div>
         ${hap(`<button type="button" class="peek-x" data-action="peek-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`, 'x')}
       </div>
       <div class="peek-body">${body}</div>
@@ -2175,6 +2184,9 @@
       const on = b.dataset.action === 'want' ? wantedHere(b.dataset.id) : d[STEPS[peek.step].id] === peek.value;
       b.setAttribute('aria-pressed', String(on));
     });
+    // v9d D5: "Any is fine" while nothing is named here, Done once something is.
+    const done = peek.ask && $('.peek-done', dlg);
+    if (done) { const t = d.want.some(wantedHere) ? PK.done : PK.anyFine; if (done.textContent !== t) done.textContent = t; }
   }
   // Named under the sight or food this peek is for (not just named somewhere).
   const wantedHere = (id) => stage.draft.want.includes(id) && P.wantReason(OPT[id], stage.draft) === peek.value;
@@ -2245,6 +2257,7 @@
     dlg.style.transform = '';
     root.classList.remove('is-locked');
     peek.kind = null;
+    peek.ask = false;
     peek.closing = false;
     if (peek.opener && peek.opener.isConnected && document.activeElement !== peek.opener) refocus(peek.opener);
     peek.opener = null;

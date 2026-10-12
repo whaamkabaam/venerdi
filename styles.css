@@ -1462,6 +1462,8 @@ dialog.peek .say-sound { white-space: normal; }
 /* The title takes focus only so the dialog announces its name; no ring. */
 .peek-head h2:focus { outline: none; }
 .peek-hint { font-size: 0.9375rem; color: var(--ink-muted); text-wrap: pretty; }
+/* v9d D5: over "Anything in particular?", the name of the sight or food she just picked, in the small label style. */
+.peek-over { color: var(--ink-muted); }
 .peek-x {
   flex: none;
   display: grid;
