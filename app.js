@@ -1445,7 +1445,9 @@
 
   // Board taps: finish a running replay; the Sunday egg; her TBC line; otherwise go to the card.
   function onBoardClick(e) {
-    if (DEP.replay) { e.preventDefault(); finishBoard(); return; }
+    // A tap mid-wave finishes it. Stopping the Android rhythm (vibrate(0)) also cancels the tap's own pulse, sent just
+    // before this click, so the pulse goes again after the stop (fold-in, verify nit 2).
+    if (DEP.replay) { e.preventDefault(); const buzzing = DEP.replay.buzzing; finishBoard(); if (buzzing) buzz('light'); return; }
     const hit = e.target.closest('.board-hit');
     if (!hit) return;
     const row = DEP.board.rows.find((r) => r.hit === hit) || (DEP.board.sun.hit === hit ? DEP.board.sun : null);
