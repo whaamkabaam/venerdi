@@ -927,8 +927,8 @@
   // (an id with no letter, as in links from before, goes to the first answer it serves).
   const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (s.multi ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-')
     + (a.want?.length ? `-${a.want.map((id) => (WHY[P.wantReason(OPT[id], a)]?.code || '') + id).join('.')}` : '');
-  // A link without `v=7` or `v=8` is from v6: its pick-one steps hold positions in v6's tile lists, read
-  // through these frozen tables (v7 and v8 share their tile lists, so they decode the same way). A v6 tile that is gone (the Appian Way, the film fest, the Domus) reads as none.
+  // A link without `v=7`, `v=8` or `v=9` is from v6: its pick-one steps hold positions in v6's tile lists, read
+  // through these frozen tables (v7, v8 and v9 share their tile lists, so they decode the same way). A v6 tile that is gone (the Appian Way, the film fest, the Domus) reads as none.
   const V6_TILES = {
     wander: ['trastevere', 'centre', 'aventine', 'appia', 'acquedotti', 'coppede', 'monti', 'ghetto'],
     wild: ['circovr', 'filmfest', 'domus', 'cannon', 'circusjog', 'coronati'],
@@ -976,7 +976,7 @@
     if (q.has('p') || q.has('a')) {
       const byCode = Object.fromEntries(Object.entries(WHY).map(([k, v]) => [v.code, k]));
       const codes = Array.from(q.get('r') || '');
-      let linkAnswers = q.has('a') ? decodeAnswers(q.get('a'), { v6: !['7', '8'].includes(q.get('v')) }) : null;
+      let linkAnswers = q.has('a') ? decodeAnswers(q.get('a'), { v6: !['7', '8', '9'].includes(q.get('v')) }) : null;
       // A link with answers but no picks composes them here, and so does a link whose picks name a
       // place this page no longer has (a v6 link with the Colosseum, say): its day comes from its answers.
       const linkIds = q.has('p') ? q.get('p').split(',').map((s) => aliasId(s.trim())) : [];
