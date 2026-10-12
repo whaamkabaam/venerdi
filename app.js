@@ -1885,8 +1885,10 @@
       announceMoved(prev);
       const nl = stopEl(id);
       if (!nl) return;
-      if (!inView(nl)) nl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-      if (!reduced) gsap.from($('.stop-card', nl), { opacity: 0, duration: 0.2, ease: 'power1.out', clearProps: 'opacity' });
+      // v9d D1: the new pick goes first in her list, so its entry can land far from the old one: the page glides there
+      // (a board row's glide) and it lights up when it lands; where it stays in view, it fades in as before.
+      if (!inView(nl)) goToEntry(id);
+      else if (!reduced) gsap.from($('.stop-card', nl), { opacity: 0, duration: 0.2, ease: 'power1.out', clearProps: 'opacity' });
       $('[data-action="swap"], [data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: byKey });
     };
     if (reduced) { land(); return; }
