@@ -2757,6 +2757,22 @@
     "mapLabel": "Map of central Rome with your picks",
     "mapCredit": "Map data © OpenStreetMap contributors",
     "mapNolliCredit": "Map of Rome in 1748: Giambattista Nolli, La Topografia di Roma. Scan: Bibliothèque nationale de France (btv1b530645959), public domain.",
+    "travelCredits": [
+      {
+        "title": "Bus, tram and metro timetables for Friday 16 October",
+        "author": "Roma Servizi per la Mobilità",
+        "license": "CC BY-SA",
+        "sourceUrl": "https://dati.comune.roma.it/catalog/it/dataset/c_h501-d-9000",
+        "licenseUrl": "http://www.opendefinition.org/licenses/cc-by-sa"
+      },
+      {
+        "title": "Walking routes",
+        "author": "OpenStreetMap contributors",
+        "license": "ODbL",
+        "sourceUrl": "https://www.openstreetmap.org/copyright",
+        "licenseUrl": "https://opendatacommons.org/licenses/odbl/"
+      }
+    ],
     "mapNote": "Rome in 1748",
     "mapSightDome": "St Peter's dome",
     "mapTrack": {
@@ -2825,6 +2841,7 @@
       "title": "Photos",
       "back": "Back",
       "preview": "Link preview",
+      "travel": "Travel times",
       "map": "Map"
     }
   },
