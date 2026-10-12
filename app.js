@@ -918,7 +918,9 @@
   let laterNow = [];
   // The planner's options for her day: her dinner time and pizza place, and the travel times (data.js).
   const planOpts = (o = {}) => ({ dinnerAt, dinner, transit: TRANSIT, ...o });
-  const listOf = (titles) => (titles.length < 2 ? titles.join('') : `${titles.slice(0, -1).join(U.listJoin)}${U.listJoinLast}${titles[titles.length - 1]}`);
+  // A title with "and" in it ("Piazza Navona and around") gets a comma before the last "and", so the list still reads as
+  // a list (v9d fold-in, gate-d1 N1).
+  const listOf = (titles) => (titles.length < 2 ? titles.join('') : `${titles.slice(0, -1).join(U.listJoin)}${titles.some((t) => t.includes(U.listJoinLast)) ? U.listJoin.trimEnd() : ''}${U.listJoinLast}${titles[titles.length - 1]}`);
 
   // Her answers in the link: one group per step, joined by "-": the pick-any steps as their
   // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped. A
