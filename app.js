@@ -1369,7 +1369,9 @@
     return `${line.slice(0, at)}${hap(`<button type="button" class="say" data-action="say" aria-expanded="false" aria-controls="${cid}">${w}</button>`, 'say')}${line.slice(at + w.length)}<span class="say-cap" id="${cid}"><span class="say-in"><span class="say-how">${howHTML(S.how)}</span></span></span>`;
   }
   // The respelling in brackets never breaks across lines (round 1: "(oon" was left at the end of a line).
-  const howHTML = (how) => { const i = how.lastIndexOf('('); return i > 0 ? `${esc(how.slice(0, i))}<span class="say-sound">${esc(how.slice(i))}</span>` : esc(how); };
+  // The respelling breaks only at its spaces, never at a hyphen inside a word (fold-in, gates S1: in the pastry sheet's
+  // narrow column it ran past the edge as one unbreakable piece).
+  const howHTML = (how) => { const i = how.lastIndexOf('('); return i > 0 ? `${esc(how.slice(0, i))}<span class="say-sound">${how.slice(i).split(' ').map((w) => `<span class="say-w">${esc(w)}</span>`).join(' ')}</span>` : esc(how); };
   function toggleSay(b) {
     const cap = document.getElementById(b.getAttribute('aria-controls'));
     if (!cap) return;

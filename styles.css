@@ -1088,6 +1088,9 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .say-cap.is-open { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 200ms ease-out, visibility 0s linear 0s; }
 .say-in { min-height: 0; overflow: hidden; }
 .say-sound { white-space: nowrap; }
+/* In a sheet's narrow column the respelling wraps, at its spaces only (fold-in, gates S1). */
+dialog.peek .say-sound { white-space: normal; }
+.say-w { white-space: nowrap; }
 .say-how { display: block; padding-top: var(--s1); font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); text-wrap: pretty; }
 
 /* Swap: the alternatives open under the entry, between hairlines, no boxes. */
