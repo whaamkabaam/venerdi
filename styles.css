@@ -807,7 +807,11 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 @media (hover: hover) and (pointer: fine) {
   .tile-more:hover .i { translate: 2px 0; }
 }
-/* No need / No thanks: under the grid on a phone (full width); on a laptop the last cell. */
+/* Not really / No thanks: under the grid on a phone (full width), with its own switch (the wrapper takes its place
+   in the grid); on a laptop the foot's quiet button instead (fold-in, design gate S2). */
+.hapw--none { display: grid; grid-column: 1 / -1; margin-top: 2px; }
+.hapw--snone { display: none; }
+.stage-none { min-height: 44px; font-size: 0.9375rem; }
 .step-none {
   grid-column: 1 / -1;
   display: block;
@@ -1498,7 +1502,7 @@ dialog.peek .say-sound { white-space: normal; }
   .sheet-head, .peek-head { touch-action: auto; padding-top: var(--s5); }
 }
 /* Laptop: the questions span the wide column, four across, the buttons inline under the grid. On
-   the pick-one steps the none button is the last cell of the grid, as tall as a tile. */
+   the pick-one steps the none button is a quiet button beside Back. */
 @media (min-width: 1024px) {
   /* The note sits beside the board, and the board, the note's column and the questions share one left
      edge (design-v9 4.1). The question follows the hero (two classes: `.section` below sets 96 px). */
@@ -1509,9 +1513,11 @@ dialog.peek .say-sound { white-space: normal; }
   .section.section--ask { padding-top: var(--s8); }
   .step-title { font-size: clamp(44px, 4.2vw, 60px); line-height: 1.04; }
   .step-hint { margin: var(--s3) 0 var(--s5); font-size: 1rem; }
-  .tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: var(--s5); }
+  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s5); }
   .tiles--one { --ar: 4 / 3; }
-  .step-none { grid-column: span var(--span); min-height: 0; margin: 0; border-radius: var(--r-tile); font-size: 1.0625rem; }
+  /* The none answer leaves the photo grid for the foot, beside Back (fold-in, design gate S2). */
+  .tiles > .hapw--none { display: none; }
+  .hapw--snone { display: inline-grid; }
   .stage-foot { position: static; margin-top: var(--s5); padding: 0; background: none; }
   .peek, .catalogue {
     width: min(1040px, 100% - 48px);

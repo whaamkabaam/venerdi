@@ -429,7 +429,8 @@
 
   // A tile is the photo, then its label and sub under it; the whole tile selects. Under the sub, a
   // sibling text button (never inside the tile) opens the peek: "See all 8" on the pick-any steps,
-  // "Photos" on the pick-one steps. On the pick-one steps the none button is the grid's last cell.
+  // "Photos" on the pick-one steps. On the pick-one steps the none button sits under the grid on a phone; on a
+  // laptop it is a quiet button in the stage's foot beside Back (renderStage), never a cell in the photo grid.
   function stepHTML(s, i) {
     const lid = `ask-${esc(s.id)}-t`;
     const tiles = s.tiles.map((t, k) => {
@@ -447,16 +448,15 @@
           ${hap(`<button type="button" class="tile-more" data-step="${i}" data-value="${v}" aria-haspopup="dialog">${esc(more)}<span class="sr-only">: ${esc(tileLabel(t))}</span>${ICON.more}</button>`, 'more')}
         </div>`;
     }).join('');
-    // Laptop: four across. The none button fills the empty cells of the last row. When the tiles
-    // would fill every row of four (the Wild card's 4), the step goes five across instead, so the none
-    // button still closes the last row and the step fits one 900 px screen (qa/v7/build-notes.md).
-    const n = s.tiles.length, cols = s.none && n % 4 === 0 ? 5 : 4;
-    const span = s.none ? (cols - (n % cols)) || cols : 0;
-    const none = s.none ? `<button type="button" class="step-none" data-action="none" style="--span:${span}">${esc(s.none)}</button>` : '';
+    // Laptop: four across. The none button is an answer like a tile, so her finger gets the tile's tick through
+    // its own switch (fold-in, gates S3); on a laptop it steps out of the grid into the foot (fold-in, design
+    // gate S2: a tile-sized empty card read as a missing photo).
+    const n = s.tiles.length;
+    const none = s.none ? hap(`<button type="button" class="step-none" data-action="none">${esc(s.none)}</button>`, 'none') : '';
     return `<fieldset class="step" data-step="${i}"${i ? ' hidden' : ''}>
         <legend class="step-title" id="${lid}" tabindex="-1"><span class="sr-only">${esc(progressText(i))}: </span>${esc(s.title)}</legend>
         <p class="step-hint">${esc(s.hint)}</p>
-        <div class="tiles ${s.multi ? 'tiles--any' : 'tiles--one'}${n > 4 ? ' tiles--many' : ''}" style="--cols:${cols}"${s.multi ? ` role="group" aria-labelledby="${lid}"` : ''}>${tiles}${none}</div>
+        <div class="tiles ${s.multi ? 'tiles--any' : 'tiles--one'}${n > 4 ? ' tiles--many' : ''}"${s.multi ? ` role="group" aria-labelledby="${lid}"` : ''}>${tiles}${none}</div>
       </fieldset>`;
   }
   function renderStage() {
@@ -466,6 +466,7 @@
         <div class="stage-steps">${STEPS.map(stepHTML).join('')}</div>
         <div class="stage-foot">
           ${hap(`<button type="button" class="btn stage-back" data-action="back">${ICON.back}${esc(ASK.back)}</button>`, 'back')}
+          ${hap('<button type="button" class="btn btn--quiet stage-none" data-action="none" hidden></button>', 'snone', true)}
           <span class="picked" aria-hidden="true"></span>
           ${hap('<button type="button" class="btn stage-next" data-action="next"></button>')}
         </div>
@@ -541,6 +542,10 @@
     next.textContent = last ? ASK.plan : any ? ASK.next : ASK.skip;
     next.classList.toggle('btn--primary', last || any);
     hideCtl($('.stage-back', host), stage.step === 0);
+    // The laptop's none button (the foot's), for the steps that have one: "Not really", "No thanks".
+    const sn = $('.stage-none', host);
+    if (s.none && sn.textContent !== s.none) sn.textContent = s.none;
+    hideCtl(sn, !s.none);
     $('.stage-count', host).dataset.text = counterText(stage.step);
     syncPicked();
   }
@@ -662,6 +667,7 @@
     if (a === 'next') { if (last) planFriday(); else goStep(stage.step + 1); }
     else if (a === 'back') goStep(stage.step - 1);
     else if (a === 'none') {
+      buzz('selection'); // an answer, like a tile (Android; an iPhone's switch already ticked)
       stage.draft[STEPS[stage.step].id] = null;
       syncStage();
       if (last) planFriday(); else goStep(stage.step + 1);
@@ -3215,7 +3221,7 @@
     if (!ctl || ctl === sw || ctl.disabled || ctl.hidden) return;
     // Android (b3.4): the tiles, the toggles, the word and Show me Friday buzz in their own handlers; every other
     // deliberate tap gets a light one here. (An iPhone has no navigator.vibrate: its switch already ticked.)
-    if (!ctl.matches('.tile, .peek-toggle, .say') && !(ctl.matches('.stage-next') && stage.step === STEPS.length - 1)) buzz('light');
+    if (!ctl.matches('.tile, .peek-toggle, .say, [data-action="none"]') && !(ctl.matches('.stage-next') && stage.step === STEPS.length - 1)) buzz('light');
     try { ctl.focus({ preventScroll: true, focusVisible: false }); } catch { /* focus options unsupported */ }
     ctl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, detail: e.detail, clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY }));
   }, true);
