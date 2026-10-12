@@ -32,6 +32,8 @@
     GAP_NEAR: 10,                  // ...between two stops in the same area
     NOON: toMin('12:00'),          // a stop that would start (rounded) at noon or later waits for lunch
     LUNCH_FROM: toMin('12:30'),    // the plain lunch line starts no earlier
+    NOON_EARLY: toMin('11:30'),    // v9c C1e: with no pastry stop on her day (no breakfast), lunch comes early:
+    LUNCH_FROM_EARLY: toMin('11:30'), // NOON and LUNCH_FROM become 11:30 (she has been up since about 4)
     LUNCH_MINUTES: 45,             // "Lunch wherever we are."
     SNACK_GAP: 120,                // a snack that is not lunch: this long after lunch ends and before dinner
     FIXED_EARLY: 10,               // default minutes early for a fixed-time thing
@@ -46,14 +48,17 @@
     OVERLAP_MIN: 10,               // an overlap this long or shorter is not called one: it hides inside "around"
     NEAR_M: 1200,                  // "near her day" for More ideas, straight-line metres
   });
+  // Two frames per content object, both frozen and cached: the normal one, and the early-lunch one for a day with no
+  // pastry stop (v9c C1e: no breakfast, so lunch from 11:30).
   const frameCache = new WeakMap();
-  function frameOf(C) {
-    let F = frameCache.get(C);
-    if (!F) {
-      F = Object.freeze({ ...FRAME, START: toMin(C.meta.startsAt.slice(11, 16)), DINNER: toMin(C.anchors.dinner.time) });
-      frameCache.set(C, F);
+  function frameOf(C, early = false) {
+    let Fs = frameCache.get(C);
+    if (!Fs) {
+      const normal = Object.freeze({ ...FRAME, START: toMin(C.meta.startsAt.slice(11, 16)), DINNER: toMin(C.anchors.dinner.time) });
+      Fs = { normal, early: Object.freeze({ ...normal, NOON: FRAME.NOON_EARLY, LUNCH_FROM: FRAME.LUNCH_FROM_EARLY }) };
+      frameCache.set(C, Fs);
     }
-    return F;
+    return early ? Fs.early : Fs.normal;
   }
   // A card whose rough start is 17:00 or later sits under Evening (spec 8.5).
   const EVENING_SLOT = toMin('17:00');
@@ -305,12 +310,15 @@
 
   /* build(C, ids) -> plan (spec 8.2). `ids` are her picks in board order. */
   function build(C, pickIds) {
-    const F = frameOf(C);
     const O = optionsById(C);
     const ids = [...new Set(pickIds)].filter((id) => O[id]);
     const picked = C.options.filter((o) => ids.includes(o.id)).sort(byOrder);
     const cant = picked.filter((o) => o.fridayNo);
     const P = ids.map((id) => O[id]).filter((o) => !o.fridayNo); // in board order
+    // v9c C1e (felix-2.md 4): no pastry stop on her day means no breakfast, so lunch comes early (from 11:30); with
+    // one, the day keeps its frame. Every rule below reads F.
+    const earlyLunch = !P.some(isPastry);
+    const F = frameOf(C, earlyLunch);
     const evening = P.filter(isEvening);
     const lunches = P.filter((o) => o.lunch && !isEvening(o));
     const lead = lunches.find(isClass) || lunches[0] || null;
@@ -448,6 +456,7 @@
       picked,
       bags: { start: B, end: B + F.BAGS_BLOCK },
       idle: A.idle,
+      earlyLunch,
     };
   }
 
