@@ -717,6 +717,7 @@
   // Show me Friday: compose her answers, close the stage, glide to the board and let it play.
   function planFriday() {
     buzz('medium');
+    DEP.tapped = true; // v9c C1j: the replay this tap asks for may carry the Android rhythm
     loadNolli();
     answers = cloneAnswers(stage.draft);
     picks = P.compose(C, answers).picks;
@@ -1115,6 +1116,7 @@
     const r = DEP.replay;
     if (!r) return;
     r.stopping = true;
+    stopBuzz(r);
     r.tls.forEach((t) => t.progress(1).kill());
     if (DEP.sunPending) setSunNow(true);
     DEP.sunPending = false;
@@ -1184,12 +1186,15 @@
     const tl = gsap.timeline({ paused: true });
     r.tls.push(tl);
     let k = 0, end = 0;
+    const lands = [];
     DEP.board.rows.forEach((row, j) => {
       const d = to[j] || null;
       const moves = rowTexts(d, row.widths).some((t, c) => t !== row.shown[c]);
       const at = DEP_W.start + k * DEP_W.row;
       if (moves) k++;
-      end = Math.max(end, writeRow(tl, row, d, moves ? at : 0, j, { rolls: false, W: DEP_W }));
+      const e = writeRow(tl, row, d, moves ? at : 0, j, { rolls: false, W: DEP_W });
+      if (moves && d) lands.push(e);
+      end = Math.max(end, e);
     });
     DEP.shown = to;
     tl.call(() => r.rowsDone(), null, end);
@@ -1204,9 +1209,28 @@
       DEP.replay = null;
     }, null, Math.max(end, tl.duration()));
     tl.play(0);
+    // v9c C1j (dir-2's pattern, Android only): when the board writes the day she just asked for, a pulse as each row
+    // lands, in one vibrate() pattern (a 0 ms buzz first, then each pause to the next landing, 24 ms pulses; rows
+    // closer than 70 ms share one). Never on load, a scroll, the return visit's settle or a change: only a full replay
+    // that follows her Show me Friday tap. An iPhone has no navigator.vibrate and cannot tick after the tap: there
+    // her one tick is the one under her finger.
+    if (full && DEP.tapped && navigator.vibrate) {
+      DEP.tapped = false;
+      const pattern = [0];
+      let at = 0, last = -1e9;
+      [...new Set(lands.map((x) => Math.round(x * 1000)))].sort((a, b) => a - b).forEach((ms) => {
+        if (ms - last < 70) return;
+        pattern.push(Math.max(0, ms - at), 24);
+        at = ms + 24;
+        last = ms;
+      });
+      if (pattern.length > 1) { try { navigator.vibrate(pattern); r.buzzing = true; } catch { /* not allowed here */ } }
+    }
   }
+  // The rhythm stops with its replay (a tap on the board, the board off screen).
+  const stopBuzz = (r) => { if (r && r.buzzing && navigator.vibrate) { r.buzzing = false; try { navigator.vibrate(0); } catch { /* fine */ } } };
   // Off screen the replay waits, so a flick past the board does not spend it.
-  function pauseReplay() { const r = DEP.replay; if (r && !r.paused) { r.paused = true; r.tls.forEach((t) => t.pause()); } }
+  function pauseReplay() { const r = DEP.replay; if (r && !r.paused) { r.paused = true; stopBuzz(r); r.tls.forEach((t) => t.pause()); } }
   function resumeReplay() { const r = DEP.replay; if (r && r.paused) { r.paused = false; r.tls.forEach((t) => t.resume()); } }
   function maybeSun() { if (DEP.sunPending && !DEP.replay && !reduced) playSun(null, 0); }
   // When the board comes into view: her day in full the first time, the return visit's settle once per load, one
