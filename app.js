@@ -2196,7 +2196,7 @@
   // (a More ideas photo or See everything: the place, no toggle). A bottom sheet on a phone, a centred
   // panel on a laptop; a single thing shows its photos, line, facts and details, "This one" in the foot.
   // `ask` (v9d D5): the list opened by the tile's own tap, titled "Anything in particular?".
-  const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false, ask: false };
+  const peek = { kind: null, step: -1, value: null, id: null, opener: null, closing: false, ask: false, dbl: false };
   // "This one". For something that can't happen on Friday, its reason shows in place of the toggle (the
   // toggle stays for screen readers, disabled and described by the reason).
   const toggleHTML = (o, action) => `${o.fridayNo ? `<p class="peek-no" id="pn-${esc(o.id)}">${esc(o.fridayNo)}</p>` : ''}${hap(`<button type="button" class="peek-toggle${o.fridayNo ? ' is-no' : ''}" aria-pressed="false" data-action="${action}" data-id="${esc(o.id)}"${o.fridayNo ? ` disabled aria-describedby="pn-${esc(o.id)}"` : ''}><span class="peek-toggle-in">${ICON.tick}${esc(action === 'want' ? PK.want : PK.pick)}</span><span class="sr-only">: ${esc(o.title)}</span></button>`, 'toggle')}`;
@@ -2249,7 +2249,7 @@
     // A sight or a food with one thing behind it (the class) opens that thing alone, with "This one"
     // naming it under the food (design-v9 2.4); the list is for two or more.
     const single = kind === 'vibe' && servedBy(value).length === 1 ? servedBy(value)[0] : null;
-    Object.assign(peek, { kind, step, value, id: single ? single.id : id, opener, closing: false, ask: ask && !single });
+    Object.assign(peek, { kind, step, value, id: single ? single.id : id, opener, closing: false, ask: ask && !single, dbl: true });
     let title, hint = '', body, foot, over = '';
     if (kind === 'vibe' && !single) {
       // v9d D5: opened by the tile's tap, it asks "Anything in particular?" under the sight or food's name, and its foot
@@ -2348,6 +2348,10 @@
   }
   function onPeekClick(e) {
     const dlg = slot('peek');
+    // The second click of the double click that opened the sheet (a laptop's, on a tile) lands in it: it does nothing,
+    // so it cannot open a row's photos (v9d fold-in, gate-small N2). Her next click of her own (detail 1) acts.
+    if (peek.dbl && e.detail > 1) return;
+    peek.dbl = false;
     if (e.target === dlg) { closePeek(); return; } // the backdrop
     const dot = e.target.closest('.stop-dot');
     if (dot) { onStripDot(dot); return; }
