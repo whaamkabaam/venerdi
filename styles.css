@@ -1116,7 +1116,7 @@ dialog.peek .say-sound { white-space: normal; }
 .swap-photo img, .room-photo img, .cat-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
 .swap-text { grid-area: text; display: grid; gap: 2px; min-width: 0; }
 .swap-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.25; text-wrap: balance; }
-.swap-line { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); text-wrap: pretty; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.swap-line { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .swap-use { grid-area: use; }
 
 /* Dinner: the evening entry's three ideas, a hairline between them, no boxes. Each: its name, line, facts

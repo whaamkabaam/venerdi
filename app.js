@@ -1337,13 +1337,15 @@
   // A time chip with "around" before a rough time (the board's language), and the Now tag on the day.
   const whenHTML = (it, extra = '') => `${it.exact ? '' : `<span class="stop-around" aria-hidden="true">${esc(aroundWord)}</span>`}<span class="chip" aria-hidden="true">${FLAP.repeat(5)}</span>${extra}${nowTag}`;
 
+  // Each alternative: its photo, its title and its facts line (fold-in, design gate N3: its line, cut to two lines,
+  // read as an unfinished sentence).
   function swapHTML(id, alts) {
     const D = C.day;
     return `<div class="swap" id="sw-${esc(id)}" hidden><div class="swap-in">
         <p class="swap-title label">${esc(D.instead)}</p>
         <ul class="swap-list">${alts.map((a) => { const o = OPT[a]; return `<li class="swap-alt">
           ${thumbHTML(o.photos?.[0], 'swap-photo', '112px')}
-          <span class="swap-text"><span class="swap-name">${esc(o.title)}</span><span class="swap-line">${esc(o.line)}</span></span>
+          <span class="swap-text"><span class="swap-name">${esc(o.title)}</span><span class="swap-line">${factsHTML(factList(o))}</span></span>
           ${hap(`<button type="button" class="btn btn--quiet swap-use" data-action="use" data-id="${esc(a)}">${esc(D.useThis)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}
         </li>`; }).join('')}</ul>
       </div></div>`;
