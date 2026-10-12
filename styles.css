@@ -1025,6 +1025,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+  transition: scale 150ms ease-out; /* v9c C3b: the press her finger gives it through its cover eases, like every other control's */
 }
 .day-change::after { content: ""; position: absolute; inset: -12px -8px; }
 .day-body { display: grid; gap: 0; }
@@ -1087,7 +1088,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* Which photo: short bars, not dots (dir-3; design-v9 amendments b1.3): 16 x 2 px, the current one in
    ink, the other at 30 %; each a 44 x 44 target. The first bar starts on the content's edge. */
 .stop-dots { display: flex; justify-content: flex-start; margin: var(--s1) 0 0 -14px; }
-.stop-dot { position: relative; width: 44px; height: 24px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.stop-dot { position: relative; width: 44px; height: 24px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: scale 150ms ease-out; /* the press through its cover (v9c C3b) */ }
 .stop-dot::before {
   content: "";
   position: absolute;
@@ -1729,7 +1730,7 @@ dialog.peek .say-sound { white-space: normal; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mk, .mk-dot, .mk-label, .hud-map, .plan-item, .stop-card, .tile, .tile-img, .tile-img img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot::before { transition: none; }
+  .mk, .mk-dot, .mk-label, .hud-map, .plan-item, .stop-card, .tile, .tile-img, .tile-img img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot, .stop-dot::before, .day-change { transition: none; }
   .tile-more, .tile-more .i, .tbtn, .room-photo, .room-photo img, .cat-photo, .cat-photo img, .stop-title, .plan-title, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
   .picked-ph, .sheet::backdrop { animation: none; }
   .note-en.is-on { animation: none; }
