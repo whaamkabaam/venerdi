@@ -250,12 +250,17 @@ svg { display: block; }
 .hapw--done { margin-left: auto; }
 .hapw--x { flex: none; margin-right: -6px; }
 .swap-alt > .hapw { grid-area: use; }
-.room-tile > .hapw { grid-area: add; }
+.room-tile > .hapw--add { grid-area: add; }
 .hapw--all { margin-top: var(--s4); }
 .hapw--send { justify-self: start; margin-top: var(--s1); }
 .hapw--clock { flex: none; margin: 0 -6px; }
 .hapw--pocket { flex: none; }
 .hapw--clock > .hud-clock { display: flex; }
+/* v9c C3b: Change answers, the bar's Now, the More ideas and See everything photos, the peek's thumbnails. */
+.hapw--change, .hapw--now { flex: none; }
+.room-tile > .hapw--rphoto { grid-area: photo; display: grid; }
+.hapw--cphoto { display: grid; }
+.peek-row > .hapw--thumb { grid-area: thumb; align-self: start; display: grid; }
 
 .tag {
   display: inline-flex;
@@ -330,7 +335,6 @@ button.hud-clock:active { scale: 0.96; }
   font-size: 0.9375rem;
   font-weight: 500;
 }
-.hud-now { flex: none; }
 .now-short { display: none; }
 @media (max-width: 479px) {
   .hud-inner { gap: 10px; }
@@ -681,7 +685,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   color: color-mix(in oklch, var(--ink) 55%, transparent);
   box-shadow: none;
 }
-.day-note .btn { margin-left: 4px; vertical-align: middle; }
+.day-note > .hapw { margin-left: 4px; vertical-align: middle; }
 @media (hover: hover) {
   .btn--primary:not(:disabled):hover { background-color: color-mix(in oklch, var(--accent) 88%, var(--ink)); }
 }
@@ -1013,7 +1017,6 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 .day-change {
   position: relative;
-  flex: none;
   padding: 0;
   border: 0;
   background: none;
@@ -1260,7 +1263,6 @@ dialog.peek .say-sound { white-space: normal; }
   align-items: center;
 }
 .room-photo {
-  grid-area: photo;
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -1284,7 +1286,7 @@ dialog.peek .say-sound { white-space: normal; }
   .room-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
   .room-tile { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; grid-template-areas: "photo" "why" "name" "add"; align-items: start; row-gap: 2px; }
   .room-why { margin-top: var(--s2); }
-  .room-tile > .hapw { justify-self: start; margin-top: var(--s2); }
+  .room-tile > .hapw--add { justify-self: start; margin-top: var(--s2); }
 }
 
 .plan-undo { display: flex; justify-content: center; padding: var(--s1) 0; }
@@ -1488,7 +1490,6 @@ dialog.peek .say-sound { white-space: normal; }
   border-bottom: 1px solid var(--hairline);
 }
 .peek-row:last-child { border-bottom: 0; }
-.peek-row > .peek-thumb { grid-area: thumb; }
 .peek-row > .peek-text { grid-area: text; }
 .peek-row > .peek-strip { grid-area: strip; }
 .peek-row > .peek-toggle, .peek-row > .peek-no { grid-area: toggle; justify-self: start; align-self: start; }

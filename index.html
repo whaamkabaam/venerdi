@@ -39,7 +39,7 @@
   <div class="hud-inner">
     <span class="hapw hapw--clock"><button class="hud-clock" type="button" data-slot="hud-clock"></button><label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label></span>
     <p class="hud-place"><span class="sr-only" data-slot="hud-time"></span><span data-slot="hud-place"></span></p>
-    <button class="btn btn--small hud-now" type="button" hidden><span class="now-long" data-slot="now-long"></span><span class="now-short" data-slot="now-short"></span></button>
+    <span class="hapw hapw--now" hidden><button class="btn btn--small hud-now" type="button" hidden><span class="now-long" data-slot="now-long"></span><span class="now-short" data-slot="now-short"></span></button><label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label></span>
     <span class="hapw hapw--pocket" hidden><button class="hud-map" type="button" data-slot="hud-map" aria-haspopup="dialog" hidden></button><label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label></span>
   </div>
 </aside>
@@ -73,7 +73,7 @@
   <section class="section section--day" id="day" aria-labelledby="day-h" hidden>
     <div class="day-head">
       <h2 id="day-h" data-slot="day-title"></h2>
-      <button class="day-change" type="button" data-slot="change-answers"></button>
+      <span class="hapw hapw--change"><button class="day-change" type="button" data-slot="change-answers"></button><label class="hap" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label></span>
     </div>
     <div class="day-lines" data-slot="day-lines" hidden></div>
     <div class="day-map" data-slot="day-map"></div>

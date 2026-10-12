@@ -508,7 +508,7 @@
           ${hap('<button type="button" class="btn stage-next" data-action="next"></button>', 'next')}
         </div>
       </div>
-      <div class="stage-closed"><p class="stage-answers"></p><button type="button" class="btn btn--small" data-action="change">${esc(ASK.change)}</button></div>`;
+      <div class="stage-closed"><p class="stage-answers"></p>${hap(`<button type="button" class="btn btn--small" data-action="change">${esc(ASK.change)}</button>`)}</div>`;
     stage.count = $$('.stage-count .flap', host).map(flapOf);
     setCount(0, false);
     // v9c C2a (dir-3): the pill never lies over the first screen. It comes up once she has scrolled (more than 24 px
@@ -1486,7 +1486,7 @@
   // Over the board, a link's note and "Back to my picks". Nothing renders under Send (AM7).
   function renderDepNote() {
     const D = C.day;
-    const back = hasBackup ? ` <button class="btn btn--small" type="button" data-action="back-to-mine">${esc(D.backToMine)}</button>` : '';
+    const back = hasBackup ? ` ${hap(`<button class="btn btn--small" type="button" data-action="back-to-mine">${esc(D.backToMine)}</button>`)}` : '';
     slot('dep-note').innerHTML = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
   }
 
@@ -1534,7 +1534,7 @@
     const photos = (o.photos || []).filter((k) => IMG[k]);
     const strip = photos.map((k, n) => thumbHTML(k, 'stop-photo', sizes, '', { alt: true, loading }).replace('<span', `<span data-n="${n}"`)).join('');
     const dots = photos.length > 1
-      ? `<div class="stop-dots">${photos.map((k, n) => `<button type="button" class="stop-dot" data-n="${n}" aria-label="${esc(IMG[k].alt || o.title)}"${n ? '' : ' aria-current="true"'}></button>`).join('')}</div>`
+      ? `<div class="stop-dots">${photos.map((k, n) => hap(`<button type="button" class="stop-dot" data-n="${n}" aria-label="${esc(IMG[k].alt || o.title)}"${n ? '' : ' aria-current="true"'}></button>`, 'dot')).join('')}</div>`
       : '';
     return `<div class="stop-photos"><div class="strip-frame"><div class="stop-strip">${strip}</div>${pill}</div>${dots}</div>`;
   }
@@ -1612,10 +1612,10 @@
       const o = OPT[x.id];
       const label = x.reason === 'added' ? groupLabel(o) : reasonLabel(x.reason);
       return `<li class="room-tile">
-          ${photoButtonHTML(o, 'room-photo', '(min-width: 640px) 240px, 96px')}
+          ${hap(photoButtonHTML(o, 'room-photo', '(min-width: 640px) 240px, 96px'), 'rphoto')}
           <span class="room-why label">${esc(label)}</span>
           <span class="room-name">${esc(o.title)}</span>
-          ${hap(`<button type="button" class="btn btn--quiet room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}
+          ${hap(`<button type="button" class="btn btn--quiet room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>`, 'add')}
         </li>`;
     }).join('');
     return `${sugg.length ? `<li class="plan-group plan-group--more"><h3 class="label">${esc(D.roomTitle)}</h3></li>` : ''}<li class="plan-room${sugg.length ? '' : ' is-bare'}">
@@ -1682,7 +1682,7 @@
   function renderDay() {
     const D = C.day;
     const body = slot('day-body');
-    slot('change-answers').hidden = !answers;
+    hideCtl(slot('change-answers'), !answers);
     // Under "Your Friday": the full-day line (more than six things), else a line when cards overlap in
     // time ("Two of these overlap", or "Some" for three or more), and one line per pick that can't
     // happen on Friday.
@@ -1924,7 +1924,7 @@
         if (!opts.length) return '';
         // A tile per option, as on the questions: the photo (it opens the thing), the text under it, then Add.
         return `<section class="cat-group" aria-labelledby="cg-${esc(g.id)}"><h3 class="label" id="cg-${esc(g.id)}">${esc(g.label)}</h3><ul class="cat-list">${opts.map((o) => `<li class="cat-row">
-            ${photoButtonHTML(o, 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw')}
+            ${hap(photoButtonHTML(o, 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw'), 'cphoto')}
             <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span></span>
             <span class="cat-acts">
             ${hap(`<button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button>`)}<span class="cat-no" id="cw-${esc(o.id)}" hidden></span></span>
@@ -2052,7 +2052,7 @@
   function peekRowHTML(o, k) {
     const id = esc(o.id);
     return `<article class="peek-row" aria-labelledby="pk-${id}">
-        <button type="button" class="peek-thumb" data-action="expand" aria-expanded="false" aria-controls="pp-${id}">${thumbHTML(o.photos?.[0], 'peek-thumb-img', '(min-width: 1024px) 160px, 112px')}<span class="sr-only">${esc(PK.openPhotos)}: ${esc(o.title)}</span></button>
+        ${hap(`<button type="button" class="peek-thumb" data-action="expand" aria-expanded="false" aria-controls="pp-${id}">${thumbHTML(o.photos?.[0], 'peek-thumb-img', '(min-width: 1024px) 160px, 112px')}<span class="sr-only">${esc(PK.openPhotos)}: ${esc(o.title)}</span></button>`, 'thumb')}
         ${peekTextHTML(o)}
         <div class="peek-strip" id="pp-${id}" hidden>${stripHTML(o, PEEK_ROW_SIZES, '', k < 5 ? 'eager' : 'lazy')}</div>
         ${toggleHTML(o, 'want')}
@@ -3311,7 +3311,7 @@
       jumpEl = nowEl || (r.min < +items[0].dataset.min ? items[0] : null);
     }
     items.forEach((el) => el.classList.toggle('is-now', el === nowEl));
-    nowBtns.forEach((b) => { b.hidden = !jumpEl; });
+    nowBtns.forEach((b) => hideCtl(b, !jumpEl));
     hud.toggleAttribute('data-today', !!jumpEl);
   }
   function jumpToNow() {
