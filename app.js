@@ -2089,8 +2089,8 @@
         ${toggleHTML(o, 'want')}
       </article>`;
   }
-  // The class's details (design-v9 2.4): When, Sauce, Drinks, Where, Run by; the last row ends with the
-  // option's second link (the Class page), opening in a new tab.
+  // The class's details (design-v9 2.4): When, Sauce, Where, Run by (v9d D6: no Drinks row, felix-6.md); the last row
+  // ends with the option's second link (the Class page), opening in a new tab.
   const detailsHTML = (o) => {
     if (!o.details?.length) return '';
     const rows = o.details.map((d, i, a) => {
