@@ -1733,14 +1733,16 @@
   // A time from the strip: the day is built again with dinner there (only dinner moves), the strip closes and the
   // chip flips once from the old time (syncChips); the board's dinner row, the bar's clock, the sky and the map at
   // dinner, the send text and the link follow. The time she already has just closes the strip.
-  function setDinnerAt(at) {
+  function setDinnerAt(at, byKey = false) {
     buzz('selection');
     if (at === plan.dinnerAt) { const b = $('[data-action="dinner-time"]', slot('day-body')); if (b && b.getAttribute('aria-expanded') === 'true') toggleDinnerTime(b); return; }
     dinnerAt = cleanDinnerAt(at);
     fromLink = false;
     saveState();
     update();
-    $('[data-action="dinner-time"]', slot('day-body'))?.focus({ preventScroll: true });
+    // Focus goes back to the time; its ring shows only for the keyboard (after a finger or a mouse, a ring would sit
+    // around the time as if it were still being chosen).
+    $('[data-action="dinner-time"]', slot('day-body'))?.focus({ preventScroll: true, focusVisible: byKey });
   }
   // Use this: the stop is replaced in place (same answer), the card fades over to the new one.
   function useAlternative(btn) {
@@ -1871,7 +1873,7 @@
     else if (a === 'add') addPick(b.dataset.id, b.dataset.reason);
     else if (a === 'dinner') setDinner(b.dataset.id);
     else if (a === 'dinner-time') toggleDinnerTime(b);
-    else if (a === 'dinner-at') setDinnerAt(b.dataset.at);
+    else if (a === 'dinner-at') setDinnerAt(b.dataset.at, e.detail === 0);
     else if (a === 'catalogue') openCatalogue();
     else if (a === 'say') toggleSay(b);
   }
