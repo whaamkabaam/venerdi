@@ -577,7 +577,7 @@
     const st = { y: scrollY };
     gliding = true;
     clearTimeout(glideTimer);
-    gsap.to(st, { y, duration, ease: 'power2.inOut', onUpdate: () => scrollTo(0, st.y), onComplete: () => { glideTimer = setTimeout(() => { gliding = false; render(lastY); }, 450); if (done) done(); } });
+    gsap.to(st, { y, duration, ease: 'power2.inOut', onUpdate: () => scrollTo(0, st.y), onComplete: () => { glideTimer = setTimeout(() => { gliding = false; render(lastY); keyholeRecheck(); }, 450); if (done) done(); } });
   }
   // Where a programmatic scroll lands a section: under the HUD, like an anchor jump. The HUD stays
   // away from the questions, so the stage only keeps a small gap.
@@ -2001,17 +2001,22 @@
     gsap.timeline({ delay, onComplete: () => { svg.remove(); if (clip) frame.classList.remove('has-keyhole'); } })
       .fromTo(svg, { scale: 1 }, { scale: 10, duration: 0.55, ease: 'power3.in', transformOrigin: `${f(cx)}px ${f(cy + 0.3 * r)}px` }, 0.25);
   }
-  // Her entry: the first time its first photo is two-thirds in view (the day re-renders, so this follows it).
-  let keyholeIO = null;
+  // Her entry: the first time its first photo is two-thirds in view (the day re-renders, so this follows it). A glide
+  // that only passes it (a board row, the clock) does not use it up; where a glide lands, it is looked at again
+  // (fold-in, gates N4/N5/N1).
+  let keyholeIO = null, keyholePh = null;
+  function keyholeRecheck() { if (keyholeIO && keyholePh) { keyholeIO.unobserve(keyholePh); keyholeIO.observe(keyholePh); } }
   function watchKeyhole() {
     if (reduced || keyholeDone.has('entry') || !('IntersectionObserver' in window)) return;
     const ph = $('.stop[data-key="keyhole"] .stop-photo[data-n="0"]', slot('day-body'));
     keyholeIO?.disconnect();
+    keyholePh = ph;
     if (!ph) return;
     keyholeIO = new IntersectionObserver((es) => {
-      if (!es.some((x) => x.isIntersecting && x.intersectionRatio >= 0.66)) return;
+      if (gliding || !es.some((x) => x.isIntersecting && x.intersectionRatio >= 0.66)) return;
       keyholeIO.disconnect();
       keyholeIO = null;
+      keyholePh = null;
       keyholeOpen(ph, 0, 'entry');
     }, { threshold: 0.66 });
     keyholeIO.observe(ph);
