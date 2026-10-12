@@ -2255,7 +2255,7 @@
       // v9d D5: opened by the tile's tap, it asks "Anything in particular?" under the sight or food's name, and its foot
       // reads "Any is fine" until she names a thing here, then Done (syncPeek). Either one only closes it.
       title = peek.ask ? PK.askTitle : tileLabel(tileOf(STEPS[step], value));
-      if (peek.ask) over = `<p class="peek-over label">${esc(tileLabel(tileOf(STEPS[step], value)))}</p>`;
+      if (peek.ask) over = `<p class="peek-over label" id="peek-over">${esc(tileLabel(tileOf(STEPS[step], value)))}</p>`;
       hint = PK.vibeHint;
       body = `<div class="peek-list">${servedBy(value).map(peekRowHTML).join('')}</div>`;
       foot = hap(`<button type="button" class="btn btn--primary peek-done" data-action="peek-close">${esc(peek.ask ? PK.anyFine : PK.done)}</button>`, 'done');
@@ -2267,6 +2267,9 @@
       foot = action ? toggleHTML(o, action) : '';
     }
     dlg.className = `sheet peek peek--${kind === 'vibe' && !single ? 'list' : 'one'}${peek.ask ? ' peek--ask' : ''}`;
+    // The list a tap opens is named by its sight or food and its question ("Old Rome, Anything in particular?"), so a
+    // screen reader says which list it is (v9d fold-in, gate-small N1); any other sheet by its title.
+    dlg.setAttribute('aria-labelledby', over ? 'peek-over peek-h' : 'peek-h');
     dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
       <div class="peek-head">
         <div class="peek-titles">${over}<h2 id="peek-h" tabindex="-1">${esc(title)}</h2>${hint ? `<p class="peek-hint">${esc(hint)}</p>` : ''}</div>
