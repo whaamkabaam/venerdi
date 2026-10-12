@@ -1646,7 +1646,9 @@
     const o = it.option, D = C.day;
     const i = picks.findIndex((p) => p.id === o.id);
     const reason = i >= 0 ? picks[i].reason : 'added';
-    const alts = i >= 0 ? P.alternatives(C, picks, i, { want: answers?.want || [] }) : [];
+    // v9d fold-in (gate-d1 S1): Swap offers only what Use this can put on her day. Use this puts it first in her list,
+    // where it lands exactly when it fits on its own (Swap in's test), so the roof is not offered with dinner at 18:30.
+    const alts = i >= 0 ? P.alternatives(C, picks, i, { want: answers?.want || [] }).filter((a) => P.canSwapIn(C, a, planOpts())) : [];
     const id = esc(o.id);
     // Only Felix's pick says why it is there: her own answers need no label (design-v9 4.5.2).
     const why = reason === 'felix' ? `<span class="stop-why label">${esc(WHY.felix.label)}</span>` : '';
