@@ -1906,7 +1906,9 @@
   let removing = false, lastRemove = null;
   function removeStop(btn, ev) {
     const li = btn.closest('.stop');
-    const now = performance.now();
+    // When the click happened (its timeStamp, on performance.now()'s clock), not when a busy page got to it, so a slow
+    // frame cannot stretch her gap past the half second (v9d fold-in, gate-small N4).
+    const now = ev ? ev.timeStamp : performance.now();
     const pointer = !!ev && ev.detail > 0; // keyboard Enter and Space give 0
     const echo = pointer && !!lastRemove && now - lastRemove.t < 500 && Math.hypot(ev.clientX - lastRemove.x, ev.clientY - lastRemove.y) < 24;
     if (li.dataset.out || removing || (ev && ev.detail > 1) || echo) return;
