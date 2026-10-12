@@ -929,9 +929,13 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   justify-content: center; box-shadow: none; font-size: 1rem; font-weight: 600;
   transition-property: scale, background-color, color; }
 .stage-next:not(.btn--primary) { color: var(--ink); }      /* Skip: plain words on the glass, the same size */
+/* v9d D2: the step's count after the word ("Skip 1/4", 6 px after it, the button's gap), in the page's one muted ink
+   (72 %) and a lighter weight, so the word stays the action; tabular figures, so it keeps its width from step to step. */
+.stage-next-n { color: color-mix(in oklch, currentColor 72%, transparent); font-weight: 500; font-variant-numeric: tabular-nums; }
 /* Under 360 px (a 320 px phone) Back, four photos and Next fill the 280 px column: a narrower Next keeps the pill's
-   6 px padding whole, so Back's circle never touches its end (fold-in, gate-mechanics N3 / gate-design N1). */
-@media (max-width: 359px) { .stage-next { min-width: 100px; } }
+   6 px padding whole, so Back's circle never touches its end (fold-in, gate-mechanics N3 / gate-design N1). v9d D2:
+   with the count in it ("Next 2/4", 64 px of text) its sides are 14 px there, so it stays 100 px with every word. */
+@media (max-width: 359px) { .stage-next { min-width: 100px; padding: 0 14px; } }
 @media (hover: hover) { .stage-next:not(.btn--primary):hover { background-color: var(--fill-quiet); } }
 .stage-closed {
   display: flex;

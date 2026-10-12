@@ -608,12 +608,14 @@
       tiles.forEach((b) => { b.tabIndex = b === cur ? 0 : -1; });
     });
     // Nothing picked: a quiet Skip. Something picked: Next, in the primary style. The last step
-    // always reads Show me Friday.
+    // always reads Show me Friday. v9d D2 (felix-5.md: "include the 1/4 in the skip button"): before the last step the
+    // word carries the step's count after it, "Skip 1/4", "Next 2/4", quieter than the word; screen readers hear only the
+    // word, since the step's legend already says "Question 1 of 4".
     const last = stage.step === STEPS.length - 1;
     const any = chosen(stage.draft, s).length > 0;
     const next = $('.stage-next', host);
     morphPill(() => {
-      next.textContent = last ? ASK.plan : any ? ASK.next : ASK.skip;
+      next.innerHTML = last ? esc(ASK.plan) : `${esc(any ? ASK.next : ASK.skip)}<span class="stage-next-n" aria-hidden="true">${esc(counterText(stage.step))}</span>`;
       next.classList.toggle('btn--primary', last || any);
       hideCtl($('.stage-back', host), stage.step === 0);
       // The laptop's none button (in the pill), for the steps that have one: "Not really", "No thanks".
