@@ -598,8 +598,8 @@
       inn.hidden = false;
       $('.step-title', inn).focus({ preventScroll: true });
       refreshSoon();
-      // The Aventine tile shows through the keyhole as step 3 comes in (b3.3).
-      if (STEPS[to].id === 'wander') keyholeOpen($('.tile[data-value="aventine"] .tile-photo', inn), 0.12, 'tile');
+      // The Aventine tile shows through the keyhole as step 3 comes in (b3.3), or later, once she can see it (v9c P3).
+      if (STEPS[to].id === 'wander') watchKeyholeAt('tile', $('.tile[data-value="aventine"] .tile-photo', inn), 0.12, footCover());
     };
     if (reduced) { out.hidden = true; land(); stage.busy = false; return; }
     const parts = (f) => [$('.step-title', f), $('.step-hint', f), $('.step-none', f)].filter(Boolean);
@@ -2004,26 +2004,30 @@
     gsap.timeline({ delay, onComplete: () => { svg.remove(); if (clip) frame.classList.remove('has-keyhole'); } })
       .fromTo(svg, { scale: 1 }, { scale: 10, duration: 0.55, ease: 'power3.in', transformOrigin: `${f(cx)}px ${f(cy + 0.3 * r)}px` }, 0.25);
   }
-  // Her entry: the first time its first photo is two-thirds in view (the day re-renders, so this follows it). A glide
-  // that only passes it (a board row, the clock) does not use it up; where a glide lands, it is looked at again
-  // (fold-in, gates N4/N5/N1).
-  let keyholeIO = null, keyholePh = null;
-  function keyholeRecheck() { if (keyholeIO && keyholePh) { keyholeIO.unobserve(keyholePh); keyholeIO.observe(keyholePh); } }
-  function watchKeyhole() {
-    if (reduced || keyholeDone.has('entry') || !('IntersectionObserver' in window)) return;
-    const ph = $('.stop[data-key="keyhole"] .stop-photo[data-n="0"]', slot('day-body'));
-    keyholeIO?.disconnect();
-    keyholePh = ph;
-    if (!ph) return;
-    keyholeIO = new IntersectionObserver((es) => {
+  // Her entry and the Aventine tile: the first time the photo is two-thirds in view. Her entry's photo follows the
+  // day's re-renders. A glide that only passes it (a board row, the clock) does not use it up; where a glide lands,
+  // it is looked at again (fold-in, gates N4/N5/N1). The tile is watched from the moment step 3 comes in, and the
+  // strip of screen under the stage's sticky foot does not count as in view (v9c P3: on a phone, answering step 2
+  // with the questions low on the screen, the tile's keyhole opened below the fold).
+  const keyholeIO = {}, keyholePh = {};
+  function keyholeRecheck() { Object.keys(keyholeIO).forEach((w) => { const io = keyholeIO[w], ph = keyholePh[w]; if (io && ph) { io.unobserve(ph); io.observe(ph); } }); }
+  function watchKeyholeAt(where, ph, delay, under = 0) {
+    keyholeIO[where]?.disconnect();
+    keyholeIO[where] = keyholePh[where] = null;
+    if (reduced || !ph || keyholeDone.has(where) || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver((es) => {
       if (gliding || !es.some((x) => x.isIntersecting && x.intersectionRatio >= 0.66)) return;
-      keyholeIO.disconnect();
-      keyholeIO = null;
-      keyholePh = null;
-      keyholeOpen(ph, 0, 'entry');
-    }, { threshold: 0.66 });
-    keyholeIO.observe(ph);
+      io.disconnect();
+      keyholeIO[where] = keyholePh[where] = null;
+      keyholeOpen(ph, delay, where);
+    }, { threshold: 0.66, rootMargin: `0px 0px ${-Math.round(under)}px 0px` });
+    keyholeIO[where] = io;
+    keyholePh[where] = ph;
+    io.observe(ph);
   }
+  function watchKeyhole() { watchKeyholeAt('entry', $('.stop[data-key="keyhole"] .stop-photo[data-n="0"]', slot('day-body')), 0); }
+  // The phone's step foot sticks to the screen's bottom; on a laptop it sits in the stage's flow.
+  function footCover() { const f = $('.stage-foot', slot('stage')); return f && getComputedStyle(f).position === 'sticky' ? f.offsetHeight : 0; }
 
   /* ------------------------------------------------------------------ */
   /* Map: Nolli's Rome in 1748 under her day (design-v9 amendments b2)  */
