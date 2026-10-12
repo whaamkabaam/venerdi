@@ -553,7 +553,7 @@
       const named = s.multi ? wantsFor(a, v).map((id) => OPT[id].title) : [];
       labels.push(named.length ? fmt(ASK.answerWants, { label, list: named.join(U.listJoin) }) : label);
     }));
-    // Nothing answered (every step skipped): "You left it to me :)".
+    // Nothing answered (every step skipped): "No picks, so we just wing it :-)".
     return labels.length ? fmt(ASK.answers, { list: labels.join(U.listJoin) }) : ASK.answersNone;
   };
   // Tiles (and their subs), the primary button, Back, the counter's screen-reader text and the

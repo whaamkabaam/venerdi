@@ -90,7 +90,7 @@
     "back": "Back",
     "plan": "Show me Friday",
     "answers": "Your answers: {list}",
-    "answersNone": "You left it to me :)",
+    "answersNone": "No picks, so we just wing it :-)",
     "change": "Change",
     "counter": "{n}/{total}",
     "progress": "Question {n} of {total}",
