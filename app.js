@@ -1959,8 +1959,7 @@
   // v9d D1 (design-d1.md 4.2): Swap in puts a pick from "If there's time" first in her list, so it goes on her day;
   // whatever no longer fits moves to the list. The new entry lights up (and comes into view), focus goes to its
   // Remove (the ring only from the keyboard), the live region says what happened, and Undo stands where the row was
-  // for 6 s: it puts her list back exactly as it was. A double tap's second tap, landing on that Undo, does nothing
-  // (Remove's guard).
+  // for 6 s: it puts her list back exactly as it was. A double tap's second tap does nothing (onDayClick).
   let lastSwapIn = null;
   function swapIn(btn, ev) {
     const id = btn.dataset.id;
@@ -1981,8 +1980,7 @@
     $('[data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: !pointer });
   }
   function undoSwapIn(byKey, ev) {
-    const now = performance.now();
-    if (ev && (ev.detail > 1 || (ev.detail > 0 && lastSwapIn && now - lastSwapIn.t < 500 && Math.hypot(ev.clientX - lastSwapIn.x, ev.clientY - lastSwapIn.y) < 24))) return;
+    if (ev && ev.detail > 1) return;
     const { list, id } = undo;
     undoDrop();
     setPicks(list);
@@ -2036,6 +2034,9 @@
     $$('.stop-dot', strip.closest('.stop-photos')).forEach((d) => { if (+d.dataset.n === n) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
   }
   function onDayClick(e) {
+    // v9d D1: Swap in scrolls to the entry it puts on her day, so a double tap's second tap lands on whatever is under
+    // the finger then (the Undo, another row, an entry): within half a second at the same spot it does nothing.
+    if (e.detail > 0 && lastSwapIn && performance.now() - lastSwapIn.t < 500 && Math.hypot(e.clientX - lastSwapIn.x, e.clientY - lastSwapIn.y) < 24) return;
     const dot = e.target.closest('.stop-dot');
     if (dot) { onStripDot(dot); return; }
     // A tap or a click on an entry's photo shows the next one (no dialog: the entry already says it all).
