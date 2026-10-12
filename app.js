@@ -590,15 +590,36 @@
     const last = stage.step === STEPS.length - 1;
     const any = chosen(stage.draft, s).length > 0;
     const next = $('.stage-next', host);
-    next.textContent = last ? ASK.plan : any ? ASK.next : ASK.skip;
-    next.classList.toggle('btn--primary', last || any);
-    hideCtl($('.stage-back', host), stage.step === 0);
-    // The laptop's none button (in the pill), for the steps that have one: "Not really", "No thanks".
-    const sn = $('.stage-none', host);
-    if (s.none && sn.textContent !== s.none) sn.textContent = s.none;
-    hideCtl(sn, !s.none);
+    morphPill(() => {
+      next.textContent = last ? ASK.plan : any ? ASK.next : ASK.skip;
+      next.classList.toggle('btn--primary', last || any);
+      hideCtl($('.stage-back', host), stage.step === 0);
+      // The laptop's none button (in the pill), for the steps that have one: "Not really", "No thanks".
+      const sn = $('.stage-none', host);
+      if (s.none && sn.textContent !== s.none) sn.textContent = s.none;
+      hideCtl(sn, !s.none);
+      syncPicked();
+    });
     $('.stage-count', host).dataset.text = counterText(stage.step);
-    syncPicked();
+  }
+  // v9c C2b (dir-2): when what the pill holds changes (a pick, Skip turning into Next, Back coming in), it eases from
+  // its old width to its new one: measured before and after, one 0.42 s tween on expo.out (no overshoot), the inline
+  // width cleared at the end. With justify-content: flex-end Next stays at the pill's right edge while it opens to the
+  // left. Only while the pill is shown; reduced motion or PILL_EASE off: it takes the new width at once.
+  const PILL_EASE = true;
+  let pillTw = null;
+  function morphPill(change) {
+    const host = slot('stage');
+    const pill = $('.stage-foot', host);
+    const live = PILL_EASE && !reduced && host.classList.contains('is-foot') && !$('.stage-open', host).hidden;
+    const w0 = live ? pill.getBoundingClientRect().width : 0;
+    if (pillTw) { pillTw.kill(); pillTw = null; }
+    pill.style.width = '';
+    change();
+    if (!live || !w0) return;
+    const w1 = pill.getBoundingClientRect().width;
+    if (Math.abs(w1 - w0) < 1) return;
+    pillTw = gsap.fromTo(pill, { width: w0 }, { width: w1, duration: 0.42, ease: 'expo.out', clearProps: 'width', onComplete: () => { pillTw = null; } });
   }
   // Beside Next: the photos of what she picked on this step, in the order she picked them, so the answer
   // stays in sight when the tiles have scrolled away (dir-3, design-v9 amendments b1.1). Only the newest

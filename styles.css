@@ -881,6 +881,10 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .stage-foot { background-color: var(--glass-fill-solid); } }
 @media (prefers-reduced-transparency: reduce) { .stage-foot { background-color: var(--glass-fill-solid); } }
 .stage-foot .hapw--back { margin-left: 0; }
+/* v9c C2b: while the pill's width eases (app.js morphPill), nothing in it shrinks or wraps: the pill clips instead,
+   with Next held at its right edge (dir-2's pill had the same two rules). */
+.stage-foot { white-space: nowrap; }
+.stage-foot > * { flex: none; }
 .stage button { touch-action: manipulation; }
 /* Back: the arrow in a 44 px circle (its name is "Back" for screen readers), from step 2. */
 .stage-back { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
