@@ -305,24 +305,6 @@
       "code": "f"
     }
   },
-  "defaultDay": [
-    {
-      "id": "maritozzo",
-      "reason": "felix"
-    },
-    {
-      "id": "pantheon",
-      "reason": "felix"
-    },
-    {
-      "id": "monti",
-      "reason": "felix"
-    },
-    {
-      "id": "vittoriano",
-      "reason": "felix"
-    }
-  ],
   "day": {
     "title": "Your Friday",
     "crowded": "That's a full Friday, so we'll pick on the day.",

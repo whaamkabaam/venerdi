@@ -727,7 +727,9 @@
   let plan = null;
   let hasBackup = false;
   const pickIds = () => picks.map((p) => p.id);
-  const cleanPicks = (list) => (Array.isArray(list) ? list : []).map((p) => (p && typeof p.id === 'string' ? { ...p, id: aliasId(p.id) } : p)).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
+  // v9c C1d: a pick of Felix's old default fill (reason `felix`) drops out, so a stored day or an old link opens
+  // without it (felix-2.md 6: his four ideas were for testing).
+  const cleanPicks = (list) => (Array.isArray(list) ? list : []).filter((p) => p && p.reason !== 'felix').map((p) => (p && typeof p.id === 'string' ? { ...p, id: aliasId(p.id) } : p)).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
   const cleanDinner = (id) => (typeof id === 'string' && IDEA[id] ? id : null);
   // What the answers compose to (kept while the answers stay the same): the build a full replay shows.
   let composedMemo = { key: null, res: null };
@@ -778,7 +780,7 @@
   }
 
   // A link from before answers travelled with it (no `a`): rebuild the answers from the picks. Felix's
-  // picks only ever come from the default day, which is what skipping every step gives.
+  // picks only ever came from the default day, which is what skipping every step gave (v9c C1d: no longer).
   function answersFrom(list) {
     const a = emptyAnswers();
     if (list.some((p) => p.reason === 'felix')) return a;
@@ -1059,19 +1061,18 @@
   // A spare row while her note is empty, so her TBC line takes it and the page never moves.
   const spare = () => (freeText.trim() ? 0 : 1);
   const slotsFor = (states) => Math.max(...states.map((s) => s.length)) + spare();
-  // What the board last showed, and the composition last replayed in full (only a replay with at
-  // least two picks counts, so a look at the empty board does not spend it).
+  // What the board last showed, and the composition last replayed in full (an array, empty for a light day
+  // with no picks: v9c C1d).
   function markSeen(fullPicks = null) {
     DEP.seen = { sig: depSig(), rows: plainRows(DEP.shown), picks: pickIds(), fullPicks: fullPicks || DEP.seen?.fullPicks || null };
     store.set('depSeen', DEP.seen);
   }
   // A new composition (Plan Friday, or a link) replays in full; a swap, a removal, an addition, a
-  // dinner pick or her note plays one diff wave. Before she plans, the board only ever diffs.
+  // dinner pick or her note plays one diff wave. A planned day with no picks still plays once (v9c C1d: the
+  // board is not on the page before she plans).
   function needsFull() {
     const s = DEP.seen;
-    if (!s) return true;
-    const want = composedIds();
-    return want.length > 0 && (s.fullPicks || []).join() !== want.join();
+    return !!answers && (!s || !Array.isArray(s.fullPicks) || s.fullPicks.join() !== composedIds().join());
   }
   function primeFull() {
     const states = replayStates();
@@ -1221,14 +1222,14 @@
     const sig = depSig();
     if (initial) {
       const full = !reduced && needsFull();
-      if (reduced || (!full && DEP.seen.sig === sig)) {
+      if (reduced || (!full && DEP.seen && DEP.seen.sig === sig)) {
         DEP.board.ensure(finalRows.length + spare());
         setBoardNow(finalRows);
         setSunNow(true);
         if (reduced) markSeen();
         DEP.pending = false;
       } else if (!full) {
-        const old = DEP.seen.rows;
+        const old = DEP.seen ? DEP.seen.rows : [];
         DEP.board.ensure(Math.max(old.length, finalRows.length) + spare());
         setBoardNow(old);
         setSunNow(true);

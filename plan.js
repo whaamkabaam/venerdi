@@ -455,7 +455,6 @@
      from. Every option has one home (`serves`, one key: reason -> rank, lower is better). No caps, no
      fit test, nothing parked: build() puts everything on the day. */
 
-  const FILL_TO = 3;          // a composed day with fewer picks than this gets my default-day picks up to it
   const STEP_ORDER = ['see', 'wander', 'wild', 'eat']; // the order the board fills in
   const FOOD_FIRST = ['class', 'pastry', 'lunch'];
   const STREET = 'street';
@@ -517,7 +516,8 @@
     const can = (o) => !!o && !o.fridayNo;
     const see = answers.see || [], eat = answers.eat || [];
     const wander = answers.wander || null, wild = answers.wild || null;
-    if (!see.length && !eat.length && !wander && !wild) return { picks: (C.defaultDay || []).filter((p) => can(O[p.id])).map((p) => ({ id: p.id, reason: p.reason })), extras: [] };
+    // v9c C1d (felix-2.md 6): nothing answered gives a light day, her picks only (none); no default fill.
+    if (!see.length && !eat.length && !wander && !wild) return { picks: [], extras: [] };
     const picks = [];
     const ids = () => picks.map((p) => p.id);
     const on = (id) => picks.some((p) => p.id === id);
@@ -557,11 +557,6 @@
       const lunchOn = picks.some((p) => O[p.id].lunch);
       const o = (!lunchOn && best(STREET, (x) => !!x.lunch)) || (lunchOn && best(STREET, (x) => !x.lunch && !isSnack(x))) || best(STREET);
       if (o) add(o.id, STREET, 'eat');
-    }
-    // 6. A light day gets my default-day picks, in order, up to three.
-    for (const d of C.defaultDay || []) {
-      if (picks.length >= FILL_TO) break;
-      if (can(O[d.id]) && !on(d.id)) add(d.id, 'felix', 'felix');
     }
     // The board fills in the order she answered: the sights, the area, the wild card, then food, her tap
     // order inside each step, my picks last.
