@@ -259,12 +259,55 @@
       row.shown[c] = next;
     });
   }
-  // A single quiet flip of one row, outside any replay (live statuses, eggs).
+  // v9c C1h, C1i (dir-3's write): how a board writes a row. Only its final text ever shows: in a column that changes,
+  // every lit module first turns to blank (and goes dark), then, once the last one has landed, each module of the new
+  // text lights and turns to its glyph, left to right, the time column leading. With `rolls` (ARRIVALS' write-in) a
+  // module turns one or two blank leaves first (the drum moving, nothing printed), fixed per place, never random.
+  // A column that does not change does not move. Returns the time its last flip lands.
+  const HERO_W = { D: 0.04, cell: 0.014, row: 0.14, lead: 0.04, clearCell: 0.008, clear: 0.2 };
+  const rollsAt = (j, c, k) => ((j * 7 + c * 3 + k * 5) % 3 === 0 ? 2 : 1);
+  function writeRow(tl, row, d, at, j = 0, { rolls = false, W = HERO_W } = {}) {
+    const texts = rowTexts(d, row.widths);
+    const changed = texts.map((t, c) => t !== row.shown[c]);
+    tl.call(() => applyRowMeta(row, d), null, at);
+    if (!changed.some(Boolean)) return at;
+    let g = 0, gLast = -1;
+    row.cols.forEach((cells, c) => cells.forEach((f, k) => {
+      const i = g++;
+      if (!changed[c] || !cellChar(row.shown[c], k)) return;
+      const when = at + i * W.clearCell;
+      addFlip(tl, f, '', when, W.D);
+      tl.call(() => dimFlap(f, true), null, when + 2 * W.D);
+      gLast = i;
+    }));
+    const t0 = gLast < 0 ? at : Math.max(at + W.clear, at + gLast * W.clearCell + 2 * W.D + 0.02);
+    let end = at;
+    g = 0;
+    row.cols.forEach((cells, c) => {
+      cells.forEach((f, k) => {
+        const i = g++;
+        if (!changed[c]) return;
+        let when = t0 + i * W.cell + (c > 0 ? W.lead : 0);
+        const ch = cellChar(texts[c], k);
+        if (!ch) { tl.call(() => dimFlap(f, true), null, when); return; }
+        tl.call(() => dimFlap(f, false), null, when);
+        const n = rolls ? rollsAt(j, c, k) : 0;
+        for (let r = 0; r < n; r++) { addFlip(tl, f, '', when, W.D); when += 2 * W.D; }
+        addFlip(tl, f, ch, when, W.D);
+        end = Math.max(end, when + 2 * W.D);
+      });
+      if (changed[c]) row.shown[c] = texts[c];
+    });
+    return end;
+  }
+  // A single quiet write of one row, outside any replay (ARRIVALS' live statuses and egg; on DEPARTURES the egg and the
+  // Sunday row's TODAY and DONE).
   function flipRowNow(row, d, opts = { scramble: 0, D: 0.07, stagger: 0.02 }) {
     if (reduced) { setRowNow(row, d); return; }
     const tl = gsap.timeline({ onComplete: () => { row.tls = row.tls.filter((x) => x !== tl); } });
     row.tls.push(tl);
-    flipRow(tl, row, d, 0, opts);
+    if (HERO && HERO.rows.includes(row)) writeRow(tl, row, d, 0, 0, { rolls: false, W: HERO_W });
+    else flipRow(tl, row, d, 0, opts);
   }
 
   /* ------------------------------------------------------------------ */
@@ -312,39 +355,25 @@
     });
     slot('hero-title').textContent = U.pageTitle;
   }
-  // First visit: the board flips in from blank. Later visits: it opens as it was and only changed cells flip.
+  // v9c C1h (dir-3's write-in, dir-2's start rule): on every load, first visit or fiftieth, the board opens dark (every
+  // module unlit) and writes its rows in, row by row, left to right, each glyph after one or two blank leaves. Never a
+  // wrong letter: only blanks or the final glyph. The rows' data (screen readers) is there from the first frame.
   function heroIntro(tl, start) {
-    const seen = store.get('heroSeen', null);
     const now = H.rows.map(heroRowData);
-    if (seen && seen.length === now.length) {
-      HERO.rows.forEach((row, i) => { setRowNow(row, { ...now[i], remark: seen[i] }); flipRow(tl, row, now[i], start + 0.4 + i * 0.12, { scramble: 0, D: 0.07, stagger: 0.02 }); });
-    } else {
-      const D = 0.045;
-      HERO.rows.forEach((row, ri) => {
-        setRowNow(row, null);
-        tl.call(() => applyRowMeta(row, now[ri]), null, start);
-        rowTexts(now[ri], row.widths).forEach((s, c) => {
-          row.cols[c].forEach((f, k) => {
-            let at = start + ri * 0.12 + Math.random() * 0.05;
-            tl.call(() => dimFlap(f, false), null, at);
-            const n = 3 + Math.floor(Math.random() * 4);
-            for (let j = 0; j < n; j++) { addFlip(tl, f, randomGlyph(), at, D); at += 2 * D; }
-            addFlip(tl, f, cellChar(s, k), at, D);
-            if (!cellChar(s, k)) tl.call(() => dimFlap(f, true), null, at + 2 * D);
-          });
-          row.shown[c] = s;
-        });
-      });
-    }
-    store.set('heroSeen', now.map((d) => d.remark));
+    HERO.rows.forEach((row, i) => {
+      setRowNow(row, null);
+      applyRowMeta(row, now[i]);
+      writeRow(tl, row, now[i], start + i * HERO_W.row, i, { rolls: true, W: HERO_W });
+    });
   }
-  function heroFinal() { HERO.rows.forEach((row, i) => setRowNow(row, heroRowData(H.rows[i], i))); store.set('heroSeen', HERO.rows.map((r) => r.data.remark)); }
+  function heroFinal() { HERO.rows.forEach((row, i) => setRowNow(row, heroRowData(H.rows[i], i))); }
   function heroTick() {
+    // While the write-in waits or runs, the next minute's tick catches up (a paused intro is not active: spec gate S4).
+    if (HERO.intro && HERO.intro.progress() < 1) return;
     HERO.rows.forEach((row, i) => {
       const d = heroRowData(H.rows[i], i);
       if (row.data && row.data.remark !== d.remark) flipRowNow(row, d); else if (row.data) applyRowMeta(row, d);
     });
-    store.set('heroSeen', HERO.rows.map((r) => r.data && r.data.remark));
   }
 
   /* ------------------------------------------------------------------ */
@@ -1293,7 +1322,9 @@
     if (!hit) return;
     const i = HERO.rows.findIndex((r) => r.hit === hit);
     if (i < 0 || !H.rows[i].tap) return;
-    if (HERO.intro && HERO.intro.isActive()) HERO.intro.progress(1);
+    // A tap during the write-in, or while it waits for the font, finishes it first (it is paused until then, so
+    // isActive() would miss it: spec gate S4), so its flips never write the plain row over her egg.
+    if (HERO.intro && HERO.intro.progress() < 1) HERO.intro.progress(1);
     heroEgg[i] = !heroEgg[i];
     flipRowNow(HERO.rows[i], heroRowData(H.rows[i], i));
     refreshSoon();
@@ -3277,6 +3308,7 @@
       motionCtx = null;
 
       if (reduced) {
+        HERO.intro = null;
         heroFinal();
         finishBoard();
         ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (self) => render(self.scroll()) });
@@ -3294,14 +3326,22 @@
       });
       render(scrollY);
 
-      // Hero: the ARRIVALS board flips in (or only its changed cells on a return visit), then
-      // Felix's note and the first question.
-      const intro = gsap.timeline();
+      // Hero (v9c C1h): the ARRIVALS board writes itself in on every load, once the fonts are in (at most 0.7 s) and a
+      // frame with the dark board has been painted, so it is seen rather than spent while the page loads. Felix's note
+      // and the first question fade up from 0.55 s into the write, and never later than 0.9 s from here, so a slow
+      // font never keeps her waiting for the first question.
+      const intro = gsap.timeline({ paused: true });
       HERO.intro = intro;
-      heroIntro(intro, 0.2);
-      intro.from(['#note .note', '#ask .stage'], {
-        autoAlpha: 0, y: 18, duration: 0.8, ease: 'power3.out', stagger: 0.1, clearProps: 'transform,visibility,opacity',
-      }, 0.75);
+      heroIntro(intro, 0.1);
+      // Their own tween: from() renders its start at once even when paused, so neither shows before its fade.
+      const ask = gsap.from(['#note .note', '#ask .stage'], { autoAlpha: 0, y: 18, duration: 0.8, ease: 'power3.out',
+        stagger: 0.1, clearProps: 'transform,visibility,opacity', paused: true });
+      let asked = false;
+      const showAsk = () => { if (!asked) { asked = true; ask.play(); } };
+      intro.call(showAsk, null, 0.55);
+      setTimeout(showAsk, 900);
+      const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (!intro.progress()) intro.play(0); }));
+      Promise.race([...(document.fonts ? [document.fonts.ready] : []), new Promise((r) => setTimeout(r, 700))]).then(go);
 
       // The board's triggers come with the board (showDay adds them to this context later).
       motionCtx = ctx;
@@ -3424,6 +3464,7 @@
   (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => { if (DEP.board) warmBoard(); }, { timeout: 3000 });
   window.__venerdi = {
     finishBoard, depRows: () => depRows(plan), boardRows: () => (DEP.board ? DEP.board.rows.map((r) => r.shown) : []), replayStats: () => DEP.stats, plan: () => plan,
+    introDone: () => !HERO.intro || HERO.intro.progress() === 1,
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
     compose: (a) => P.compose(C, a), answers: () => answers && cloneAnswers(answers), picks: () => picks.map((p) => ({ ...p })),
     shareText: () => shareText(), dinner: () => dinner, dinnerAt: () => dinnerAt,
