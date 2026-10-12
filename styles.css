@@ -953,6 +953,25 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 }
 .dep-gap { border-top: 1px dashed #333337; margin-top: 4px; transform-origin: 0 50%; }
 
+/* v9c C1l (dir-3's signature moment, only with ?moment=1): the Show me Friday button grows into the DEPARTURES board
+   while the page glides to it. One fixed box, moved with transforms and sized each frame; no blur, no glass. */
+.morph {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+  will-change: transform, width, height;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 48px -28px rgb(10 12 40 / 0.55);
+}
+.morph-label { position: absolute; inset: 0; display: grid; place-items: center; color: var(--on-accent); font-size: 1rem; font-weight: 600; white-space: nowrap; }
+.morph-head { position: absolute; top: 0; left: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 12px 0; color: var(--flap-ink); opacity: 0; }
+@media (min-width: 1024px) { .morph-head { padding: 22px 24px 0; } }
+/* While the button turns into the board, the step's controls fade and nothing in the step takes a tap. */
+.stage.is-leaving .stage-foot { opacity: 0; pointer-events: none; transition: opacity 140ms var(--ease-out); }
+.stage.is-leaving .stage-steps { pointer-events: none; }
+
 /* ---------- Your day ---------- */
 
 .day-head {

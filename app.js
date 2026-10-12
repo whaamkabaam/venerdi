@@ -24,6 +24,19 @@
     get(k, d) { try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
     set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch { /* private mode */ } },
   };
+  // v9c C1l: the morph (Show me Friday grows into the board) is behind a flag, off by default, for Felix to try on his
+  // phone: ?moment=1 turns it on for this browser, ?moment=0 off. The parameter leaves the address at once (the
+  // others keep their exact text), before anything else reads the query.
+  {
+    const mq = new URLSearchParams(location.search).get('moment');
+    if (mq === '1') store.set('moment', true);
+    if (mq === '0') store.set('moment', false);
+    if (mq !== null) {
+      const rest = location.search.slice(1).split('&').filter((kv) => kv && !/^moment(=|$)/.test(kv)).join('&');
+      history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+    }
+  }
+  const MOMENT = store.get('moment', false) === true;
   // Once (spec 9.4, AM18): a v7 visitor's answers and note come over (a v6 visitor's answers when there
   // are no v7 ones), and her day is composed again, because a v7 day was cut by the calmer caps. The
   // things she added from the catalogue in v7 are kept here and go back on after the compose.
@@ -537,9 +550,12 @@
   function syncStage() {
     const host = slot('stage');
     const s = STEPS[stage.step];
-    host.classList.toggle('is-closed', !stage.open);
-    $('.stage-open', host).hidden = !stage.open;
-    $('.stage-closed', host).hidden = stage.open;
+    // v9c C1l (dir-3, only with the morph on): while Show me Friday turns into the board (stage.hold) the step stays
+    // where it is, so nothing jumps under her finger; it closes once the board is in place (morphToBoard).
+    const shownOpen = stage.open || !!stage.hold;
+    host.classList.toggle('is-closed', !shownOpen);
+    $('.stage-open', host).hidden = !shownOpen;
+    $('.stage-closed', host).hidden = shownOpen;
     $('.stage-answers', host).textContent = answersLine(answers || stage.draft);
     $$('.tile', host).forEach((b) => {
       const st = STEPS[+b.dataset.step];
@@ -688,7 +704,7 @@
     // Mid-transition the buttons already belong to the next step: a second quick tap waits.
     if (stage.busy && (a === 'next' || a === 'back' || a === 'none')) return;
     const last = stage.step === STEPS.length - 1;
-    if (a === 'next') { if (last) planFriday(); else goStep(stage.step + 1); }
+    if (a === 'next') { if (last) planFriday(e.target.closest('button')); else goStep(stage.step + 1); }
     else if (a === 'back') goStep(stage.step - 1);
     else if (a === 'none') {
       // An answer, like a tile (Android; an iPhone's switch already ticked). On the last step Show me Friday's own
@@ -696,7 +712,7 @@
       if (!last) buzz('selection');
       stage.draft[STEPS[stage.step].id] = null;
       syncStage();
-      if (last) planFriday(); else goStep(stage.step + 1);
+      if (last) planFriday(e.target.closest('button')); else goStep(stage.step + 1);
     } else if (a === 'change') openStage();
   }
   // "Change" and "Change answers": the stage opens on step 1 with her answers selected.
@@ -715,7 +731,9 @@
     scrollToY(sec.getBoundingClientRect().top + scrollY - ASK_GAP, 0.5, () => $('.step-title', host).focus({ preventScroll: true }));
   }
   // Show me Friday: compose her answers, close the stage, glide to the board and let it play.
-  function planFriday() {
+  // v9c C1l: with the flag on (and motion allowed), `src`, the button under her finger, grows into the board.
+  function planFriday(src = null) {
+    const from = MOMENT && !reduced && src && src.offsetParent && stage.open ? src.getBoundingClientRect() : null;
     buzz('medium');
     DEP.tapped = true; // v9c C1j: the replay this tap asks for may carry the Android rhythm
     loadNolli();
@@ -726,13 +744,82 @@
     undoDrop();
     saveState();
     stage.open = false;
+    if (from) { stage.hold = true; slot('stage').classList.add('is-leaving'); }
     showDay();
     syncStage();
     update();
     // Focus follows her to the board (the button she pressed is hidden with the stage).
     slot('dep-title').focus({ preventScroll: true });
     const b = DEP.board.host;
+    if (from && from.width) { morphToBoard(from, src); return; }
     scrollToY(b.getBoundingClientRect().top + scrollY - scrollGap(), 0.6, () => { if (DEP.pending && boardInView()) maybePlay(); });
+  }
+  // v9c C1l (dir-3's signature moment, behind the flag): the button grows into the DEPARTURES board's black panel while
+  // the page glides up to it, the board's title fades in on it, and once it has become the board her day is written
+  // in by the one wave (C1i). One fixed box moved with transforms and sized each frame; no blur.
+  const MORPH = 0.62;
+  const easeSheet = (t) => { // cubic-bezier(0.32, 0.72, 0, 1), the sheets' ease
+    let lo = 0, hi = 1, x = t;
+    for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; const bx = 3 * m * (1 - m) ** 2 * 0.32 + m ** 3; if (bx < t) lo = m; else hi = m; x = m; }
+    return 3 * x * (1 - x) ** 2 * 0.72 + 3 * x * x * (1 - x) + x ** 3;
+  };
+  function morphToBoard(from, src) {
+    const boardEl = $('.board', DEP.board.host);
+    const host = DEP.board.host;
+    // Nothing jumps: the step stays open under her finger while the page glides down to the board. The step closes
+    // once the board is in place (the scroll is corrected in the same frame, so the board does not move).
+    const target = Math.max(0, Math.min(host.getBoundingClientRect().top + scrollY - scrollGap(), ScrollTrigger.maxScroll(window)));
+    const b0 = boardEl.getBoundingClientRect();
+    const land = { left: b0.left, top: b0.top - (target - scrollY), width: b0.width, height: b0.height };
+    const cs = getComputedStyle(src);
+    const ghost = document.createElement('div');
+    ghost.className = 'morph';
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.innerHTML = `<span class="morph-label">${esc(src.textContent.trim())}</span><span class="morph-head"><span class="board-title">${esc(DEPC.title)}</span><span class="board-sub label">${esc(DEPC.sub)}</span></span>`;
+    document.body.appendChild(ghost);
+    const r0 = { x: from.left, y: from.top, w: from.width, h: from.height, rad: parseFloat(cs.borderTopLeftRadius) || 24 };
+    const radEnd = parseFloat(getComputedStyle(boardEl).borderTopLeftRadius) || 10;
+    const fill0 = cs.backgroundColor;
+    DEP.morphing = true;
+    boardEl.style.visibility = 'hidden';
+    const label = $('.morph-label', ghost), head = $('.morph-head', ghost);
+    const st = { p: 0 };
+    const draw = () => {
+      const e = easeSheet(st.p);
+      const lerp = (a, z) => a + (z - a) * e;
+      ghost.style.transform = `translate3d(${lerp(r0.x, land.left)}px, ${lerp(r0.y, land.top)}px, 0)`;
+      ghost.style.width = `${lerp(r0.w, land.width)}px`;
+      ghost.style.height = `${lerp(r0.h, land.height)}px`;
+      ghost.style.borderRadius = `${lerp(r0.rad, radEnd)}px`;
+      const c = Math.min(1, st.p / 0.5);
+      ghost.style.backgroundColor = `color-mix(in srgb, ${fill0} ${Math.round((1 - c) * 100)}%, #0B0B0C)`;
+      label.style.opacity = String(Math.max(0, 1 - st.p / 0.18));
+      head.style.opacity = String(Math.min(1, Math.max(0, (st.p - 0.55) / 0.4)));
+      head.style.width = `${land.width}px`;
+    };
+    draw();
+    // The tap's own frame is a heavy one (her whole day is laid out in it), so the capsule starts moving on the frame
+    // after, from where her finger left it.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      scrollToY(target, MORPH);
+      gsap.to(st, {
+        p: 1, duration: MORPH, ease: 'none', onUpdate: draw,
+        onComplete: () => {
+          const before = boardEl.getBoundingClientRect().top;
+          stage.hold = false;
+          slot('stage').classList.remove('is-leaving');
+          syncStage();
+          const shift = boardEl.getBoundingClientRect().top - before;
+          if (shift) scrollTo(0, scrollY + shift);
+          refreshSoon();
+          draw();
+          boardEl.style.visibility = '';
+          DEP.morphing = false;
+          gsap.to(ghost, { opacity: 0, duration: 0.14, ease: 'power1.out', onComplete: () => ghost.remove() });
+          if (DEP.pending) maybePlay();
+        },
+      });
+    }));
   }
 
   /* ------------------------------------------------------------------ */
@@ -1237,7 +1324,8 @@
   // When the board comes into view: her day in full the first time, the return visit's settle once per load, one
   // diff wave after a change.
   function maybePlay() {
-    if (DEP.replay || !DEP.pending) return;
+    // Not while Show me Friday is turning into the board (C1l): the board writes once the button has become it.
+    if (DEP.replay || !DEP.pending || DEP.morphing) return;
     if (reduced) { finishBoard(); return; }
     if (needsFull()) {
       playStates(primeFull(), { full: true });
@@ -3471,6 +3559,7 @@
   loadWeather();
   (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => { if (DEP.board) warmBoard(); }, { timeout: 3000 });
   window.__venerdi = {
+    moment: () => MOMENT,
     finishBoard, depRows: () => depRows(plan), boardRows: () => (DEP.board ? DEP.board.rows.map((r) => r.shown) : []), replayStats: () => DEP.stats, plan: () => plan,
     introDone: () => !HERO.intro || HERO.intro.progress() === 1,
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, settle: DEP.settle, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),
