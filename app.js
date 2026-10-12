@@ -3314,11 +3314,13 @@
     nowBtns.forEach((b) => hideCtl(b, !jumpEl));
     hud.toggleAttribute('data-today', !!jumpEl);
   }
-  function jumpToNow() {
+  function jumpToNow(e) {
     if (!jumpEl) return;
     jumpEl.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
     const h = $('h4', jumpEl);
-    if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+    // The entry's title takes focus; its ring shows only when Now was pressed from the keyboard (v9c C3b: a finger
+    // on Now's cover would otherwise leave a ring around the title).
+    if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true, focusVisible: e?.detail === 0 }); }
   }
 
   /* ------------------------------------------------------------------ */
