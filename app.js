@@ -1416,7 +1416,10 @@
   function playShown() {
     if (!DEP.board || !DEP.pending) return;
     const on = DEP.board.rows.filter((row) => { const r = row.el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }).length;
-    if (on >= Math.min(2, DEP.board.rows.length)) maybePlay();
+    // Or its scroll trigger is already behind her (top above 45 % of the window, bottom not yet off the top): after a
+    // reload that kept her scroll under the board, or a flick there while ARRIVALS wrote, that trigger has fired already.
+    const b = DEP.board.host.getBoundingClientRect();
+    if (on >= Math.min(2, DEP.board.rows.length) || (b.top < innerHeight * 0.45 && b.bottom > 0)) maybePlay();
   }
   let depTimer = 0;
   // After picks, her dinner pick or her line change: settle the board now if she is looking at it, else
