@@ -1975,9 +1975,10 @@
     announceMoved(prev, fmt(on ? C.day.live.onDay : C.day.live.inLater, { title: OPT[id].title }));
     const nl = stopEl(id);
     if (!nl) return;
-    flash(nl);
-    if (!inView(nl)) nl.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
     $('[data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: !pointer });
+    // The page's own glide (a board row's), which lights the entry up when it lands; a native smooth scroll was
+    // cancelled by the ScrollTrigger refresh that follows a new day (v9d build-d1 look round).
+    if (inView(nl)) flash(nl); else goToEntry(id);
   }
   function undoSwapIn(byKey, ev) {
     if (ev && ev.detail > 1) return;
