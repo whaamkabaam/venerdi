@@ -986,6 +986,9 @@
         linkAnswers = linkAnswers || answersFrom(linkIds.map((id, i) => ({ id, reason: byCode[codes[i]] || 'added' })));
         linkPicks = cleanPicks(P.compose(C, linkAnswers).picks);
       }
+      // v9d D1: her picks are a priority list now (the board's order before); a link from before v=9 is put in the
+      // new order once, from its answers.
+      if (q.get('v') !== '9') linkPicks = P.priorityOrder(C, linkPicks, linkAnswers || answersFrom(linkPicks));
       const linkNote = q.get('n') || '';
       const linkDinner = cleanDinner(q.get('d'));
       // `t=2030`: her dinner time, 20:30 (v9c C1f).
@@ -999,7 +1002,7 @@
       if (same && store.get('fromLink', false)) hasBackup = !!store.get('before-link', null);
       else {
         hasBackup = Array.isArray(saved) && !same;
-        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null), dinner: savedDinner, dinnerAt: savedAt } : null);
+        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null), dinner: savedDinner, dinnerAt: savedAt, order: store.get('order', null) } : null);
       }
       picks = linkPicks;
       answers = linkAnswers || answersFrom(linkPicks);
@@ -1021,6 +1024,8 @@
     freeText = store.get('note', '');
     dinner = cleanDinner(store.get('dinner', null));
     dinnerAt = cleanDinnerAt(store.get('dinnerAt', null));
+    // A day stored before v9d D1 holds the board's order: put it in her priority order once.
+    if (store.get('order', null) !== 9 && picks.length) { picks = P.priorityOrder(C, picks, answers || {}); store.set('picks', picks); store.set('order', 9); }
     // Someone's link, opened earlier: the note and "Back to my picks" stay until the day changes.
     fromLink = !!store.get('fromLink', false);
     hasBackup = fromLink && !!store.get('before-link', null);
@@ -1032,13 +1037,15 @@
       saveState();
     }
   }
-  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('dinnerAt', dinnerAt); store.set('fromLink', fromLink); }
+  // `order: 9` (v9d D1): the stored picks are her priority list, not the board's order of v8.
+  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('dinnerAt', dinnerAt); store.set('fromLink', fromLink); store.set('order', 9); }
 
   function backToMine(byKey = false) {
     const b = store.get('before-link', null);
     if (!b) return;
     picks = cleanPicks(b.picks);
     answers = b.answers ? cleanAnswers(b.answers) : null;
+    if (b.order !== 9) picks = P.priorityOrder(C, picks, answers || {});
     freeText = b.note || '';
     dinner = cleanDinner(b.dinner);
     dinnerAt = cleanDinnerAt(b.dinnerAt);
@@ -1066,11 +1073,11 @@
     const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
     const a = answers ? encodeAnswers(answers) : null;
     const r = picks.map((p) => (WHY[p.reason] || WHY.added).code).join('');
-    return `${base}?v=8&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${dinnerAt ? `t=${dinnerAt.replace(':', '')}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
+    return `${base}?v=9&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${dinnerAt ? `t=${dinnerAt.replace(':', '')}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
   }
   // A mini timetable: "around 10:00 Maritozzo" per card on her day (its time as the card shows it:
-  // "around" for a rough time, the bare time for an exact one), her dinner pick, then her line, then the
-  // link. No prices. Something that can't happen on Friday has no card, so no line.
+  // "around" for a rough time, the bare time for an exact one), her dinner pick, what waits under "If there's
+  // time", then her line, then the link. No prices, no trips. Something that can't happen on Friday has no card, so no line.
   function shareText() {
     const timeOf = (it) => (it.exact ? it.rough : fmt(U.around, { time: it.rough }));
     const stops = plan.items.filter((it) => it.kind === 'option').map((it) => `${timeOf(it)} ${it.option.title}`);
@@ -1082,6 +1089,8 @@
     const dinnerTime = timeOf(plan.items.find((it) => it.id === 'dinner'));
     if (dinner) lines.push(fmt(C.send.shareDinner, { time: dinnerTime, title: IDEA[dinner].title }));
     else if (dinnerAt) lines.push(fmt(C.send.shareDinnerTime, { time: dinnerTime }));
+    // v9d D1: what waits under "If there's time", in one line.
+    if (plan.later.length) lines.push(fmt(C.send.shareLater, { list: listOf(plan.later.map((l) => l.option.title)) }));
     if (note) lines.push(`${C.send.shareExtra} ${note}`);
     lines.push(linkURL());
     return lines.join('\n');
