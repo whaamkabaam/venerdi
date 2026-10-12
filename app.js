@@ -1006,7 +1006,7 @@
   }
   function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('dinnerAt', dinnerAt); store.set('fromLink', fromLink); }
 
-  function backToMine() {
+  function backToMine(byKey = false) {
     const b = store.get('before-link', null);
     if (!b) return;
     picks = cleanPicks(b.picks);
@@ -1022,6 +1022,9 @@
     undoDrop();
     syncStage();
     update();
+    // The button goes with the link's note, so focus goes to her board's title instead of the page itself (fold-in,
+    // gate-mechanics N2); its ring only from the keyboard.
+    slot('dep-title').focus({ preventScroll: true, focusVisible: byKey });
   }
 
   // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids, in board
@@ -3216,13 +3219,16 @@
     row.flashT = setTimeout(() => row.el.classList.remove('is-flash'), s * 1000);
   }
   // The clock: back to the board, where the row of the entry she was on flashes; focus goes to the board.
-  function backToBoard() {
+  function backToBoard(e) {
     if (!DEP.board) return;
     const key = itemAt(lastY)?.dataset.key;
     const y = DEP.board.host.getBoundingClientRect().top + scrollY - scrollGap();
+    // The board's title takes focus, marked as from the keyboard only when the clock was pressed from it (fold-in,
+    // merge.md's open note: after a finger it matched :focus-visible).
+    const byKey = e?.detail === 0;
     scrollToY(y, 0.7, () => {
       flashRow(DEP.board.rows.find((r) => r.data && r.data.key === key), 0.6);
-      slot('dep-title').focus({ preventScroll: true });
+      slot('dep-title').focus({ preventScroll: true, focusVisible: byKey });
     });
   }
 
@@ -3564,7 +3570,7 @@
     clearTimeout(textTimer);
     textTimer = setTimeout(() => { if (booted) syncDepBoard(); }, 500);
   });
-  slot('dep-note').addEventListener('click', (e) => { if (e.target.closest('[data-action="back-to-mine"]')) backToMine(); });
+  slot('dep-note').addEventListener('click', (e) => { if (e.target.closest('[data-action="back-to-mine"]')) backToMine(e.detail === 0); });
   slot('dep-board').addEventListener('click', onBoardClick);
   slot('board').addEventListener('click', onHeroClick);
   slot('send').addEventListener('click', send);
