@@ -1360,6 +1360,8 @@
     // Not while Show me Friday is turning into the board (C1l): the board writes once the button has become it.
     if (DEP.replay || !DEP.pending || DEP.morphing) return;
     if (reduced) { finishBoard(); return; }
+    // Not while ARRIVALS writes itself in on load: one board at a time (playShown picks the board up after it).
+    if (HERO.intro && HERO.intro.progress() < 1) return;
     if (needsFull()) {
       playStates(primeFull(), { full: true });
     } else if (DEP.settle) {
@@ -1375,6 +1377,15 @@
     }
   }
   const boardInView = () => { const b = DEP.board.host.getBoundingClientRect(); return b.top < innerHeight * 0.85 && b.bottom > 80; };
+  // v9c fold-in (verify S1): a board she can see never sits dark. Once ARRIVALS has written itself in, a wave that
+  // waits from load (the return visit's settle, or a day this board has not shown yet) plays at once when two of her
+  // rows are already on screen (a laptop, a tall phone). A board that only peeks in (its title and one row at the
+  // bottom of a phone) still comes alive as she scrolls to it.
+  function playShown() {
+    if (!DEP.board || !DEP.pending) return;
+    const on = DEP.board.rows.filter((row) => { const r = row.el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }).length;
+    if (on >= Math.min(2, DEP.board.rows.length)) maybePlay();
+  }
   let depTimer = 0;
   // After picks, her dinner pick or her line change: settle the board now if she is looking at it, else
   // on the next visit.
@@ -1393,7 +1404,7 @@
         DEP.pending = false;
       } else if (!full && DEP.seen && DEP.seen.sig === sig) {
         // v9c C1i (dir-2's settle): a return visit with the same day: the board waits dark below the fold and writes
-        // itself in once, when she first scrolls to it.
+        // itself in once, when she first scrolls to it (on her first screen: right after ARRIVALS, playShown).
         blankBoard(finalRows);
         DEP.settle = true;
         DEP.pending = true;
@@ -3463,7 +3474,7 @@
       // frame with the dark board has been painted, so it is seen rather than spent while the page loads. Felix's note
       // and the first question fade up from 0.55 s into the write, and never later than 0.9 s from here, so a slow
       // font never keeps her waiting for the first question.
-      const intro = gsap.timeline({ paused: true });
+      const intro = gsap.timeline({ paused: true, onComplete: playShown });
       HERO.intro = intro;
       heroIntro(intro, 0.1);
       // Their own tween: from() renders its start at once even when paused, so neither shows before its fade.
