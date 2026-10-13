@@ -448,7 +448,6 @@
         "line": "Thin, crispy Roman pizza from a wood oven, in a loud room done up like a street",
         "area": "Behind the Colosseum",
         "booking": "We can book",
-        "price": "around €15 each",
         "friendTip": false,
         "lat": 41.88869,
         "lon": 12.49783,
@@ -466,7 +465,6 @@
         "line": "Loud, cheap Testaccio pizza place where the pizzas come fast and there's usually a queue",
         "area": "Testaccio",
         "booking": "Walk in, cash only",
-        "price": "around €15 each",
         "friendTip": true,
         "lat": 41.88093,
         "lon": 12.47535,
@@ -484,7 +482,6 @@
         "line": "An old Trastevere pizzeria open since 1962, no booking for two, and their site says a table always turns up\nThey have pasta too, in case it's a pasta day for you :D",
         "area": "Trastevere",
         "booking": "Walk in",
-        "price": "around €15 each",
         "friendTip": true,
         "lat": 41.88813,
         "lon": 12.47109,
@@ -1837,7 +1834,6 @@
         }
       ],
       "booking": "none",
-      "price": "around €6 each",
       "serves": {
         "street": 1
       }
@@ -1884,7 +1880,6 @@
         }
       ],
       "booking": "none",
-      "price": "€3 each",
       "serves": {
         "street": 2
       }
@@ -1926,7 +1921,6 @@
         }
       ],
       "booking": "none",
-      "price": "€5 each",
       "friendTip": true,
       "serves": {
         "street": 3
@@ -2016,7 +2010,6 @@
       ],
       "book": "lunch at Fortunata",
       "booking": "recommended",
-      "price": "around €30 each",
       "serves": {
         "lunch": 1
       }
@@ -2071,7 +2064,6 @@
       ],
       "book": "lunch at Flavio",
       "booking": "recommended",
-      "price": "around €30 each",
       "friendTip": true,
       "serves": {
         "lunch": 2
