@@ -97,6 +97,8 @@
     photos: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.75" y="1.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/><rect x="8.75" y="1.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/><rect x="1.75" y="8.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/><rect x="8.75" y="8.75" width="5.5" height="5.5" rx="1.25" fill="currentColor"/></svg>',
     close: '<svg class="i" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5 14.5 14.5M14.5 5.5 5.5 14.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
     back: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3.5M7.5 4 3.5 8l4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    // v9f F12: Send's arrow, a 2 px stroke beside its semibold words.
+    send: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
   /* ------------------------------------------------------------------ */
@@ -385,7 +387,7 @@
     const S = C.send;
     slot('free-label').textContent = S.label;
     slot('free-text').placeholder = S.placeholder;
-    slot('send').textContent = S.button;
+    slot('send').innerHTML = `${esc(S.button)}${ICON.send}`;
 
     slot('day-title').textContent = C.day.title;
     slot('change-answers').textContent = C.day.changeAnswers;
@@ -3628,7 +3630,18 @@
   let booted = false;
   let refreshTimer = 0;
   // Send needs something to send: a pick, her dinner pick or time, or a line of text.
-  function syncSend() { slot('send').disabled = !picks.length && !dinner && !dinnerAt && !freeText.trim(); }
+  // v9f F12: beside the button, the first photos of her day (at most four, in day order), as her picks sit beside Next in
+  // the questions: what she sends. Decorative; drawn again only when her day's first entries change.
+  function syncSend() {
+    slot('send').disabled = !picks.length && !dinner && !dinnerAt && !freeText.trim();
+    const box = slot('send-picked'), ids = plan ? plan.items.filter((it) => it.kind === 'option').slice(0, 4).map((it) => it.id) : [];
+    if (box.dataset.ids === ids.join()) return;
+    box.dataset.ids = ids.join();
+    box.innerHTML = ids.map((id) => {
+      const im = IMG[OPT[id].photos?.[0]];
+      return `<span class="picked-ph" data-v="${esc(id)}" style="--ph:${esc(im?.color || '')}">${im ? `<img src="${esc(im.src800)}" alt="" width="${+im.w}" height="${+im.h}" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">` : ''}</span>`;
+    }).join('');
+  }
 
   function update() {
     plan = P.build(C, pickIds(), planOpts());
