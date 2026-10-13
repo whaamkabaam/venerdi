@@ -515,6 +515,7 @@
     lastLen = Math.min(big ? 0.07 : 0.042, 0.018 + power * 0.004);
     lastBuzz = S.t;
     vibrate(Math.round(lastLen * 1000));
+    hxKnock();
   }
 
   function plan(pieces) {
@@ -949,6 +950,36 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* ?hapx=1: the knocks under her finger on an iPhone (a trial)         */
+  /* ------------------------------------------------------------------ */
+
+  // An iPhone has no navigator.vibrate; Safari ticks only for a native switch. A tap ticks once (the cover is a label
+  // with a switch, as on every control of the page). WebKit has one more route that needs no tap (CheckboxInputType.cpp,
+  // main, 13 Oct 2026): a finger held on a switch for 200 ms starts "pointer tracking", and from then on every touchmove
+  // that takes the finger across the middle of the switch's track flips it and ticks, with no user-gesture check. So with
+  // ?hapx=1, on an iPhone only (no navigator.vibrate), the cover's switch lies under her finger itself: six screens wide,
+  // see-through, with its middle a screen to one side of her finger. While she holds a piece, each knock that would buzz
+  // an Android phone moves the switch two screens over, so the finger is on the other side of the middle at her next
+  // move: one tick per knock. Between knocks the switch follows her finger, so moving it never crosses the middle. Only
+  // a real iPhone can say whether it ticks. Off by default; nothing is stored.
+  const HX = { on: false, down: false, fx: 0, sw: null };
+  function hxSetup(layer) {
+    if (!/(?:^|&)hapx=1(?:&|$)/.test(location.search.slice(1)) || navigator.vibrate || !matchMedia('(pointer: coarse)').matches) return;
+    HX.sw = layer.querySelector('input');
+    layer.classList.add('is-hapx');
+    HX.sw.style.width = `${6 * VW}px`;
+    // Tapped, it flips and ticks as before; it is put back at once, so pointer tracking always starts from off.
+    HX.sw.addEventListener('click', (e) => e.preventDefault());
+    hxPlace();
+  }
+  // Off: the finger a third of the way along the track (two screens in); on: two thirds (four screens in).
+  function hxPlace() { if (HX.sw) HX.sw.style.left = `${Math.round((HX.down ? HX.fx : 0) - (HX.down && HX.on ? 4 : 2) * VW)}px`; }
+  function hxDown(e) { if (!HX.sw) return; HX.down = true; HX.on = false; HX.fx = e.clientX; hxPlace(); }
+  function hxMove(e) { if (!HX.sw || !HX.down) return; HX.fx = e.clientX; hxPlace(); }
+  function hxUp() { if (!HX.sw) return; HX.down = false; HX.on = false; hxPlace(); }
+  function hxKnock() { if (!HX.sw || !HX.down) return; HX.on = !HX.on; hxPlace(); }
+
+  /* ------------------------------------------------------------------ */
   /* Her hands on the heap                                               */
   /* ------------------------------------------------------------------ */
 
@@ -974,6 +1005,7 @@
       if (down) return;
       const { b, wx, wy } = pick(e.clientX, e.clientY);
       down = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), b, moved: false };
+      hxDown(e);
       try { layer.setPointerCapture(e.pointerId); } catch { /* fine */ }
       thaw();
       wake();
@@ -982,6 +1014,7 @@
     layer.addEventListener('pointermove', (e) => {
       if (!down || e.pointerId !== down.id) return;
       if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 7) down.moved = true;
+      hxMove(e);
       if (S.drag) { S.drag.tx = toWorldX(e.clientX); S.drag.ty = toWorldY(e.clientY); wake(); }
     });
     const up = (e) => {
@@ -991,6 +1024,7 @@
       layer.classList.remove('is-grab');
       if (tap) poke(down.b, e.clientX, e.clientY);
       down = null;
+      hxUp();
       wake();
     };
     layer.addEventListener('pointerup', up);
@@ -1094,6 +1128,7 @@
       document.body.appendChild(S.sky);
     }
     bindTouch(ui.layer);
+    hxSetup(ui.layer);
     lockPage();
     W.bodies.length = 0; W.live.length = 0; W.arbiters.clear(); W.joints.length = 0;
     S.ghosts = [];

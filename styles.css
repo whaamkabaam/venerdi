@@ -1820,6 +1820,9 @@ dialog.peek .say-sound { white-space: normal; }
 }
 .xp-touch.is-grab { cursor: grabbing; }
 .xp-touch > input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; visibility: hidden; }
+/* ?hapx=1 on an iPhone (explode.js): the switch itself lies under her finger, see-through, a little taller than the screen
+   and six screens wide (its left edge is set as her finger moves). */
+.xp-touch.is-hapx > input { top: -20px; height: calc(100% + 40px); visibility: visible; opacity: 0; }
 /* Once it settles, one line at the top in Felix's words, in the italic of the note ("Hey Sasha,", "Felix"), and nothing
    else. It takes no touch: the whole heap under it is hers to throw. */
 .xp-top {
