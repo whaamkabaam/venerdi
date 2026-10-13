@@ -1804,6 +1804,7 @@ dialog.peek .say-sound { white-space: normal; }
 :root.xp-on .hud.xp-p { box-shadow: 0 0 0 1px var(--hairline); }
 .xp-unclip { overflow: visible !important; contain: none !important; clip-path: none !important; }
 .xp-ln { display: block; width: fit-content; }
+.xp-ib { display: inline-block; }
 .xp-hung { transition: none !important; animation: none !important; }
 /* Her hands on the heap: one cover over everything, with a switch for the iPhone's tick on a tap. */
 .xp-touch {

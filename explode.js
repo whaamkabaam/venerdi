@@ -416,9 +416,12 @@
         const r = el.getBoundingClientRect();
         if (r.width < 2 || r.height < 2) continue;
         el.__xp = true; el.setAttribute('data-xp', '');
-        pending.push({ el, o, r });
+        pending.push({ el, o, r, inline: cs.display === 'inline' });
       }
     }
+    // A transform does nothing to an inline box (the dinner card's facts are spans): those become inline blocks, before
+    // anything is measured.
+    for (const p of pending) if (p.inline) p.el.classList.add('xp-ib');
     // Paragraphs come apart into lines (one batch of writes, then the reads below).
     const pieces = [];
     const lineSets = [];
