@@ -512,10 +512,13 @@
     if (power < 1.5 || S.t < (S.hush || 0)) return;
     const gap = S.t - lastBuzz;
     if (gap < Math.max(0.075, lastLen + 0.035) && !(big && gap > 0.04)) return;
-    lastLen = Math.min(big ? 0.07 : 0.042, 0.018 + power * 0.004);
-    lastBuzz = S.t;
-    vibrate(Math.round(lastLen * 1000));
+    buzz(Math.min(big ? 0.07 : 0.042, 0.018 + power * 0.004));
     hxKnock();
+  }
+  // A buzz of `len` seconds (or a pattern of ms): the next knock waits for it to end, so it is felt whole.
+  function buzz(len, pattern) {
+    lastLen = len; lastBuzz = S.t;
+    vibrate(pattern || Math.round(len * 1000));
   }
 
   function plan(pieces) {
@@ -1009,7 +1012,7 @@
       try { layer.setPointerCapture(e.pointerId); } catch { /* fine */ }
       thaw();
       wake();
-      if (b) { S.drag = finger(b, wx, wy); layer.classList.add('is-grab'); vibrate(20); }
+      if (b) { S.drag = finger(b, wx, wy); layer.classList.add('is-grab'); buzz(0.02); }
     });
     layer.addEventListener('pointermove', (e) => {
       if (!down || e.pointerId !== down.id) return;
@@ -1033,7 +1036,7 @@
   // A tap: the piece under her finger hops; a tap on the sky sets off a little blast there.
   function poke(b, sx, sy) {
     const wx = toWorldX(sx), wy = toWorldY(sy);
-    if (b) { b.vy -= rr(1100, 1500); b.vx += (wx - b.x) * -2 + rr(-200, 200); b.w += rr(-9, 9); vibrate(26); return; }
+    if (b) { b.vy -= rr(1100, 1500); b.vx += (wx - b.x) * -2 + rr(-200, 200); b.w += rr(-9, 9); buzz(0.026); return; }
     let hit = 0;
     for (const o of W.live) {
       if (!o.piece || o.im === 0) continue;
@@ -1042,7 +1045,7 @@
       const v = 1500 / (1 + d / 110);
       o.vx += (dx / (d || 1)) * v; o.vy += (dy / (d || 1)) * v - 300; o.w += rr(-6, 6); hit++;
     }
-    if (hit) { S.shake = Math.max(S.shake, 3); vibrate([40, 30, 24]); }
+    if (hit) { S.shake = Math.max(S.shake, 3); buzz(0.094, [40, 30, 24]); }
   }
 
   /* ------------------------------------------------------------------ */
