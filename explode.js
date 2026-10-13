@@ -921,6 +921,14 @@
     if (T.listening || !S.done || opts.reduced || !matchMedia('(pointer: coarse)').matches) return;
     const ask = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
     if (!ask) { T.listening = true; addEventListener('deviceorientation', onTilt); return; }
+    // v9f fold-in (gate-mech S2): Chrome on Android has requestPermission too now, and allows the sensors by default; where
+    // the Permissions API already says granted, the heap follows the phone at once instead of waiting for her tap. Safari
+    // has no such query (it rejects) and keeps asking on the tap.
+    if (!tap && !T.queried && navigator.permissions && navigator.permissions.query) {
+      T.queried = true;
+      Promise.all(['accelerometer', 'gyroscope'].map((name) => navigator.permissions.query({ name }).then((p) => p.state, () => 'no')))
+        .then((st) => { if (st.every((x) => x === 'granted') && !T.listening) { T.listening = true; addEventListener('deviceorientation', onTilt); } }, () => {});
+    }
     if (!tap || T.asked) return;
     T.asked = true;
     DeviceOrientationEvent.requestPermission().then((r) => { if (r === 'granted' && !T.listening) { T.listening = true; addEventListener('deviceorientation', onTilt); } }, () => {});
