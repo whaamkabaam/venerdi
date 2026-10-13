@@ -2093,5 +2093,69 @@
    "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
    "sourceUrl": "https://www.flickr.com/photos/pamontgo/45820803475"
   }
+ },
+ "corsi-1": {
+  "src800": "img/corsi-1-800.webp",
+  "src1600": "img/corsi-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A plate of chickpeas and two kinds of boiled greens with a wedge of lemon",
+  "focal": "50% 50%",
+  "color": "#8a8a5f",
+  "credit": {
+   "title": "Enoteca Corsi",
+   "author": "scottpartee",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/partee/2943097777"
+  }
+ },
+ "corsi-2": {
+  "src800": "img/corsi-2-800.webp",
+  "src1600": "img/corsi-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "The arched doorway of number 87, Enoteca Corsi and Trattoria Enoteca painted on its glass doors, a bicycle against the wall",
+  "focal": "45% 55%",
+  "color": "#91806d",
+  "credit": {
+   "title": "Enoteca Corsi",
+   "author": "scottpartee",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/partee/2943104835"
+  }
+ },
+ "valentino-1": {
+  "src800": "img/valentino-1-800.webp",
+  "src1600": "img/valentino-1-1600.webp",
+  "w": 1600,
+  "h": 1063,
+  "alt": "Grilled scamorza, melted and browned on top, with roasted cherry tomatoes in a white bowl",
+  "focal": "50% 55%",
+  "color": "#c59863",
+  "credit": {
+   "title": "Grillet ost med tomater og ansjoser",
+   "author": "cyclonebill",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/23178876@N03/6977873586"
+  }
+ },
+ "valentino-2": {
+  "src800": "img/valentino-2-800.webp",
+  "src1600": "img/valentino-2-1600.webp",
+  "w": 1600,
+  "h": 1159,
+  "alt": "An old painted sign over two wooden doors on Via del Boschetto, Pasquale Pulcini, ice depot, Birra Peroni, a rider on a scooter in front",
+  "focal": "60% 45%",
+  "color": "#7a6b60",
+  "credit": {
+   "title": "Rome, June 13, 2017",
+   "author": "Ulf Bodin",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/ulfbodin/35327252666"
+  }
  }
 }

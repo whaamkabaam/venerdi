@@ -2079,6 +2079,92 @@
       }
     },
     {
+      "id": "corsi",
+      "group": "food",
+      "title": "Lunch at Enoteca Corsi",
+      "line": "A wine shop open since 1931 a few streets from the Pantheon, with Roman cooking at shared tables between the bottle shelves",
+      "board": {
+        "to": "ENOTECA CORSI"
+      },
+      "photos": [
+        "corsi-1",
+        "corsi-2"
+      ],
+      "area": "centro",
+      "lat": 41.89693,
+      "lon": 12.47877,
+      "role": "lunch",
+      "lunch": true,
+      "minutes": 75,
+      "hours": {
+        "intervals": [
+          [
+            "12:00",
+            "15:00"
+          ]
+        ],
+        "lastEntry": [
+          null
+        ]
+      },
+      "order": 10.5,
+      "hud": "Corsi",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Enoteca+Corsi+Via+del+Gesu+87+Roma"
+        }
+      ],
+      "book": "lunch at Enoteca Corsi",
+      "booking": "recommended",
+      "serves": {
+        "lunch": 3
+      }
+    },
+    {
+      "id": "valentino",
+      "group": "food",
+      "title": "Lunch at Valentino",
+      "line": "A Monti trattoria behind the old painted sign of an ice depot and Birra Peroni, with grilled scamorza done several ways",
+      "board": {
+        "to": "VALENTINO"
+      },
+      "photos": [
+        "valentino-1",
+        "valentino-2"
+      ],
+      "area": "monti",
+      "lat": 41.8982,
+      "lon": 12.49008,
+      "role": "lunch",
+      "lunch": true,
+      "minutes": 75,
+      "hours": {
+        "intervals": [
+          [
+            "13:00",
+            "15:00"
+          ]
+        ],
+        "lastEntry": [
+          null
+        ]
+      },
+      "order": 20.5,
+      "hud": "Valentino",
+      "links": [
+        {
+          "label": "Map",
+          "url": "https://maps.google.com/?q=Trattoria+Valentino+Via+del+Boschetto+37+Roma"
+        }
+      ],
+      "book": "lunch at Valentino",
+      "booking": "recommended",
+      "serves": {
+        "lunch": 4
+      }
+    },
+    {
       "id": "pasta",
       "group": "food",
       "title": "Pasta class",
