@@ -57,6 +57,12 @@
     NODE_BUDGET: 20000,             // steps per search; past it the pick waits in the list (never reached in a sweep)
     CACHE_MAX: 20000,               // remembered fit tests (cleared when full)
     NEAR_M: 1200,                   // "near her day" for More ideas, straight-line metres
+    // v9f F15b (felix-15.md): filling the day's empty stretches (qa/v9f/fill.md has the reasons for each number).
+    FILL_THINGS: 5,                 // fills stop once the day has this many things besides lunch, the luggage and dinner
+    FILL_PAD: 10,                   // spare minutes after every fill, beyond the generous trips
+    FILL_TRAVEL: 30,                // a fill adds at most this many minutes of travel to the day
+    FILL_SPREAD: 10,                // each thing of a category already on the day counts as this much more travel
+    FILL_FOOD: 1,                   // at most this many street food fills
   });
   const FRAME_EARLY = Object.freeze({ ...FRAME, NOON: FRAME.NOON_EARLY, LUNCH_FROM: FRAME.LUNCH_FROM_EARLY });
   const eveningEnd = (dinnerAt) => Math.max(FRAME.EVENING_END, dinnerAt - 30);
@@ -212,6 +218,11 @@
     const STEP = F.STEP, GRID = F.GRID, NOON = F.NOON, LUNCH_FROM = F.LUNCH_FROM, LUNCH_BY = F.LUNCH_BY, EVENING_END = F.EVENING_END;
     const SNACK_END = ctx.dinnerAt - F.SNACK_GAP; // S3: from her dinner time
     const KIND = new Int8Array(n), NODE = new Int32Array(n), MIN = new Int32Array(n), EARLY = new Int32Array(n);
+    // v9f F15b: a fill's spare minutes (`pad`) are part of its job, but not of the thing itself: the thing ends by the
+    // evening end (and a snack by its own end), its spare minutes may run on towards dinner. PADMAX keeps the bounds
+    // below valid for that.
+    const PADJ = new Int32Array(n);
+    let PADMAX = 0;
     // Bounds (spec 3.5): the least trip into each job (from any place of this set, the hostel or the flat, at any hour
     // from 10:00), its least length with that trip, and its last start. A branch dies when a job left can no longer
     // start in time, when the jobs left cannot all fit before the day's end, or (in 'best') when it cannot end earlier.
@@ -230,6 +241,7 @@
       if (j.snack) snackMask |= bit;
       if (j.snackLunch) snackLunchMask |= bit;
       if (j.fixed) fixedMask |= bit;
+      if (j.pad) { PADJ[i] = j.pad; if (j.pad > PADMAX) PADMAX = j.pad; }
       if (k === K_PLAIN) { LEG[i] = 0; NEED[i] = F.LUNCH_MINUTES; DL[i] = LUNCH_BY; MLI[i] = 0; }
       else if (k === K_BAGS) { LEG[i] = T.minRide; NEED[i] = T.minRide + F.BAGS_GRAB + F.AT_FLAT; DL[i] = F.BAGS_TO; MLI[i] = 0; }
       else {
@@ -276,13 +288,13 @@
       if (mask === full) { finish(t, loc, tr, st); return; }
       if (!exhaustive) {
         if (ctx.nodes + nodes > budget) { cut = true; return; }
-        if (t + need > ((mask & bagsBit) ? EVENING_END : ctx.dinnerAt)) return;
+        if (t + need > ((mask & bagsBit) ? EVENING_END + PADMAX : ctx.dinnerAt)) return;
         if (best && found && t + need > found.end) return;
         for (let i = 0; i < n; i++) if (!(mask & (1 << i)) && t + MLI[i] > DL[i]) return;
         if (!(mask & bagsBit) && t + need - bagsNeed > F.BAGS_TO) {
           let extra = Infinity;
           for (let i = 0; i < n; i++) if (!(mask & (1 << i)) && FLAT_EXTRA[i] < extra) extra = FLAT_EXTRA[i];
-          if (t + need + extra > EVENING_END) return;
+          if (t + need + extra > EVENING_END + PADMAX) return;
         }
       }
       const lunchDone = (mask & lunchMask) !== 0, pastriesDone = (mask & pastryMask) === pastryMask;
@@ -321,8 +333,8 @@
           if (k === K_LUNCH) { if (start > LUNCH_BY) continue; }
           else if (!lunchDone && !(fixedMask & bit) && start >= NOON) continue; // lunch comes first
           end = start + MIN[i];
-          if (end > EVENING_END) continue;
-          if ((snackMask & bit) && end > SNACK_END) continue;
+          if (end - PADJ[i] > EVENING_END) continue;
+          if ((snackMask & bit) && end - PADJ[i] > SNACK_END) continue;
           if (k === K_LUNCH) nle = end;
           eff = loc === node ? 0 : EF[loc * NN + node];
           nloc = node;
@@ -351,17 +363,19 @@
     return m;
   };
   const jobCache = new WeakMap(); // per travel table, per option
-  function jobOf(T, o, kind = 'opt', snackLunch = false) {
+  // `pad` (v9f F15b): the comfort test of a fill, the same job lasting that much longer (its opening hours unchanged:
+  // the extra minutes are spent outside), under its own id so a fit test remembers it apart.
+  function jobOf(T, o, kind = 'opt', snackLunch = false, pad = 0) {
     let byO = jobCache.get(T);
     if (!byO) { byO = new WeakMap(); jobCache.set(T, byO); }
     let per = byO.get(o);
     if (!per) { per = {}; byO.set(o, per); }
-    const key = kind + (snackLunch ? '+' : '');
+    const key = kind + (snackLunch ? '+' : '') + (pad ? `~${pad}` : '');
     if (per[key]) return per[key];
     const starts = startsOf(o);
     const wins = windowsOf(o);
     const j = {
-      kind, o, id: o.id, node: T.index.get(o.id), minutes: o.minutes, early: earlyOf(o), wins, starts,
+      kind, o, id: pad ? `${o.id}~${pad}` : o.id, node: T.index.get(o.id), minutes: o.minutes + pad, pad, early: earlyOf(o), wins, starts,
       fixed: !!o.fixedAt || isEvening(o), pastry: isPastry(o), snack: kind === 'opt' && isSnack(o), snackLunch,
       deadline: starts ? (starts.length ? starts[starts.length - 1] : -1) : (wins.length ? wins[wins.length - 1].latest : -1),
     };
@@ -379,8 +393,10 @@
   /* `picks` are her priority list ([{ id, reason }] or ids). `dinnerAt` is her dinner time (one of
      anchors.dinner.times; anything else is the default), `dinner` her pizza place (an id of dinners.ideas) or null:
      with none picked, dinner is the nearest of the three from where the day ends. `transit` defaults to C.transit. */
+  /* v9f F15b: with `answers` (her answers) the day's empty stretches fill with more of what she asked for (fillPool,
+     below); `skip` lists what she took off her day, which never comes back as a fill. Without `answers`, no fills. */
   function build(C, pickList, opts = {}) { return buildDay(C, pickList, opts, false); }
-  function buildDay(C, pickList, { dinnerAt = null, dinner = null, transit = null } = {}, exhaustive) {
+  function buildDay(C, pickList, { dinnerAt = null, dinner = null, transit = null, answers = null, skip = [] } = {}, exhaustive) {
     const T = transitOf(transit || C.transit);
     const O = optionsById(C);
     const ids = [...new Set(pickList.map((p) => (typeof p === 'string' ? p : p.id)))].filter((id) => O[id]);
@@ -454,12 +470,94 @@
       if (things >= FRAME.MAX_THINGS) return false;
       return !!fits([...kept, jobOf(T, o)], lunch);
     };
-    let jobs = order([...kept, lunch || PLAIN, BAGS]);
+    // The best order of a set (the day's last entry ends earliest, then the least travel, then the earliest starts),
+    // remembered like the fit tests. A fill never makes a day of pastry stops (fillPool), so the frame is her picks'.
+    // An exact search over a whole set of jobs, remembered like the fit tests ('best': the order whose last entry ends
+    // earliest, then the least travel, then the earliest starts).
+    const run = (jobsHere, mode) => {
+      ctx.F = jobsHere.some((j) => j.pastry) ? FN : FE;
+      ctx.searches++;
+      const key = `${mode === 'best' ? 'B' : 'A'}${keyBase}${jobsHere.map((j) => j.id + (j.kind === 'lunch' ? (j.snackLunch ? '+' : '*') : '')).join(',')}`;
+      let r = ctx.exhaustive ? undefined : cache.get(key);
+      if (r === undefined) {
+        ctx.budget = ctx.nodes + FRAME.NODE_BUDGET; // each search gets its own budget
+        r = search(ctx, jobsHere, mode);
+        if (!ctx.exhaustive) { if (cache.size >= FRAME.CACHE_MAX) cache.clear(); cache.set(key, r); }
+      } else ctx.hits++;
+      return r ? { jobs: jobsHere, sol: r } : null;
+    };
+    let day = run(order([...kept, lunch || PLAIN, BAGS]), 'best');
+    if (!day && lastFit) day = lastFit; // only past the budget: the last order the walk found
+    if (!day) throw new Error('no day for the kept picks (cannot happen: each was kept by the same test)');
+
+    /* v9f F15b (felix-15.md, qa/v9f/fill.md): fill the day's empty stretches with more of what she asked for
+       (fillPool). Her picks are settled above: the same ones on the day, the same ones under If there's time, and a
+       fill only goes on when the day still has an order with every one of them (their times may move to make room,
+       inside every rule of the frame). One fill at a time, until the day has FILL_THINGS things: the one that adds
+       the least travel where it slots into the day as planned (between two of its places, the hostel, the flat or
+       dinner), each thing of its category already on the day counting as FILL_SPREAD minutes more, so the fills
+       spread over her answers. It goes on when the day still works with FILL_PAD spare minutes after every fill, beyond
+       the generous trips (comfortable: time to linger, or for a late bus), and the day's travel grows by at most
+       FILL_TRAVEL minutes. Deterministic: ties go to the site's order. */
+    const fills = [];
+    const pool = answers ? fillPool(C, answers, new Set([...ids, ...skip])) : [];
+    if (pool.length && things < FRAME.FILL_THINGS) {
+      const EF = T.effort, N = T.n;
+      const ef = (a, b) => (a === b ? 0 : EF[a * N + b]);
+      // Travel is the effort table's (a pair's average planned minutes, the same at any hour): the day's trips, and the
+      // trip into dinner (to her pizza place, else the nearest of the three).
+      const toDinner = (loc) => { let m = Infinity; for (const d of ideaNodes) if (ef(loc, d) < m) m = ef(loc, d); return m; };
+      const travelOf = (d) => d.sol.trips + toDinner(d.sol.loc);
+      // The legs of the day as planned: from the hostel, between its places (the luggage leaves us at the flat), and the
+      // last one into dinner (-1).
+      const legsOf = (d) => {
+        const legs = [];
+        let at = ctx.hostel;
+        for (const st of d.sol.path) {
+          const j = d.jobs[st.i];
+          if (j.kind === 'plain') continue;
+          if (j.kind === 'bags') { if (at !== ctx.hostel) legs.push([at, ctx.hostel]); at = ctx.flat; continue; }
+          if (j.node !== at) legs.push([at, j.node]);
+          at = j.node;
+        }
+        legs.push([at, -1]);
+        return legs;
+      };
+      const slotIn = (legs, x) => {
+        let add = Infinity;
+        for (const [a, b] of legs) { const d = b < 0 ? ef(a, x) + toDinner(x) - toDinner(a) : ef(a, x) + ef(x, b) - ef(a, b); if (d < add) add = d; }
+        return add;
+      };
+      const padded = (o) => jobOf(T, o, 'opt', false, FRAME.FILL_PAD);
+      const count = {};
+      const homeOn = (o) => { const h = homeOf(o); if (h) count[h] = (count[h] || 0) + 1; };
+      kept.forEach((j) => homeOn(j.o));
+      let food = 0;
+      while (things < FRAME.FILL_THINGS && things < FRAME.MAX_THINGS) {
+        const legs = legsOf(day), base = travelOf(day);
+        const cands = [];
+        for (const o of pool) {
+          if (fills.includes(o) || (homeOf(o) === FOOD_FILL && food >= FRAME.FILL_FOOD)) continue;
+          if (isSnack(o) && !anyLunch) continue; // with no lunch place among her picks a snack would be the lunch: not a fill
+          const add = slotIn(legs, T.index.get(o.id));
+          if (add <= FRAME.FILL_TRAVEL) cands.push({ o, s: add + FRAME.FILL_SPREAD * (count[homeOf(o)] || 0) });
+        }
+        cands.sort((a, b) => a.s - b.s || a.o.order - b.o.order);
+        let took = null;
+        for (const { o } of cands) {
+          const d = run(order([...kept, ...fills.map(padded), padded(o), lunch || PLAIN, BAGS]), 'best');
+          if (!d || travelOf(d) - base > FRAME.FILL_TRAVEL) continue;
+          took = o; day = d;
+          break;
+        }
+        if (!took) break;
+        fills.push(took); homeOn(took); things++;
+        if (homeOf(took) === FOOD_FILL) food++;
+      }
+    }
+    const fillIds = new Set(fills.map((o) => o.id));
+    const { jobs, sol } = day;
     ctx.F = kept.some((j) => j.pastry) ? FN : FE;
-    ctx.budget = ctx.nodes + FRAME.NODE_BUDGET; // the final ordering gets its own budget
-    let sol = search(ctx, jobs, 'best');
-    if (!sol && lastFit) ({ jobs, sol } = lastFit); // only past the budget: the last order the walk found
-    if (!sol) throw new Error('no day for the kept picks (cannot happen: each was kept by the same test)');
 
     // The entries, in time order, each with the trip into it (spec 5).
     const F = ctx.F;
@@ -483,6 +581,8 @@
         const rough = exact ? hhmm(step.start) : hhmm(show);
         const slot = isL ? 'lunch' : !lunchSeen ? 'morning' : toMin(rough) < toMin('17:00') ? 'afternoon' : 'evening';
         const it = { kind: 'option', id: o.id, option: o, start: step.start, end: step.end, slot, rough, exact, trip: legOf(step.from, j.node, step.depart) };
+        // v9f F15b: a fill lasts its own minutes; the day leaves it FILL_PAD minutes later (`leave`).
+        if (fillIds.has(o.id)) { it.fill = true; it.end = step.start + o.minutes; it.leave = step.end; }
         if (isL) { it.lead = true; if (j.snackLunch) it.asLunch = true; }
         items.push(it);
       }
@@ -504,6 +604,7 @@
       items,
       options: cardsOn.map((it) => it.option),
       later: later.map((o) => ({ id: o.id, option: o })),
+      fills: fills.map((o) => ({ id: o.id, option: o })), // v9f F15b: on the day to fill the time, in the order added
       didntFit: cant.map((o) => ({ option: o, code: 'fridayNo', why: o.fridayNo, reason: o.fridayNo })),
       things: cardsOn.filter((it) => !it.option.lunch && !it.asLunch).length,
       earlyLunch: F.NOON === FRAME.NOON_EARLY,
@@ -519,7 +620,31 @@
   /* "If there's time" (spec 4.2): Swap in puts a pick first in her list, so it goes on the day exactly when it fits
      on its own, with lunch, the luggage and dinner at her time. One small search. */
   function canSwapIn(C, id, opts) {
-    return build(C, [id], opts).options.some((o) => o.id === id);
+    return build(C, [id], { ...opts, answers: null }).options.some((o) => o.id === id); // fills come after: none needed
+  }
+
+  /* v9f F15b: what can fill her day. Felix (felix-15.md): "if any are fine maybe we can choose multiple depending on
+     how comfortable the time is or whats close". So: more of each sight she picked without naming anything in it,
+     more street food when she picked it without naming any, and the sights in the areas she chose to wander (where
+     she named things in a sight, it stays as she named it). Never: anything in her list (on her day or under If
+     there's time), anything she took off (`skipIds`), anything that cannot happen on Friday or must be booked ahead (a
+     fill comes and goes as her day changes, a booked slot cannot), a pastry stop (breakfast is one stop, first), a
+     lunch place or the class (one lunch), another area or wild card (she chose hers). */
+  const FOOD_FILL = 'street';
+  const homeOf = (o) => Object.keys(o.serves || {})[0] || null;
+  function fillPool(C, answers, skipIds) {
+    const O = optionsById(C);
+    const sights = (C.ask.steps.find((s) => s.id === 'see') || { tiles: [] }).tiles.map((t) => t.id);
+    const see = answers.see || [], eat = answers.eat || [];
+    const named = new Set((answers.want || []).map((id) => O[id] && wantReason(O[id], answers)).filter(Boolean));
+    const any = new Set([...see, ...eat.filter((e) => e === FOOD_FILL)].filter((c) => !named.has(c)));
+    const areas = new Set(areaOptions(C, answers).map((o) => o.area));
+    return C.options.filter((o) => {
+      const home = homeOf(o);
+      if (!home || o.fridayNo || skipIds.has(o.id) || o.booking === 'required' || o.lunch || isPastry(o) || isClass(o)) return false;
+      if (any.has(home)) return true;
+      return sights.includes(home) && !named.has(home) && areas.has(o.area);
+    });
   }
 
   /* ---------------- the composer and her priority list ---------------- */
