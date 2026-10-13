@@ -1669,12 +1669,16 @@
   }
   // v9d D1 (design-d1.md 5): the trip into an entry, one quiet grey line at its top: "35 min, Bus 40" or "25 min
   // walk" (the usual minutes, rounded up to 5). Screen readers hear a sentence instead ("35 minutes there by Bus 40."),
-  // inside the entry and before its heading.
+  // inside the entry and before its heading. v9f F7 (felix-11.md): the day's first trip leaves my hostel, where we
+  // start at 10:00, and its line says so ("55 min from my hostel, Bus 64"), so under "You land" it never reads as a
+  // trip from where she lands. `startTrip` is that entry (renderDay).
+  let startTrip = null;
   function tripHTML(it) {
     const t = it.trip, D = C.day.trip;
     if (!t) return '';
-    const shown = t.walk ? fmt(D.walk, { min: t.min }) : fmt(D.ride, { min: t.min, mode: t.mode });
-    const said = t.walk ? fmt(D.srWalk, { min: t.min }) : fmt(D.srRide, { min: t.min, mode: t.mode.replace(/ \+ /g, U.listJoinLast) });
+    const st = it === startTrip, mode = t.walk ? '' : t.mode;
+    const shown = fmt(t.walk ? (st ? D.walkStart : D.walk) : (st ? D.rideStart : D.ride), { min: t.min, mode });
+    const said = fmt(t.walk ? (st ? D.srWalkStart : D.srWalk) : (st ? D.srRideStart : D.srRide), { min: t.min, mode: mode.replace(/ \+ /g, U.listJoinLast) });
     return `<p class="plan-trip"><span aria-hidden="true">${esc(shown)}</span><span class="sr-only">${esc(said)}</span></p>`;
   }
   // v9d D1 (design-d1.md 4.1): "If there's time" after dinner: her picks that do not fit, in her order, each a small
@@ -1788,6 +1792,9 @@
     slot('day-lines').innerHTML = lines.join('');
     slot('day-lines').hidden = !lines.length;
     if (!picks.length && !answers) { body.innerHTML = `<p class="day-empty">${esc(D.empty)}</p>`; return; }
+    // Until the first place (or the luggage) we are still at my hostel: the trip into it is the one from there.
+    const first = plan.items.find((it) => it.kind === 'option' || it.id === 'bags');
+    startTrip = first && first.trip ? first : null;
     let html = '', group = '', undoShown = false;
     plan.items.forEach((it) => {
       if (it.slot !== group) {

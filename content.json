@@ -318,7 +318,11 @@
       "walk": "{min} min walk",
       "ride": "{min} min, {mode}",
       "srWalk": "A {min} minute walk there.",
-      "srRide": "{min} minutes there by {mode}."
+      "srRide": "{min} minutes there by {mode}.",
+      "walkStart": "{min} min walk from my hostel",
+      "rideStart": "{min} min from my hostel, {mode}",
+      "srWalkStart": "A {min} minute walk from my hostel.",
+      "srRideStart": "{min} minutes from my hostel by {mode}."
     },
     "live": {
       "onDay": "{title} is on your day.",
