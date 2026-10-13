@@ -510,24 +510,37 @@
   }
 
   function plan(pieces) {
-    // The box she is looking into: the camera ends at ZF, anchored at the bottom middle of her screen.
+    // The box she is looking into: the camera ends at ZF, anchored at the bottom middle of her screen. The heap is
+    // the picture she keeps, so the camera stops no further back than it needs: 72 % on a phone and 66 % on a laptop,
+    // closer (up to 80 %) when her day is light and all of it fits with room to spare.
     const wideView = VW >= 700;
-    ZF = wideView ? 0.62 : 0.66;
+    const fill = wideView ? 0.4 : 0.5;
+    const sizeAt = (z) => {
+      const wW = VW / z, wH = VH / z, Lmax = Math.min(wW * 0.25, wH * 0.4, 400), Bmax = Math.min(wW * 0.45, 520);
+      for (const p of pieces) {
+        p.s = 1;
+        if (p.photo && Math.max(p.sw, p.sh) > Lmax) p.s = Lmax / Math.max(p.sw, p.sh);
+        if ((p.kind === 'box' || p.kind === 'row') && p.sw > Bmax) p.s = Math.min(p.s, Bmax / p.sw);
+      }
+    };
+    ZF = wideView ? 0.66 : 0.72;
+    sizeAt(ZF);
+    let all = 0;
+    for (const p of pieces) if (p.tier <= 2 || p.cy + p.sh / 2 > 0) all += p.sw * p.sh * p.s * p.s;
+    if (all < VW * VH * fill / (ZF * ZF)) { ZF = Math.min(0.8, Math.sqrt(VW * VH * fill / all)); sizeAt(ZF); }
     const worldW = VW / ZF, worldH = VH / ZF;
     viewTop = AY - AY / ZF;
     wallL = AX - worldW / 2; wallR = AX + worldW / 2; floorY = VH;
-    const Lmax = Math.min(worldW * 0.25, worldH * 0.4, 400);
-    const budget = worldW * worldH * (wideView ? 0.4 : 0.5);
+    const budget = worldW * worldH * fill;
     let used = 0;
     const near = [], far = [];
     for (const p of pieces) {
-      if (p.photo && Math.max(p.sw, p.sh) > Lmax) p.s = Lmax / Math.max(p.sw, p.sh);
-      const Bmax = Math.min(worldW * 0.45, 520);
-      if ((p.kind === 'box' || p.kind === 'row') && p.sw > Bmax) p.s = Math.min(p.s, Bmax / p.sw);
       p.near = p.kind === 'hud' || p.kind === 'bomb' || (p.cy + p.sh / 2 > viewTop - 30 && p.kind !== 'hero');
       // What she could see when she tapped always explodes; what the camera only reveals above it competes for room.
       p.seen = p.near && (p.kind === 'hud' || p.kind === 'bomb' || p.cy + p.sh / 2 > 0);
-      (p.seen ? near : far).push(p);
+      if (p.seen) near.push(p);
+      // From above, only what reads at the camera's distance: the small print (tier 3) goes with the rest of the page.
+      else if (p.tier <= 2) far.push(p);
     }
     for (const p of near) used += p.sw * p.sh * p.s * p.s;
     // Then, while there is room: the ARRIVALS board, tier 1, tier 2, tier 3, nearest first within a tier.
@@ -630,7 +643,11 @@
     const list = [...groups.values()].map((ps) => ({ ps, y: Math.max(...ps.map((p) => p.cy)) })).sort((a, b) => b.y - a.y);
     const t0 = INHALE + 0.24, t1 = INHALE + (hero ? 1.6 : 1.9);
     const bins = new Float64Array(12);
-    const slots = list.map((_, i) => (i + rr(0.15, 0.85)) / list.length);
+    // Where each group comes down: evenly spread across the box, but drawn in toward the middle so the heap is a mound
+    // under the board and not a flat layer (a triangle's quantiles mixed in: mostly on a laptop, a little on a phone).
+    const tri = (u) => (u < 0.5 ? Math.sqrt(u / 2) : 1 - Math.sqrt((1 - u) / 2));
+    const peak = VW >= 700 ? 0.85 : 0.35;
+    const slots = list.map((_, i) => { const u = (i + rr(0.15, 0.85)) / list.length; return 0.04 + 0.92 * (u + (tri(u) - u) * peak); });
     for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [slots[i], slots[j]] = [slots[j], slots[i]]; }
     list.forEach((g, i) => {
       const t = t0 + (t1 - t0) * (list.length > 1 ? i / (list.length - 1) : 0) + rr(-0.04, 0.04);
