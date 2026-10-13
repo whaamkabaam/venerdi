@@ -311,7 +311,8 @@
     "title": "Your Friday",
     "later": {
       "title": "If there's time",
-      "swapIn": "Swap in",
+      "add": "Add",
+      "instead": "Instead of {list}",
       "needsTime": "Fits with dinner at {time}"
     },
     "trip": {

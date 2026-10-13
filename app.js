@@ -901,7 +901,8 @@
   };
   const composedIds = () => composed().picks.map((p) => p.id);
   // v9d D1: each "If there's time" row, worked out once per update: { id, ok } where ok says Swap in puts it on her
-  // day, and `needs`, the earliest of her dinner times at which it would fit (only when it cannot go on now).
+  // day, and `needs`, the earliest of her dinner times at which it would fit (only when it cannot go on now). v9f F10:
+  // `moved`, the titles of what Swap in would move off her day (none: the button says Add).
   let laterNow = [];
   // The planner's options for her day: her dinner time and pizza place, and the travel times (data.js).
   const planOpts = (o = {}) => ({ dinnerAt, dinner, transit: TRANSIT, ...o });
@@ -1685,10 +1686,14 @@
   function laterHTML() {
     const D = C.day.later;
     const rows = plan.later.map((l) => {
-      const o = l.option, f = laterNow.find((x) => x.id === o.id) || { ok: true };
-      const act = f.ok ? hap(`<button type="button" class="btn btn--quiet later-in" data-action="swapin" data-id="${esc(o.id)}">${esc(D.swapIn)}<span class="sr-only">: ${esc(o.title)}</span></button>`, 'add')
+      const o = l.option, f = laterNow.find((x) => x.id === o.id) || { ok: true, moved: [] };
+      // v9f F10 (felix-11.md: "i dont understand the swap in"): the button says what it does: "Add" when nothing moves
+      // off her day, else what it would take the place of ("Instead of Noon cannon"). Screen readers hear the row's
+      // title with it ("Add: Trastevere", "Trastevere, Instead of Noon cannon").
+      const words = f.moved.length ? `<span class="sr-only">${esc(o.title)}, </span>${esc(fmt(D.instead, { list: listOf(f.moved) }))}` : `${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span>`;
+      const act = f.ok ? hap(`<button type="button" class="btn btn--quiet later-in" data-action="swapin" data-id="${esc(o.id)}">${words}</button>`, 'add')
         : f.needs ? `<span class="later-why">${esc(fmt(D.needsTime, { time: f.needs }))}</span>` : '';
-      return `<li class="later-row" data-key="${esc(o.id)}">${thumbHTML(o.photos?.[0], 'later-photo', '56px')}<span class="later-name">${esc(o.title)}</span>${act}</li>`;
+      return `<li class="later-row" data-key="${esc(o.id)}">${thumbHTML(o.photos?.[0], 'later-photo', '64px')}<span class="later-text"><span class="later-name">${esc(o.title)}</span>${act}</span></li>`;
     });
     const back = undo && undo.list ? undoHTML() : '';
     if (!rows.length) return back;
@@ -3630,8 +3635,12 @@
     // v9d D1: each "If there's time" row knows whether Swap in can put it on (else the dinner time it needs). All of it
     // in the tap (at most a few ms on her longest day, gate-d1-spec browser-timing.txt), so the day and its buttons
     // render once.
-    laterNow = plan.later.map((l) => (P.canSwapIn(C, l.id, planOpts()) ? { id: l.id, ok: true }
-      : { id: l.id, ok: false, needs: C.anchors.dinner.times.find((t) => P.canSwapIn(C, l.id, planOpts({ dinnerAt: t }))) || null }));
+    // v9f F10: what Swap in would do is the day with that pick first in her list (swapIn below), built once per row.
+    laterNow = plan.later.map((l) => {
+      const next = P.build(C, [l.id, ...pickIds().filter((id) => id !== l.id)], planOpts());
+      if (next.options.some((o) => o.id === l.id)) return { id: l.id, ok: true, moved: plan.options.filter((o) => !next.options.some((q) => q.id === o.id)).map((o) => o.title) };
+      return { id: l.id, ok: false, moved: [], needs: C.anchors.dinner.times.find((t) => P.canSwapIn(C, l.id, planOpts({ dinnerAt: t }))) || null };
+    });
     syncSend();
     renderDepNote();
     renderDay();

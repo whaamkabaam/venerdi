@@ -1282,16 +1282,19 @@ dialog.peek .say-sound { white-space: normal; }
 .plan-trip::before { content: ""; flex: none; width: 3px; height: 15px; opacity: 0.7; background: radial-gradient(circle, currentColor 1.1px, transparent 1.4px) center top / 3px 5px repeat-y; }
 .plan-item--text .plan-trip { margin-bottom: var(--s2); }
 /* v9d D1 (design-d1.md 4.1): "If there's time" after dinner: a small photo, the title, Swap in (or the dinner time
-   it needs). A row lights up like an entry when an Add lands there. */
+   it needs). A row lights up like an entry when an Add lands there. v9f F10: the button says what it does ("Add",
+   "Instead of Noon cannon"), so it sits under the title, where a long one can wrap; the photo is 64 px, the height of
+   the title and the button together. */
 .plan-later { padding: var(--s3) 0 var(--s4); }
-.later-list { display: grid; gap: var(--s2); }
-.later-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; column-gap: var(--s3); min-height: 56px; }
-.later-photo { display: block; width: 56px; height: 56px; border-radius: var(--r-thumb); overflow: hidden; background-color: var(--ph, var(--fill-quiet)); }
+.later-list { display: grid; gap: var(--s3); }
+.later-row { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; column-gap: var(--s3); min-height: 64px; }
+.later-photo { display: block; width: 64px; height: 64px; border-radius: var(--r-thumb); overflow: hidden; background-color: var(--ph, var(--fill-quiet)); }
 .later-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; border-radius: inherit; }
+.later-text { display: grid; justify-items: start; row-gap: var(--s1); min-width: 0; }
 .later-name { font-size: 0.9375rem; line-height: 1.25; font-weight: 600; text-wrap: pretty; transition: color 700ms var(--ease-out); }
 .later-row.is-flash .later-name { color: var(--accent); transition-duration: 150ms; }
-.later-in { min-height: 44px; }
-.later-why { font-size: 0.8125rem; color: var(--ink-muted); text-align: right; max-width: 9.5em; }
+.later-in { min-height: 44px; padding-block: var(--s2); line-height: 1.25; text-align: left; text-wrap: balance; }
+.later-why { font-size: 0.8125rem; color: var(--ink-muted); }
 @media (min-width: 1024px) {
   .plan-trip { margin-left: 104px; }
   .plan-later { margin-left: 104px; max-width: 640px; }
