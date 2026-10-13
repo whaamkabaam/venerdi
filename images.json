@@ -2029,5 +2029,69 @@
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Via_del_Pellegrino_in_Rome_(1).jpg"
   }
+ },
+ "remo-1": {
+  "src800": "img/remo-1-800.webp",
+  "src1600": "img/remo-1-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "A thin pizza covered in sliced mushrooms, aubergine and crumbled sausage, its rim charred from the oven",
+  "focal": "50% 50%",
+  "color": "#837876",
+  "credit": {
+   "title": "Remo's special Pizza",
+   "author": "Nancy White (Choconancy1)",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/choconancy/3721669076"
+  }
+ },
+ "remo-2": {
+  "src800": "img/remo-2-800.webp",
+  "src1600": "img/remo-2-1600.webp",
+  "w": 1600,
+  "h": 1064,
+  "alt": "Two pizza makers at Da Remo's marble counter, stacks of white plates in front and the stone oven behind",
+  "focal": "50% 55%",
+  "color": "#698064",
+  "credit": {
+   "title": "Pizza Makers",
+   "author": "Andrew Sorensen (a_sorense)",
+   "license": "CC BY-NC 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/a_sorense/261976570"
+  }
+ },
+ "ivo-1": {
+  "src800": "img/ivo-1-800.webp",
+  "src1600": "img/ivo-1-1600.webp",
+  "w": 1600,
+  "h": 1064,
+  "alt": "A thin pizza with ham, salami, a runny egg and black olives, its rim charred, a knife resting on it",
+  "focal": "50% 50%",
+  "color": "#824915",
+  "credit": {
+   "title": "DSC_3701",
+   "author": "hiro kobashi (cobacco)",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/cobacco/3578580946"
+  }
+ },
+ "ivo-2": {
+  "src800": "img/ivo-2-800.webp",
+  "src1600": "img/ivo-2-1600.webp",
+  "w": 1600,
+  "h": 1200,
+  "alt": "Da Ivo's long dining room, white tablecloths and full tables under yellow walls hung with paintings, brick arches at the back",
+  "focal": "50% 45%",
+  "color": "#95754f",
+  "credit": {
+   "title": "Ivo a Trastevere. Best pizza in Rome? (cropped to 4:3)",
+   "author": "Andy Montgomery",
+   "license": "CC BY-NC-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+   "sourceUrl": "https://www.flickr.com/photos/pamontgo/45820803475"
+  }
  }
 }

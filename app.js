@@ -1726,7 +1726,9 @@
   function dinnerHTML(it, time, attrs, timeRow) {
     const A = C.anchors.dinner;
     // v9f F2: a place line has no full stop, so a second sentence (Felix's own, on Da Ivo) sits on a line of its own.
-    const ideas = IDEAS.map((d) => `<li class="dinner-idea">
+    // v9f places (felix-11.md F8): an idea with photos shows them as an entry does (the strip, a bar per photo).
+    const ideas = IDEAS.map((d) => `<li class="dinner-idea${d.photos?.length ? ' has-photos' : ''}">
+          ${d.photos?.length ? stripHTML(d, '(min-width: 640px) 200px, 92vw') : ''}
           <div class="dinner-text">
             <p class="dinner-name">${esc(d.title)}</p>
             <p class="dinner-line">${esc(d.line).replace(/\n/g, '<br>')}</p>
@@ -2041,8 +2043,9 @@
     if (e.detail > 0 && lastSwapIn && performance.now() - lastSwapIn.t < 500 && Math.hypot(e.clientX - lastSwapIn.x, e.clientY - lastSwapIn.y) < 24) return;
     const dot = e.target.closest('.stop-dot');
     if (dot) { onStripDot(dot); return; }
-    // A tap or a click on an entry's photo shows the next one (no dialog: the entry already says it all).
-    const ph = e.target.closest('.stop .stop-photo');
+    // A tap or a click on an entry's photo shows the next one (no dialog: the entry already says it all); so does a
+    // dinner idea's (v9f places F8).
+    const ph = e.target.closest('.stop .stop-photo, .dinner-idea .stop-photo');
     if (ph) { pageStrip(ph); return; }
     const b = e.target.closest('[data-action]');
     if (!b) return;

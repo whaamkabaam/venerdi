@@ -464,6 +464,10 @@
         "title": "Da Remo",
         "board": "DA REMO",
         "line": "Loud, cheap Testaccio pizza place where the pizzas come fast and there's usually a queue",
+        "photos": [
+          "remo-1",
+          "remo-2"
+        ],
         "area": "Testaccio",
         "booking": "Walk in, cash only",
         "friendTip": true,
@@ -481,6 +485,10 @@
         "title": "Da Ivo",
         "board": "DA IVO",
         "line": "An old Trastevere pizzeria open since 1962, no booking for two, and their site says a table always turns up\nThey have pasta too, in case it's a pasta day for you :D",
+        "photos": [
+          "ivo-1",
+          "ivo-2"
+        ],
         "area": "Trastevere",
         "booking": "Walk in",
         "friendTip": true,
