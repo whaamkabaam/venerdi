@@ -351,6 +351,7 @@
     ['.later-photo', { photo: 1, tier: 2 }],
     ['.later-name, .later-why', { text: 1, tier: 2 }],
     ['.later-in', { tier: 2 }],
+    ['.plan-all-btn', { tier: 2 }],
     ['.room-photo', { photo: 1, tier: 1 }],
     ['.room-why, .room-name', { text: 1, tier: 2 }],
     ['.room-add, .room-all', { tier: 2 }],
@@ -652,7 +653,7 @@
     const shock = 5200;
     BEATS.forEach((t, k) => ev.push({ t, fn: () => hit(k) }));
     // The blast itself: the jolt, the buzz on Android, and the evening coming in above as the camera steps back.
-    ev.push({ t: BLAST, fn: () => { S.shake = 10; vibrate(BOOM); S.hush = S.t + BOOM.reduce((x, y) => x + y) / 1000; if (S.sky) S.sky.classList.add('is-in'); } });
+    ev.push({ t: BLAST, fn: () => { for (const el of S.gone || []) el.classList.add('xp-gone'); S.shake = 10; vibrate(BOOM); S.hush = S.t + BOOM.reduce((x, y) => x + y) / 1000; if (S.sky) S.sky.classList.add('is-in'); } });
     for (const p of near) {
       const b = bodyFor(p);
       const dx = p.cx - bx, dy = p.cy - by, d = Math.hypot(dx, dy);
@@ -1116,9 +1117,11 @@
       for (const im of img) { if (im.loading === 'lazy') im.loading = 'eager'; }
     }
     // Only what can be seen goes: the screen and the strip above it that the camera reveals. Hiding the whole page
-    // would restyle every element at once (81 ms with the CPU slowed 4x); this restyles a few hundred.
-    hideRegion(viewTop - 40, VH + 40);
-    S.batches = laterBatches();
+    // would restyle every element at once (81 ms with the CPU slowed 4x); this restyles a few hundred. v9f fold-in
+    // (gate-design): found now, hidden at the blast, so through the drum roll the page stays whole around its shaking
+    // pieces instead of blinking out at the tap.
+    S.gone = hideRegion(viewTop - 40, VH + 40);
+    S.batches = laterBatches(new Set(S.gone));
     root.classList.add('xp-on');
     // Gone for a screen reader and the keyboard too (aria-hidden, not inert: inert restyles the whole page).
     for (const sel of ['header', 'main', '.hud', '.footer']) { const el = document.querySelector(sel); if (el) el.setAttribute('aria-hidden', 'true'); }
@@ -1173,15 +1176,14 @@
       for (const c of el.children) visit(c);
     };
     for (const c of document.body.children) visit(c);
-    for (const el of out) el.classList.add('xp-gone');
-    return out.length;
+    return out;
   }
   // The rest of the page (above, out of sight) goes too, a few hundred elements a frame: while it is drawn, the
   // browser has to give the content around the moving pieces layers of its own (as tall as the page).
-  function laterBatches() {
+  function laterBatches(atBlast) {
     const out = [];
     const visit = (el, depth) => {
-      if (el.classList.contains('xp-p') || el.classList.contains('xp-ui') || el.classList.contains('sky-bg') || el.classList.contains('xp-gone') || el.tagName === 'SCRIPT' || el.tagName === 'DIALOG') return;
+      if (el.classList.contains('xp-p') || el.classList.contains('xp-ui') || el.classList.contains('sky-bg') || el.classList.contains('xp-gone') || atBlast.has(el) || el.tagName === 'SCRIPT' || el.tagName === 'DIALOG') return;
       const n = el.getElementsByTagName('*').length;
       if (!el.querySelector('.xp-p') && n < 500) { out.push([el, n + 1]); return; }
       if (n >= 500 && !el.querySelector('.xp-p') && depth > 6) { out.push([el, n + 1]); return; }
