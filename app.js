@@ -52,6 +52,19 @@
   }
   const SKY2 = store.get('sky2', false) === true;
   if (SKY2) document.documentElement.setAttribute('data-sky2', '');
+  // v9e (behind a flag, off by default, for Felix to try on his phone): ?boom=1 puts "Explode everything" at the end of
+  // the page for this browser, ?boom=0 takes it away again. The parameter leaves the address at once, like ?moment.
+  // Off, the page has no button and never asks for explode.js.
+  {
+    const bq = new URLSearchParams(location.search).get('boom');
+    if (bq === '1') store.set('boom', true);
+    if (bq === '0') store.set('boom', false);
+    if (bq !== null) {
+      const rest = location.search.slice(1).split('&').filter((kv) => kv && !/^boom(=|$)/.test(kv)).join('&');
+      history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+    }
+  }
+  const BOOM = store.get('boom', false) === true;
   // Once (spec 9.4, AM18): a v7 visitor's answers and note come over (a v6 visitor's answers when there
   // are no v7 ones), and her day is composed again, because a v7 day was cut by the calmer caps. The
   // things she added from the catalogue in v7 are kept here and go back on after the compose.
@@ -3240,7 +3253,9 @@
   let skyHex = '', varHex = '', varTimer = 0;
   const stageHost = slot('stage');
   let isDark = false;
+  let skyFrozen = false; // v9e: from the tap on "Explode everything" (below)
   function syncSkyVar() {
+    if (skyFrozen) return;
     clearTimeout(varTimer);
     varTimer = 0;
     if (skyHex === varHex) return;
@@ -3249,6 +3264,7 @@
     themeMeta.content = skyHex;
   }
   function applySky(t) {
+    if (skyFrozen) return;
     const lch = skyAt(t);
     const rgb = oklchToRgb(lch);
     const hex = rgbHex(rgb);
@@ -3789,6 +3805,36 @@
   // The engraving loads after her first tile tap or Show me Friday; a visit that already has a day loads it once
   // the page has loaded and the browser is idle. Never on a fresh first screen.
   if (dayShown) { const later = () => idle(loadNolli, 2000); if (document.readyState === 'complete') later(); else addEventListener('load', later, { once: true }); }
+
+  // v9e "Explode everything" (with ?boom=1, above): a button under the send box, in the night sky. explode.js loads
+  // when the button is within 600 px of the screen, or on its tap; nothing of it runs before.
+  if (BOOM) {
+    const X = C.explode;
+    const box = document.createElement('div');
+    box.className = 'xp';
+    box.innerHTML = hap(`<button class="btn xp-btn" type="button" data-slot="explode"><svg class="i xp-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.75v2.5M8 11.75v2.5M1.75 8h2.5M11.75 8h2.5M3.6 3.6l1.75 1.75M10.65 10.65l1.75 1.75M3.6 12.4l1.75-1.75M10.65 5.35 12.4 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>${esc(X.button)}</button>`, 'xp')
+      + `<p class="xp-note">${esc(X.note)}</p>`;
+    slot('send').closest('.send').after(box);
+    const xb = slot('explode');
+    let load = null;
+    const need = () => load || (load = new Promise((ok, no) => {
+      const s = document.createElement('script');
+      s.src = 'explode.js'; s.onload = ok; s.onerror = () => { load = null; no(); };
+      document.head.appendChild(s);
+    }));
+    const near = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { near.disconnect(); idle(need, 1500); } }, { rootMargin: '0px 0px 600px 0px' });
+    // Once it is wholly on screen, it wobbles on its loose screw (styles.css).
+    const seen = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { seen.disconnect(); box.classList.add('is-seen'); } }, { threshold: 1 });
+    near.observe(xb); seen.observe(xb);
+    xb.addEventListener('click', () => {
+      if (xb.dataset.gone) return;
+      xb.dataset.gone = '1';
+      // From the tap on, the sky stays as it is: a late --sky write on the root would restyle every element mid-blast.
+      // The reduced version keeps the page, and her scroll keeps the sky.
+      skyFrozen = !reduceMotion();
+      need().then(() => window.VenerdiExplode.run({ button: xb, reduced: reduceMotion(), vibrate: true, said: X.said, again: X.again, line: X.line }), () => { delete xb.dataset.gone; skyFrozen = false; });
+    });
+  }
 
   measure();
   setupMotion();

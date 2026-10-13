@@ -406,6 +406,13 @@
     "shareDinnerTime": "{time} Dinner",
     "shareLater": "If there's time: {list}"
   },
+  "explode": {
+    "button": "Explode everything",
+    "note": "Don't worry, a reload fixes it :D",
+    "said": "Oops :D",
+    "again": "Put it back",
+    "line": "Everything on the page just exploded. Reload the page, or press Put it back, and it all comes back."
+  },
   "anchors": {
     "arrival": {
       "time": "08:10",

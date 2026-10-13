@@ -1777,3 +1777,55 @@ dialog.peek .say-sound { white-space: normal; }
   .say-cap, .say-cap.is-open { transition: none; }
   .when-btn, .when-btn .i, .dt-opt { transition: none; }
 }
+
+/* ---------- Explode everything (v9e, behind ?boom=1; app.js and explode.js) ---------- */
+/* Under the send box, in the night sky: a button hanging a little crooked, as if one screw were already loose. When
+   it comes into view it wobbles once on that screw. */
+.xp { display: grid; justify-items: start; gap: var(--s2); margin-top: var(--s8); }
+.xp-btn { gap: 8px; padding: 0 16px 0 13px; color: var(--accent); rotate: -2.5deg; transform-origin: 14% 40%; }
+.xp-i { width: 16px; height: 16px; }
+.xp-note { font-size: 0.8125rem; color: var(--ink-muted); }
+.xp.is-seen .xp-btn { animation: xp-loose 1.2s cubic-bezier(0.3, 0, 0.2, 1) 0.15s both; }
+@keyframes xp-loose {
+  0% { rotate: -2.5deg; } 16% { rotate: 5deg; } 36% { rotate: -6deg; } 56% { rotate: 2deg; } 76% { rotate: -4deg; } 100% { rotate: -2.5deg; }
+}
+@media (prefers-reduced-motion: reduce) { .xp.is-seen .xp-btn { animation: none; } }
+/* While it runs and after: only the pieces and the sky are drawn; the rest of the page is gone until a reload. */
+/* No scroll anchoring once it starts: a piece moved by a transform must not make the browser scroll the page. */
+:root.xp-on, :root.xp-on body { overflow-anchor: none; }
+/* Pieces that stick out past the sides must not widen the page: a phone would zoom the page out to fit them and
+   move the scroll. clip (not hidden) also keeps them out of the scrollable area; fixed things are not clipped. */
+:root.xp-on { overflow-x: hidden; } /* no user-select here: inherited, it would restyle every element at the tap */
+:root.xp-on body { overflow: clip; }
+
+.xp-gone { visibility: hidden !important; } /* what she could see that is not a piece (the bar sets its own visibility) */
+.xp-p, .xp-ui { visibility: visible; }
+.xp-p { transition: none !important; animation: none !important; rotate: none !important; scale: none !important; translate: none !important; }
+:root.xp-on .hud.xp-p { box-shadow: 0 0 0 1px var(--hairline); }
+.xp-unclip { overflow: visible !important; contain: none !important; clip-path: none !important; }
+.xp-ln { display: block; width: fit-content; }
+.xp-hung { transition: none !important; animation: none !important; }
+/* Her hands on the heap: one cover over everything, with a switch for the iPhone's tick on a tap. */
+.xp-touch {
+  position: fixed; inset: 0; z-index: 90; display: block; margin: 0;
+  touch-action: none; cursor: grab; -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.xp-touch.is-grab { cursor: grabbing; }
+.xp-touch > input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; visibility: hidden; }
+.xp-top {
+  position: fixed; z-index: 95; left: 0; right: 0; top: calc(env(safe-area-inset-top) + var(--s5));
+  display: flex; justify-content: center; align-items: center; gap: var(--s3);
+  translate: 0 -6px; opacity: 0;
+  transition: opacity 420ms var(--ease-out), translate 420ms var(--ease-out);
+}
+.xp-top.is-in { opacity: 1; translate: 0 0; }
+.xp-said { font-weight: 600; font-size: 1rem; text-wrap: nowrap; }
+.xp-again { white-space: nowrap; }
+/* Reduced motion keeps the page (and its bar) where it is: the line sits under the bar, on a bit of sky. */
+:root.xp-rm .xp-top {
+  top: calc(env(safe-area-inset-top) + var(--hud-h) + var(--s3)); left: 50%; right: auto; width: max-content; translate: -50% -6px;
+  padding: 6px 6px 6px 14px; border-radius: 14px; background-color: var(--sky);
+  box-shadow: 0 0 0 1px var(--hairline), 0 8px 24px rgb(0 0 0 / 0.22);
+}
+:root.xp-rm .xp-top.is-in { translate: -50% 0; }
