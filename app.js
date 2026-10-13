@@ -3187,31 +3187,43 @@
   const Y_LAMP = relLum(hexRgb('#FFE6BF'));
 
   // Sky over Rome (time -> colour). Sunset and civil dusk come from content.meta.
-  // The afternoon goes blue -> lavender haze -> blush -> gold; a direct blue -> gold blend
-  // in OKLCH crosses green hues around lunch.
+  // v9f (Felix's F13, qa/v9f/sky.md): blue morning and midday, a lavender haze, a blush, then one warm run (cream, honey,
+  // apricot, a dusty rose at sunset) instead of a saturated gold and a red-coral, so no stretch is loud (chroma at most
+  // 0.105, was 0.146). The colour moves in OKLab on a monotone cubic through the stops: no kink at a stop, no overshoot,
+  // and the drop to dusk passes a muted mauve instead of a magenta flash. A direct blue -> gold blend crosses green.
   const SKY = [
-    ['09:30', '#CFE4F1'], ['13:00', '#B3D7EE'], ['15:00', '#DCDCEE'], ['16:10', '#F2D5C9'], ['17:00', '#F3B862'],
-    [C.meta.sunset, '#E9785F'], [C.meta.civilDusk, '#3A4A8E'], ['21:00', '#121833'],
-  ].map(([t, hex]) => ({ t: toMin(t), lch: rgbToOklch(hexRgb(hex)) }));
-  const DUSK = 5; // tramonto -> ora blu
+    ['09:30', '#CFE4F1'], ['13:00', '#B5D7EE'], ['14:50', '#D8DBF0'], ['15:40', '#F1DADB'], ['16:20', '#F5DFC8'],
+    ['17:05', '#F3CC98'], ['17:50', '#EEAF88'], [C.meta.sunset, '#E2917A'], [C.meta.civilDusk, '#3A4A8E'], ['21:00', '#121833'],
+  ].map(([t, hex]) => { const [L, Ch, H] = rgbToOklch(hexRgb(hex)); const h = (H * Math.PI) / 180; return { t: toMin(t), lab: [L, Ch * Math.cos(h), Ch * Math.sin(h)] }; });
+  const DUSK = SKY.findIndex((s) => s.t === toMin(C.meta.sunset)); // tramonto -> ora blu
   const SKY_NIGHT = SKY[SKY.length - 1].t; // 21:00, night: where the page's end scrolls to (v9c C1a)
   // Between sunset and blue hour the light drops fast. A steep curve also keeps the page
   // out of the mid-luminance band where neither ink nor lampione reaches 4.5:1.
   const steep = (p) => { const f = (x) => 1 / (1 + Math.exp(-30 * (x - 0.5))); return (f(p) - f(0)) / (f(1) - f(0)); };
+  // Each channel's slope at each stop (monotone cubic, Fritsch-Butland): 0 where the channel turns, at the ends and on
+  // both sides of the drop to dusk, so the colour eases into and out of it.
+  const SLOPE = SKY.map((s, i) => s.lab.map((v, c) => {
+    if (i === 0 || i === SKY.length - 1 || i === DUSK || i === DUSK + 1) return 0;
+    const h0 = s.t - SKY[i - 1].t, h1 = SKY[i + 1].t - s.t;
+    const d0 = (v - SKY[i - 1].lab[c]) / h0, d1 = (SKY[i + 1].lab[c] - v) / h1;
+    return d0 * d1 <= 0 ? 0 : (3 * (h0 + h1)) / ((2 * h1 + h0) / d0 + (h1 + 2 * h0) / d1);
+  }));
 
   function skyAt(t) {
-    if (t <= SKY[0].t) return SKY[0].lch;
-    if (t >= SKY[SKY.length - 1].t) return SKY[SKY.length - 1].lch;
-    let i = 0;
-    while (t > SKY[i + 1].t) i++;
-    let p = (t - SKY[i].t) / (SKY[i + 1].t - SKY[i].t);
-    if (i === DUSK) p = steep(p);
-    const [L1, C1, H1] = SKY[i].lch;
-    const [L2, C2, H2] = SKY[i + 1].lch;
-    let dh = H2 - H1;
-    if (dh > 180) dh -= 360;
-    if (dh < -180) dh += 360;
-    return [L1 + (L2 - L1) * p, C1 + (C2 - C1) * p, (H1 + dh * p + 360) % 360];
+    let lab;
+    if (t <= SKY[0].t) lab = SKY[0].lab;
+    else if (t >= SKY[SKY.length - 1].t) lab = SKY[SKY.length - 1].lab;
+    else {
+      let i = 0;
+      while (t > SKY[i + 1].t) i++;
+      const h = SKY[i + 1].t - SKY[i].t, s = (t - SKY[i].t) / h;
+      if (i === DUSK) { const p = steep(s); lab = SKY[i].lab.map((v, c) => v + (SKY[i + 1].lab[c] - v) * p); }
+      else {
+        const s2 = s * s, s3 = s2 * s;
+        lab = SKY[i].lab.map((v, c) => (2 * s3 - 3 * s2 + 1) * v + (s3 - 2 * s2 + s) * h * SLOPE[i][c] + (-2 * s3 + 3 * s2) * SKY[i + 1].lab[c] + (s3 - s2) * h * SLOPE[i + 1][c]);
+      }
+    }
+    return [lab[0], Math.hypot(lab[1], lab[2]), ((Math.atan2(lab[2], lab[1]) * 180) / Math.PI + 360) % 360];
   }
 
   // Every frame: write the sky layer and the HUD backgrounds directly (cheap, no inheritance), and --sky
