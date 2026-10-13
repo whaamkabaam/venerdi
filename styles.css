@@ -1807,6 +1807,11 @@ dialog.peek .say-sound { white-space: normal; }
 .xp-ib { display: inline-block; }
 .xp-hung { transition: none !important; animation: none !important; }
 /* Her hands on the heap: one cover over everything, with a switch for the iPhone's tick on a tap. */
+.xp-sky {
+  position: fixed; top: 0; left: 0; right: 0; height: 100lvh; z-index: -1; pointer-events: none;
+  opacity: 0; transition: opacity 1100ms var(--ease-out);
+}
+.xp-sky.is-in { opacity: 1; }
 .xp-touch {
   position: fixed; inset: 0; z-index: 90; display: block; margin: 0;
   touch-action: none; cursor: grab; -webkit-tap-highlight-color: transparent;

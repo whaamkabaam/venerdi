@@ -3832,7 +3832,9 @@
       // From the tap on, the sky stays as it is: a late --sky write on the root would restyle every element mid-blast.
       // The reduced version keeps the page, and her scroll keeps the sky.
       skyFrozen = !reduceMotion();
-      need().then(() => window.VenerdiExplode.run({ button: xb, reduced: reduceMotion(), vibrate: true, said: X.said, again: X.again, line: X.line }), () => { delete xb.dataset.gone; skyFrozen = false; });
+      // The sky above the heap: the page's blue hour at the top, down to the night she is in (explode.js).
+      const sky = [rgbHex(oklchToRgb(skyAt(toMin(C.meta.civilDusk)))), skyHex];
+      need().then(() => window.VenerdiExplode.run({ button: xb, reduced: reduceMotion(), vibrate: true, said: X.said, again: X.again, line: X.line, sky }), () => { delete xb.dataset.gone; skyFrozen = false; });
     });
   }
 

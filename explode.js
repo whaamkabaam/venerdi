@@ -599,8 +599,8 @@
     const ev = [];
     const bx = opts.from.x, by = opts.from.y;
     const shock = 5200;
-    // The blast itself: the jolt, and the buzz on Android.
-    ev.push({ t: INHALE, fn: () => { S.shake = 10; vibrate([50, 40, 30]); } });
+    // The blast itself: the jolt, the buzz on Android, and the evening coming in above as the camera steps back.
+    ev.push({ t: INHALE, fn: () => { S.shake = 10; vibrate([50, 40, 30]); if (S.sky) S.sky.classList.add('is-in'); } });
     for (const p of near) {
       const b = bodyFor(p);
       const dx = p.cx - bx, dy = p.cy - by, d = Math.hypot(dx, dy);
@@ -977,6 +977,15 @@
     // Gone for a screen reader and the keyboard too (aria-hidden, not inert: inert restyles the whole page).
     for (const sel of ['header', 'main', '.hud', '.footer']) { const el = document.querySelector(sel); if (el) el.setAttribute('aria-hidden', 'true'); }
     ui = buildUI();
+    // As the camera steps back it shows the page above her screen, which is earlier in the evening: the sky there is the
+    // page's blue hour, down to the night she was in at the floor. One still layer over the page's sky, faded in once.
+    S.sky = null;
+    if (o.sky) {
+      S.sky = document.createElement('div');
+      S.sky.className = 'xp-sky xp-ui';
+      S.sky.style.backgroundImage = `linear-gradient(to bottom, ${o.sky[0]}, ${o.sky[1]} 64%)`;
+      document.body.appendChild(S.sky);
+    }
     bindTouch(ui.layer);
     lockPage();
     W.bodies.length = 0; W.live.length = 0; W.arbiters.clear(); W.joints.length = 0;
