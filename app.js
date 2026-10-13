@@ -191,8 +191,9 @@
   const KINDS = ['is-pick', 'is-anchor', 'is-tbc', 'is-sun', 'is-you'];
   const cellHTML = (cls, n, en = '') => `<span class="c c--${cls}" role="cell"><span class="sr-only"></span><span class="cells" aria-hidden="true">${FLAP.repeat(n)}</span>${en}</span>`;
   const EN = '<span class="note-en" aria-hidden="true"></span>';
+  // v9f fold-in (felix-13.md): a fourth width is ARRIVALS' flight (number and origin), under the time.
   const rowHTML = (w) => `<div class="board-row" role="row">
-      ${cellHTML('time', w[0])}${w.length > 2 ? cellHTML('who', w[1]) + cellHTML('note', w[2], EN) : cellHTML('who', w[1], EN)}
+      ${cellHTML('time', w[0])}${w.length > 2 ? cellHTML('who', w[1]) + cellHTML('note', w[2], EN) : cellHTML('who', w[1], EN)}${w[3] ? cellHTML('flight', w[3]) : ''}
       ${hap('<button type="button" class="board-hit" hidden></button>', 'hit', true)}
     </div>`;
   function rowModel(el, widths) {
@@ -227,7 +228,7 @@
     B.ensure(rows);
     return B;
   }
-  const rowTexts = (d, w) => w.map((n, c) => boardText(d ? [d.time, d.to, d.remark][c] : '', n));
+  const rowTexts = (d, w) => w.map((n, c) => boardText(d ? [d.time, d.to, d.remark, d.flight][c] : '', n));
   // Classes, screen-reader text, the tap target and the caption follow the row's data.
   function applyRowMeta(row, d) {
     row.data = d;
@@ -240,6 +241,7 @@
     row.srs[0].textContent = d ? (d.srTime ?? d.time ?? '') : '';
     row.srs[1].textContent = d ? (d.label || d.to || '') + (row.srs.length > 2 ? '' : caption) : '';
     if (row.srs[2]) row.srs[2].textContent = d ? (d.remark || '') + caption : '';
+    if (row.srs[3]) row.srs[3].textContent = d ? d.flight || '' : '';
     row.en.textContent = d && d.en ? d.en : '';
     row.en.classList.toggle('is-on', !!(d && d.enOn));
     const hasTarget = !!(d && d.target);
@@ -332,7 +334,7 @@
     const egg = heroEgg[i] && r.tap;
     const remark = egg ? r.tap.remark : heroStatus(r);
     return {
-      time: r.time, to: r.who, remark, kind: r.highlight ? 'you' : 'anchor',
+      time: r.time, to: r.who, remark, flight: r.flight, kind: r.highlight ? 'you' : 'anchor',
       en: r.tap ? r.tap.en : '', enOn: !!egg,
       target: r.tap ? 'egg' : null, hitLabel: `${r.who}, ${remark}`,
     };
@@ -341,13 +343,22 @@
   const heroWidths = () => {
     const variants = H.rows.flatMap((r) => [r.note, ...(r.status || []).map((s) => s.text), r.tap?.remark || '',
       ...(r.countdown ? [H.countdownStatus.tomorrow, fmt(H.countdownStatus.days, { n: 99 })] : [])]);
-    return [Math.max(...H.rows.map((r) => [...r.time].length)), Math.max(...H.rows.map((r) => [...r.who].length)), Math.max(...variants.map((v) => [...v].length))];
+    const w = [Math.max(...H.rows.map((r) => [...r.time].length)), Math.max(...H.rows.map((r) => [...r.who].length)), Math.max(...variants.map((v) => [...v].length))];
+    const flight = Math.max(0, ...H.rows.map((r) => [...(r.flight || '')].length));
+    return flight ? [...w, flight] : w;
   };
   let HERO = null;
   function renderHero() {
     HERO = makeBoard(slot('board'), {
       title: H.boardTitle, sub: H.boardSubtitle, label: `${H.boardTitle}, ${H.boardSubtitle}`,
       columns: H.columns, widths: heroWidths(), rows: H.rows.length,
+    });
+    // v9f fold-in (felix-13.md): only a row with a flight keeps the flight's modules (FR134 BERLIN under WED 14 00:15).
+    HERO.rows.forEach((row, i) => {
+      if (row.widths.length < 4) return;
+      if (H.rows[i].flight) { row.el.classList.add('has-flight'); return; }
+      $('.c--flight', row.el).remove();
+      HERO.rows[i] = rowModel(row.el, row.widths.slice(0, 3));
     });
     slot('hero-title').textContent = U.pageTitle;
   }

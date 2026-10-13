@@ -447,6 +447,9 @@ button.hud-clock:active { scale: 0.96; }
 .c--time { grid-area: time; }
 .c--who { grid-area: who; }
 .c--note { grid-area: note; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* v9f fold-in (felix-13.md): ARRIVALS' flight (FR134 BERLIN) sits under the time, on a phone beside the status. */
+.c--flight { grid-area: flight; }
+.board-row.has-flight { grid-template-areas: "time who" "flight note"; }
 .board-colheads .c--note { display: none; }
 .cells { display: flex; gap: 2px; }
 /* Narrow: the remark sits under the name, so the wider of the two sets the flap size (on ARRIVALS the
@@ -482,6 +485,7 @@ button.hud-clock:active { scale: 0.96; }
     grid-template-areas: "time who note";
     column-gap: 14px;
   }
+  .board-row.has-flight { grid-template-areas: "time who note" "flight . ."; }
   .c--note { flex-direction: column; align-items: flex-start; gap: 4px; }
   .board-colheads .c--note { display: flex; flex-direction: row; align-items: baseline; gap: 6px; }
 }

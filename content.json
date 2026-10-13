@@ -27,9 +27,10 @@
     ],
     "rows": [
       {
-        "time": "TUE 13",
+        "time": "WED 14 00:15",
         "who": "FELIX",
-        "note": "ALREADY HERE",
+        "flight": "FR134 BERLIN",
+        "note": "EXPECTED",
         "noteEn": "",
         "status": [
           {
@@ -37,7 +38,11 @@
             "text": "EXPECTED"
           },
           {
-            "from": "2026-10-13T12:00:00+02:00",
+            "from": "2026-10-13T22:05:00+02:00",
+            "text": "IN THE AIR"
+          },
+          {
+            "from": "2026-10-14T00:15:00+02:00",
             "text": "ALREADY HERE"
           }
         ]
