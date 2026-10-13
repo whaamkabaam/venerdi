@@ -841,7 +841,8 @@
     if (ui) {
       ui.top.hidden = false;
       requestAnimationFrame(() => ui.top.classList.add('is-in'));
-      try { ui.again.focus({ preventScroll: true, focusVisible: false }); } catch { /* old focus options */ }
+      // Focus goes to the line, which says how to get the page back (the status line above says what happened).
+      try { ui.line.focus({ preventScroll: true, focusVisible: false }); } catch { /* old focus options */ }
     }
   }
 
@@ -925,8 +926,8 @@
     addEventListener('keydown', (e) => {
       if (!S.on && !S.done) return;
       if (KEYS.has(e.key) && !(e.target && e.target.closest && e.target.closest('button'))) e.preventDefault();
-      // The page is gone: Tab stays on Put it back.
-      if (e.key === 'Tab' && ui) { e.preventDefault(); try { ui.again.focus({ preventScroll: true }); } catch { /* fine */ } }
+      // The page is gone: Tab stays on the line.
+      if (e.key === 'Tab' && ui) { e.preventDefault(); try { ui.line.focus({ preventScroll: true }); } catch { /* fine */ } }
     });
   }
 
@@ -935,16 +936,15 @@
     layer.className = 'xp-touch xp-ui';
     layer.setAttribute('aria-hidden', 'true');
     layer.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+    // Once it settles, one line at the top in Felix's words, and nothing else.
     const top = document.createElement('div');
     top.className = 'xp-top xp-ui';
     top.hidden = true;
-    top.innerHTML = `<p class="xp-said" aria-hidden="true"></p><button class="btn xp-again" type="button"></button>`;
-    top.querySelector('.xp-said').textContent = opts.said;
-    const again = top.querySelector('.xp-again');
-    again.textContent = opts.again;
-    again.addEventListener('click', () => location.reload());
+    top.innerHTML = '<p class="xp-said" tabindex="-1"></p>';
+    const line = top.querySelector('.xp-said');
+    line.textContent = opts.said;
     document.body.append(layer, top);
-    return { layer, top, again };
+    return { layer, top, line };
   }
 
   function run(o) {

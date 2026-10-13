@@ -1820,28 +1820,26 @@ dialog.peek .say-sound { white-space: normal; }
 }
 .xp-touch.is-grab { cursor: grabbing; }
 .xp-touch > input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; visibility: hidden; }
-/* Once it settles: "Oops :D" is the title of the picture, in the italic of the note ("Hey Sasha,", "Felix") and as big as
-   the screen allows, with Put it back beside it; the two come in one after the other. Only the button takes a touch:
-   around it, the heap is hers to throw. */
+/* Once it settles, one line at the top in Felix's words, in the italic of the note ("Hey Sasha,", "Felix"), and nothing
+   else. It takes no touch: the whole heap under it is hers to throw. */
 .xp-top {
-  position: fixed; z-index: 95; left: 0; right: 0; top: calc(env(safe-area-inset-top) + clamp(var(--s5), 5vh, var(--s8)));
-  display: flex; justify-content: center; align-items: center; gap: var(--s4);
+  position: fixed; z-index: 95; left: 0; right: 0; top: calc(env(safe-area-inset-top) + clamp(var(--s4), 3.5vh, var(--s6)));
+  display: flex; justify-content: center; padding: 0 var(--s4);
   pointer-events: none;
 }
 .xp-said {
-  margin: 0; font-family: var(--font-display); font-size: clamp(3.25rem, 14vw, 6.5rem); line-height: 1;
-  font-style: italic; font-weight: 400; font-synthesis: none; text-wrap: nowrap; opacity: 0;
+  margin: 0; font-family: var(--font-display); font-size: clamp(1.25rem, 5.4vw, 2.25rem); line-height: 1.15;
+  font-style: italic; font-weight: 400; font-synthesis: none; text-align: center; text-wrap: balance; opacity: 0;
 }
-.xp-again { white-space: nowrap; pointer-events: auto; opacity: 0; }
+.xp-said:focus { outline: none; }
 .xp-top.is-in > .xp-said { animation: xp-in 480ms var(--ease-out) both; }
-.xp-top.is-in > .xp-again { animation: xp-in 480ms var(--ease-out) 120ms both; }
 @keyframes xp-in { from { opacity: 0; translate: 0 -8px; } to { opacity: 1; translate: 0 0; } }
 @keyframes xp-fade { from { opacity: 0; } to { opacity: 1; } }
 /* Reduced motion keeps the page (and its bar) where it is: the line sits under the bar, on a bit of sky, and fades in. */
 :root.xp-rm .xp-top {
   top: calc(env(safe-area-inset-top) + var(--hud-h) + var(--s3)); left: 50%; right: auto; width: max-content; translate: -50% 0;
-  padding: 6px 6px 6px 18px; border-radius: 14px; background-color: var(--sky); pointer-events: auto;
+  max-width: calc(100% - 2 * var(--s4)); padding: var(--s2) var(--s4); border-radius: 14px; background-color: var(--sky);
   box-shadow: 0 0 0 1px var(--hairline), 0 8px 24px rgb(0 0 0 / 0.22);
 }
-:root.xp-rm .xp-said { font-size: 2rem; }
+:root.xp-rm .xp-said { font-size: 1.25rem; }
 :root.xp-rm .xp-top.is-in, :root.xp-rm .xp-top.is-in > * { animation: xp-fade 420ms var(--ease-out) both; }
