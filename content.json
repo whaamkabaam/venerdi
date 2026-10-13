@@ -356,6 +356,7 @@
     "add": "Add",
     "seeEverything": "See everything",
     "close": "Close",
+    "fillMark": "Close by",
     "facts": {
       "price": "€{n} each",
       "priceSplit": "€{you} for you, €{me} for me",

@@ -898,7 +898,15 @@
   let fromLink = false;
   let plan = null;
   let hasBackup = false;
+  // v9f F15b (felix-15.md): what she took off her day (ids), so it never comes back as a fill (plan.js fills the
+  // empty stretches from her answers); on this phone and in her link (`x=`).
+  let skip = [];
   const pickIds = () => picks.map((p) => p.id);
+  const cleanSkip = (list) => (Array.isArray(list) ? list : []).map((id) => (typeof id === 'string' ? aliasId(id) : '')).filter((id, i, a) => OPT[id] && a.indexOf(id) === i);
+  const skipAdd = (...ids) => { skip = cleanSkip([...skip, ...ids]); };
+  const skipDrop = (id) => { skip = skip.filter((x) => x !== id); };
+  // An entry on her day that the planner added to fill the time (v9f F15b), not one of her picks.
+  const isFill = (id) => !!plan && plan.fills.some((f) => f.id === id);
   // v9c C1d: a pick of Felix's old default fill (reason `felix`) drops out, so a stored day or an old link opens
   // without it (felix-2.md 6: his four ideas were for testing).
   const cleanPicks = (list) => (Array.isArray(list) ? list : []).filter((p) => p && p.reason !== 'felix').map((p) => (p && typeof p.id === 'string' ? { ...p, id: aliasId(p.id) } : p)).filter((p, i, a) => p && OPT[p.id] && a.findIndex((q) => q && q.id === p.id) === i).map((p) => ({ id: p.id, reason: WHY[p.reason] ? p.reason : 'added' }));
@@ -917,8 +925,9 @@
   // day, and `needs`, the earliest of her dinner times at which it would fit (only when it cannot go on now). v9f F10:
   // `moved`, the titles of what Swap in would move off her day (none: the button says Add).
   let laterNow = [];
-  // The planner's options for her day: her dinner time and pizza place, and the travel times (data.js).
-  const planOpts = (o = {}) => ({ dinnerAt, dinner, transit: TRANSIT, ...o });
+  // The planner's options for her day: her dinner time and pizza place, the travel times (data.js), and (v9f F15b) her
+  // answers and what she took off, for the fills.
+  const planOpts = (o = {}) => ({ dinnerAt, dinner, transit: TRANSIT, answers, skip, ...o });
   // A title with "and" in it ("Piazza Navona and around") gets a comma before the last "and", so the list still reads as
   // a list (v9d fold-in, gate-d1 N1).
   const listPlain = (titles) => (titles.length < 2 ? titles.join('') : `${titles.slice(0, -1).join(U.listJoin)}${U.listJoinLast}${titles[titles.length - 1]}`);
@@ -1001,20 +1010,23 @@
       const tq = q.get('t') || '';
       const linkAt = cleanDinnerAt(/^\d{4}$/.test(tq) ? `${tq.slice(0, 2)}:${tq.slice(2)}` : null);
       // Keep her own day (and her dinner pick and time) before adopting the link's, so "Back to my picks" can restore it.
-      const saved = store.get('picks', null), savedNote = store.get('note', ''), savedDinner = cleanDinner(store.get('dinner', null)), savedAt = cleanDinnerAt(store.get('dinnerAt', null));
+      // v9f F15b: `x=`, what she took off her day (it never comes back as a fill); a link from before has none.
+      const linkSkip = cleanSkip((q.get('x') || '').split(',').map((s) => s.trim()));
+      const saved = store.get('picks', null), savedNote = store.get('note', ''), savedDinner = cleanDinner(store.get('dinner', null)), savedAt = cleanDinnerAt(store.get('dinnerAt', null)), savedSkip = cleanSkip(store.get('skip', []));
       const ids = (list) => list.map((p) => p.id).sort().join();
-      const same = Array.isArray(saved) && ids(saved) === ids(linkPicks) && savedNote === linkNote && savedDinner === linkDinner && savedAt === linkAt;
+      const same = Array.isArray(saved) && ids(saved) === ids(linkPicks) && savedNote === linkNote && savedDinner === linkDinner && savedAt === linkAt && [...savedSkip].sort().join() === [...linkSkip].sort().join();
       // The same link opened again (from the chat a second time): the day kept from the first time stays.
       if (same && store.get('fromLink', false)) hasBackup = !!store.get('before-link', null);
       else {
         hasBackup = Array.isArray(saved) && !same;
-        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null), dinner: savedDinner, dinnerAt: savedAt, order: store.get('order', null) } : null);
+        store.set('before-link', hasBackup ? { picks: saved, note: savedNote, answers: store.get('answers', null), dinner: savedDinner, dinnerAt: savedAt, order: store.get('order', null), skip: savedSkip } : null);
       }
       picks = linkPicks;
       answers = linkAnswers || answersFrom(linkPicks);
       freeText = linkNote;
       dinner = linkDinner;
       dinnerAt = linkAt;
+      skip = linkSkip;
       fromLink = true;
       saveState();
       // A link always replays its build in order, whatever this phone has seen before.
@@ -1030,6 +1042,7 @@
     freeText = store.get('note', '');
     dinner = cleanDinner(store.get('dinner', null));
     dinnerAt = cleanDinnerAt(store.get('dinnerAt', null));
+    skip = cleanSkip(store.get('skip', []));
     // A day stored before v9d D1 holds the board's order: put it in her priority order once.
     if (store.get('order', null) !== 9 && picks.length) { picks = P.priorityOrder(C, picks, answers || {}); store.set('picks', picks); store.set('order', 9); }
     // Someone's link, opened earlier: the note and "Back to my picks" stay until the day changes.
@@ -1044,7 +1057,7 @@
     }
   }
   // `order: 9` (v9d D1): the stored picks are her priority list, not the board's order of v8.
-  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('dinnerAt', dinnerAt); store.set('fromLink', fromLink); store.set('order', 9); }
+  function saveState() { store.set('picks', picks); store.set('answers', answers); store.set('note', freeText); store.set('dinner', dinner); store.set('dinnerAt', dinnerAt); store.set('fromLink', fromLink); store.set('order', 9); store.set('skip', skip); }
 
   function backToMine(byKey = false) {
     const b = store.get('before-link', null);
@@ -1055,6 +1068,7 @@
     freeText = b.note || '';
     dinner = cleanDinner(b.dinner);
     dinnerAt = cleanDinnerAt(b.dinnerAt);
+    skip = cleanSkip(b.skip);
     slot('free-text').value = freeText;
     fromLink = false;
     hasBackup = false;
@@ -1069,7 +1083,8 @@
   }
 
   // Links in chat apps end at the last "safe" character, so the note goes first, `p` (ids, in board
-  // order) last, and ! ' ( ) * . are encoded too. `r` has one letter per pick: the answer it came from;
+  // order) last, and ! ' ( ) * . are encoded too. `r` has one letter per pick: the answer it came from; `x` (v9f F15b)
+  // what she took off her day;
   // `d` is her dinner pick (absent for none), before `p` so a cut never loses it, and `t` her dinner time before it
   // (absent for the default; v9c C1f). The link carries a capped copy of the note.
   const NOTE_LINK_MAX = 1000;
@@ -1079,7 +1094,7 @@
     const n = Array.from(freeText.trim()).slice(0, NOTE_LINK_MAX).join('');
     const a = answers ? encodeAnswers(answers) : null;
     const r = picks.map((p) => (WHY[p.reason] || WHY.added).code).join('');
-    return `${base}?v=9&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${dinnerAt ? `t=${dinnerAt.replace(':', '')}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
+    return `${base}?v=9&${n ? `n=${encodeNote(n)}&` : ''}${a !== null ? `a=${a}&` : ''}${r ? `r=${r}&` : ''}${skip.length ? `x=${skip.join(',')}&` : ''}${dinnerAt ? `t=${dinnerAt.replace(':', '')}&` : ''}${dinner ? `d=${dinner}&` : ''}p=${pickIds().join(',')}`;
   }
   // A mini timetable: "around 10:00 Maritozzo" per card on her day (its time as the card shows it:
   // "around" for a rough time, the bare time for an exact one), her dinner pick, what waits under "If there's
@@ -1185,7 +1200,7 @@
   }
 
   const DEP = { board: null, replay: null, seen: store.get('depSeen', null), sunEgg: false, shown: [], pending: false, sunPending: false, stats: null, settle: false, tapped: false };
-  const depSig = () => `${pickIds().join(',')}|${dinner || ''}|${dinnerAt || ''}|${freeText.trim()}`;
+  const depSig = () => `${pickIds().join(',')}|${dinner || ''}|${dinnerAt || ''}|${freeText.trim()}|${skip.join(',')}`;
   const plainRows = (rows) => rows.map((r) => (r ? { time: r.time, to: r.to, kind: r.kind } : null));
   const sameRows = (a, b) => JSON.stringify(plainRows(a)) === JSON.stringify(plainRows(b));
   const gapEl = () => $('.dep-gap', DEP.board.host);
@@ -1664,10 +1679,14 @@
     const reason = i >= 0 ? picks[i].reason : 'added';
     // v9d fold-in (gate-d1 S1): Swap offers only what Use this can put on her day. Use this puts it first in her list,
     // where it lands exactly when it fits on its own (Swap in's test), so the roof is not offered with dinner at 18:30.
-    const alts = i >= 0 ? P.alternatives(C, picks, i, { want: answers?.want || [] }).filter((a) => P.canSwapIn(C, a, planOpts())) : [];
+    // v9f F15b: a fill swaps within its own category too (asked as if it were last in her list), and nothing already on
+    // her day is offered.
+    const list = it.fill ? [...picks, { id: o.id, reason: P.bestReason(o) }] : picks, at = it.fill ? picks.length : i;
+    const alts = at >= 0 ? P.alternatives(C, list, at, { want: answers?.want || [] }).filter((a) => !plan.options.some((x) => x.id === a) && P.canSwapIn(C, a, planOpts())) : [];
     const id = esc(o.id);
-    // Only Felix's pick says why it is there: her own answers need no label (design-v9 4.5.2).
-    const why = reason === 'felix' ? `<span class="stop-why label">${esc(WHY.felix.label)}</span>` : '';
+    // Only Felix's pick says why it is there: her own answers need no label (design-v9 4.5.2). v9f F15b: so does a fill,
+    // quietly ("Close by"): the planner added it to fill the time, and it gives way when her day changes.
+    const why = reason === 'felix' ? `<span class="stop-why label">${esc(WHY.felix.label)}</span>` : it.fill ? `<span class="stop-why label">${esc(D.fillMark)}</span>` : '';
     return `<li class="plan-item stop" ${attrs} data-dot="${id}" data-hud-title="${esc(o.hud || o.title)}">
         ${tripHTML(it)}<article class="stop-card" aria-labelledby="st-${id}">
           <p class="stop-top">${whenHTML(it, why)}</p>
@@ -1893,10 +1912,15 @@
     const li = btn.closest('.stop');
     const i = picks.findIndex((p) => p.id === li.dataset.key);
     const id = btn.dataset.id;
-    if (i < 0 || !OPT[id]) return;
-    const next = [{ id, reason: picks[i].reason }, ...picks.filter((_, j) => j !== i)];
+    // v9f F15b: on a fill, the chosen thing goes first in her list (it is hers now) under the fill's category.
+    const fill = i < 0 && isFill(li.dataset.key) ? li.dataset.key : null;
+    if ((i < 0 && !fill) || !OPT[id]) return;
+    const next = fill ? [{ id, reason: P.bestReason(OPT[fill]) }, ...picks] : [{ id, reason: picks[i].reason }, ...picks.filter((_, j) => j !== i)];
     const land = () => {
       const prev = plan;
+      // What she swapped away never comes back as a fill; what she chose is hers.
+      skipAdd(li.dataset.key);
+      skipDrop(id);
       setPicks(next);
       announceMoved(prev);
       const nl = stopEl(id);
@@ -1925,7 +1949,8 @@
     const echo = pointer && !!lastRemove && now - lastRemove.t < 500 && Math.hypot(ev.clientX - lastRemove.x, ev.clientY - lastRemove.y) < 24;
     if (li.dataset.out || removing || (ev && ev.detail > 1) || echo) return;
     const id = li.dataset.key;
-    if (!picks.some((p) => p.id === id)) return;
+    const fill = isFill(id); // v9f F15b: a fill comes off too, and stays off (`skip`)
+    if (!fill && !picks.some((p) => p.id === id)) return;
     li.dataset.out = '1';
     removing = true;
     lastRemove = pointer ? { t: now, x: ev.clientX, y: ev.clientY } : null;
@@ -1934,15 +1959,17 @@
     const go = () => {
       removing = false;
       const i = picks.findIndex((p) => p.id === id);
-      if (i < 0) return;
+      if (i < 0 && !fill) return;
       undoDrop();
-      undo = { pick: picks[i], index: i, after: prev ? prev.dataset.key : null, title: OPT[picks[i].id].title, timer: setTimeout(() => undoDrop(true), 6000) };
-      const before = plan, waiting = plan.later.map((l) => l.id);
+      undo = { pick: i >= 0 ? picks[i] : null, fill: i < 0 ? id : null, index: i, after: prev ? prev.dataset.key : null, title: OPT[id].title, timer: setTimeout(() => undoDrop(true), 6000) };
+      const before = plan;
+      // v9f F15b: what she takes off never comes back as a fill.
+      skipAdd(id);
       setPicks(picks.filter((_, j) => j !== i), { keepUndo: true });
       // v9d D1: the time it frees can bring a pick from "If there's time" onto her day; that entry lights up. A pick
       // higher in her list that now fits (often the lunch place) can move a lower one to the list; the live region
-      // names both.
-      const pulled = plan.options.filter((o) => waiting.includes(o.id));
+      // names both. v9f F15b: so can the next fill, and it lights up the same way.
+      const pulled = plan.options.filter((o) => !before.options.some((x) => x.id === o.id));
       pulled.forEach((o) => flash(stopEl(o.id)));
       announceMoved(before, pulled.map((o) => fmt(C.day.live.onDay, { title: o.title })).join(' '));
       $('.undo-btn', slot('day-body'))?.focus({ preventScroll: true, focusVisible: ev?.detail === 0 });
@@ -1966,12 +1993,13 @@
   function undoRemove(byKey = false, ev = null) {
     if (!undo) return;
     if (undo.list) { undoSwapIn(byKey, ev); return; }
-    const { pick, index } = undo;
+    const { pick, index, fill } = undo;
     undoDrop();
     const next = [...picks];
-    next.splice(Math.min(index, next.length), 0, pick);
+    if (pick) next.splice(Math.min(index, next.length), 0, pick);
+    skipDrop(pick ? pick.id : fill);
     setPicks(next);
-    const nl = stopEl(pick.id);
+    const nl = stopEl(pick ? pick.id : fill);
     if (!nl) return;
     if (!reduced) gsap.from(nl, { opacity: 0, duration: 0.22, ease: 'power1.out', clearProps: 'opacity' });
     $('[data-action="remove"]', nl).focus({ preventScroll: true, focusVisible: byKey });
@@ -2017,6 +2045,7 @@
   // "If there's time" when it does not fit), and the live region says which.
   function addPick(id, reason, byKey = false) {
     if (!OPT[id] || picks.some((p) => p.id === id)) return;
+    skipDrop(id);
     setPicks([...picks, { id, reason }]);
     const on = plan.options.some((o) => o.id === id);
     announce(fmt(on ? C.day.live.onDay : C.day.live.inLater, { title: OPT[id].title }));
@@ -2107,7 +2136,7 @@
     const ids = pickIds();
     $$('.cat-add', slot('catalogue')).forEach((b) => {
       const id = b.dataset.id;
-      const on = ids.includes(id);
+      const on = ids.includes(id) || isFill(id);
       const res = on ? null : P.catalogueAdd(C, picks, id);
       const why = res && !res.ok ? res.vars.why : '';
       b.setAttribute('aria-pressed', String(on));
@@ -2142,7 +2171,8 @@
     const b = e.target.closest('.cat-add');
     if (!b) return;
     const id = b.dataset.id;
-    if (picks.some((p) => p.id === id)) { setPicks(picks.filter((p) => p.id !== id)); return; }
+    // Taking something off here keeps it off as a fill too (v9f F15b); a fill on her day is ticked like her picks.
+    if (picks.some((p) => p.id === id) || isFill(id)) { skipAdd(id); setPicks(picks.filter((p) => p.id !== id)); return; }
     addPick(id, 'added');
   }
 
@@ -3695,9 +3725,11 @@
     // in the tap (at most a few ms on her longest day, gate-d1-spec browser-timing.txt), so the day and its buttons
     // render once.
     // v9f F10: what Swap in would do is the day with that pick first in her list (swapIn below), built once per row.
+    // v9f F15b: only her picks count (fills give way), so those days are built without fills.
+    const mine = plan.options.filter((o) => !isFill(o.id));
     laterNow = plan.later.map((l) => {
-      const next = P.build(C, [l.id, ...pickIds().filter((id) => id !== l.id)], planOpts());
-      if (next.options.some((o) => o.id === l.id)) return { id: l.id, ok: true, moved: plan.options.filter((o) => !next.options.some((q) => q.id === o.id)).map((o) => o.title) };
+      const next = P.build(C, [l.id, ...pickIds().filter((id) => id !== l.id)], planOpts({ answers: null }));
+      if (next.options.some((o) => o.id === l.id)) return { id: l.id, ok: true, moved: mine.filter((o) => !next.options.some((q) => q.id === o.id)).map((o) => o.title) };
       return { id: l.id, ok: false, moved: [], needs: C.anchors.dinner.times.find((t) => P.canSwapIn(C, l.id, planOpts({ dinnerAt: t }))) || null };
     });
     syncSend();
