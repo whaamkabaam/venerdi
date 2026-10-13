@@ -621,28 +621,29 @@
     out.push(Math.round((DRUM - ROLL) * 1000));
     return out;
   }
-  // A hit of the drum: the camera thumps in and jolts, and everything she sees jumps a little, harder each time; the
-  // button most.
+  // A hit of the drum: the camera thumps in and jolts, and everything she sees jumps, harder each time; the button
+  // most, and it swells a little more with every hit. v9f fold-in (gate-design): built to be seen, since an iPhone
+  // has no buzz to carry it: from a 1 to 2 px nudge at the first hit to a 9 px jolt and a 3 % punch of the camera at the last.
   function hit(k) {
     const a = 0.25 + 0.75 * k / (BEATS.length - 1);
-    S.shake = Math.max(S.shake, 1.5 + 3 * a);
-    S.thump = 0.004 + 0.01 * a;
-    for (const p of S.pieces) if (p.state === 'pinned') kick(p, a);
+    S.shake = Math.max(S.shake, 1 + 8 * a * a);
+    S.thump = 0.004 + 0.032 * a * a;
+    for (const p of S.pieces) if (p.state === 'pinned') { kick(p, a); if (p.kind === 'bomb') p.sc = p.s * (1 + 0.45 * a); }
   }
   function kick(p, a) {
     const big = Math.max(p.sw, p.sh) > 240 ? 0.4 : 1, bomb = p.kind === 'bomb';
-    const r = (bomb ? 4 : 1.6) * a * big;
+    const r = (bomb ? 6 : 1 + 6 * a) * a * big;
     p.jx = (Math.random() - 0.5) * 2 * r; p.jy = -Math.random() * r * (bomb ? 1.4 : 1);
-    p.ja = (Math.random() - 0.5) * (bomb ? 0.36 : 0.016) * a * big;
+    p.ja = (Math.random() - 0.5) * (bomb ? 0.5 : 0.06) * a * big;
   }
   // Between hits the jumps settle back; in the held roll everything shakes all the time.
   function rattle(dt) {
     const roll = S.t >= ROLL, k = Math.exp(-dt / 0.045);
-    if (roll) S.shake = Math.max(S.shake, 4.5);
+    if (roll) S.shake = Math.max(S.shake, 6);
     S.thump = (S.thump || 0) * Math.exp(-dt / 0.06);
     for (const p of S.pieces) {
       if (p.state !== 'pinned' || p.x0 === undefined) continue;
-      if (roll) kick(p, 1); else if (p.jx !== undefined) { p.jx *= k; p.jy *= k; p.ja *= k; }
+      if (roll) kick(p, 0.8); else if (p.jx !== undefined) { p.jx *= k; p.jy *= k; p.ja *= k; }
       const b = p.body;
       b.x = p.x0 + (p.jx || 0); b.y = p.y0 + (p.jy || 0); b.a = p.ja || 0;
     }
