@@ -37,21 +37,6 @@
     }
   }
   const MOMENT = store.get('moment', false) === true;
-  // v9d D3 (behind a flag, off by default, for Felix to try on his phone): ?sky=2 turns the document-height sky on for
-  // this browser, ?sky=1 turns it off. The parameter leaves the address at once, like ?moment. With it on, the sky
-  // layer is part of the page (as tall as the page) instead of fixed to the viewport, so what iOS Safari paints under
-  // and around its floating bar is the live sky and not the root background, which trails it by design (applySky).
-  {
-    const sq = new URLSearchParams(location.search).get('sky');
-    if (sq === '2') store.set('sky2', true);
-    if (sq === '1') store.set('sky2', false);
-    if (sq !== null) {
-      const rest = location.search.slice(1).split('&').filter((kv) => kv && !/^sky(=|$)/.test(kv)).join('&');
-      history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
-    }
-  }
-  const SKY2 = store.get('sky2', false) === true;
-  if (SKY2) document.documentElement.setAttribute('data-sky2', '');
   // Once (spec 9.4, AM18): a v7 visitor's answers and note come over (a v6 visitor's answers when there
   // are no v7 ones), and her day is composed again, because a v7 day was cut by the calmer caps. The
   // things she added from the catalogue in v7 are kept here and go back on after the compose.
@@ -3416,8 +3401,6 @@
     // The board's first row under the bar: the handover point (b3.2).
     const row0 = dayShown && DEP.board && DEP.board.rows[0];
     dockY = row0 ? top(row0.el) - hudH() : Infinity;
-    // v9d D3 (?sky=2): the sky layer is as tall as the page (the in-flow content; the layer itself is out of flow).
-    if (SKY2) skyBg.style.height = `${document.body.offsetHeight}px`;
   }
 
   function timeAt(y) {
@@ -3447,9 +3430,9 @@
     const end = !!el && el === itemEls[itemEls.length - 1] && y >= maxY - 2;
     // At the page end it is night (v9c C1a); the clock still reads the entry (dinner's time).
     applySky(end ? SKY_NIGHT : reduced ? (el ? +el.dataset.min : START_MIN) : timeAt(y));
-    // v9d D3 (?sky=2): at the page end the sky is still (night), so the root background (what the rubber band past
-    // the end shows) follows at once instead of 200 ms later. One restyle per arrival, not one per frame.
-    if (SKY2 && end) syncSkyVar();
+    // At the page end the sky is still (night), so the root background (what the rubber band past the end shows)
+    // follows at once instead of 200 ms later. One restyle per arrival, not one per frame.
+    if (end) syncSkyVar();
 
     let sec = null;
     for (const s of sectionMarks) if (y >= s.y) sec = s;
@@ -3687,9 +3670,6 @@
     // longer she was at the bottom of the short page, and the smoothed sky caught up from the new bottom (night) for a
     // frame: a night flash under the glide.
     ScrollTrigger.addEventListener('refresh', () => { measure(); syncDock(false); const tw = skyTween?.scrollTrigger?.getTween?.(); if (tw) tw.progress(1); render(reduced ? scrollY : lastY); });
-    // v9d D3 (?sky=2): while ScrollTrigger measures the page the layer is one window tall again, so a page that has just
-    // got shorter (a pick removed) is not measured at the layer's old height; measure() then sets the new one.
-    if (SKY2) ScrollTrigger.addEventListener('refreshInit', () => { skyBg.style.height = ''; });
     ScrollTrigger.addEventListener('scrollEnd', syncSkyVar);
   }
 
@@ -3831,7 +3811,7 @@
   loadWeather();
   (window.requestIdleCallback || ((fn) => setTimeout(fn, 2500)))(() => { if (DEP.board) warmBoard(); }, { timeout: 3000 });
   window.__venerdi = {
-    moment: () => MOMENT, sky2: () => SKY2,
+    moment: () => MOMENT,
     finishBoard, depRows: () => depRows(plan), boardRows: () => (DEP.board ? DEP.board.rows.map((r) => r.shown) : []), replayStats: () => DEP.stats, plan: () => plan,
     introDone: () => !HERO.intro || HERO.intro.progress() === 1,
     state: () => ({ replaying: !!DEP.replay, paused: !!DEP.replay?.paused, pending: DEP.pending, settle: DEP.settle, seen: !!DEP.seen, fullPicks: DEP.seen?.fullPicks || null, sun: DEP.board ? DEP.board.sun.shown : [], stageBusy: stage.busy, draft: cloneAnswers(stage.draft), peek: peek.kind }),

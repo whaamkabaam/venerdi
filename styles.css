@@ -99,25 +99,20 @@ html {
   color: var(--ink);
 }
 /* The sky behind the page, its own composited layer: app.js recolours it every frame while scrolling,
-   which is a solid-colour layer update instead of a repaint of everything in view. */
+   which is a solid-colour layer update instead of a repaint of everything in view.
+   v9f (Felix's F13): it is part of the page, from its top to its end (body is its containing block), not fixed to the
+   window. iOS Safari draws no fixed box under and around its floating bar, so a fixed sky left that strip to the root
+   background, which follows the sky only once it has been still for 200 ms: a lavender strip under an orange page. */
 .sky-bg {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 100lvh;
+  position: absolute;
+  inset: 0;
+  min-height: 100lvh;
   z-index: -1;
   pointer-events: none;
   will-change: transform;
 }
-/* v9d D3, behind ?sky=2 (app.js sets data-sky2 on html): the sky is part of the page, as tall as it (app.js sets the
-   height on every measure), instead of fixed to the viewport. iOS 26 Safari ends the fixed containing block above its
-   floating bar and shows the page's own content and root background under and around the bar; the root background
-   follows --sky, which trails the layer while she scrolls. Still one solid-colour composited layer. */
-[data-sky2] .sky-bg {
-  position: absolute;
-  height: auto;
-  min-height: 100lvh;
-}
 body {
+  position: relative; /* the sky layer's containing block: it spans the page */
   margin: 0;
   font-family: var(--font-body);
   font-size: 1.0625rem;
