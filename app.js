@@ -921,6 +921,7 @@
   const planOpts = (o = {}) => ({ dinnerAt, dinner, transit: TRANSIT, ...o });
   // A title with "and" in it ("Piazza Navona and around") gets a comma before the last "and", so the list still reads as
   // a list (v9d fold-in, gate-d1 N1).
+  const listPlain = (titles) => (titles.length < 2 ? titles.join('') : `${titles.slice(0, -1).join(U.listJoin)}${U.listJoinLast}${titles[titles.length - 1]}`);
   const listOf = (titles) => (titles.length < 2 ? titles.join('') : `${titles.slice(0, -1).join(U.listJoin)}${titles.some((t) => t.includes(U.listJoinLast)) ? U.listJoin.trimEnd() : ''}${U.listJoinLast}${titles[titles.length - 1]}`);
 
   // Her answers in the link: one group per step, joined by "-": the sights and foods as their
@@ -1707,7 +1708,9 @@
       // v9f F10 (felix-11.md: "i dont understand the swap in"): the button says what it does: "Add" when nothing moves
       // off her day, else what it would take the place of ("Instead of Noon cannon"). Screen readers hear the row's
       // title with it ("Add: Trastevere", "Trastevere, Instead of Noon cannon").
-      const words = f.moved.length ? `<span class="sr-only">${esc(o.title)}, </span>${esc(fmt(D.instead, { list: listOf(f.moved) }))}` : `${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span>`;
+      // v9f fold-in (gate-design): the titles joined plainly ("A and B", "A, B and C"): listOf's comma before "and" after a
+      // title with "and" in it read as three things ("Instead of Piazza Navona and around, and Monti").
+      const words = f.moved.length ? `<span class="sr-only">${esc(o.title)}, </span>${esc(fmt(D.instead, { list: listPlain(f.moved) }))}` : `${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span>`;
       const act = f.ok ? hap(`<button type="button" class="btn btn--quiet later-in" data-action="swapin" data-id="${esc(o.id)}">${words}</button>`, 'add')
         : f.needs ? `<span class="later-why">${esc(fmt(D.needsTime, { time: f.needs }))}</span>` : '';
       return `<li class="later-row" data-key="${esc(o.id)}">${thumbHTML(o.photos?.[0], 'later-photo', '64px')}<span class="later-text"><span class="later-name">${esc(o.title)}</span>${act}</span></li>`;
