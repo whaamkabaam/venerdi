@@ -105,5 +105,14 @@
 <script src="vendor/gsap.min.js"></script>
 <script src="vendor/ScrollTrigger.min.js"></script>
 <script src="app.js"></script>
+<script>
+  /* Cloudflare Web Analytics (no cookies, so no banner), on the live site only: a local copy or a preview counts no visit. */
+  if (location.hostname === 'whaamkabaam.github.io') {
+    var cf = document.createElement('script');
+    cf.type = 'module'; cf.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    cf.setAttribute('data-cf-beacon', '{"token": "5e68ce1bab7542d48d91859ebb74e345"}');
+    document.body.appendChild(cf);
+  }
+</script>
 </body>
 </html>
