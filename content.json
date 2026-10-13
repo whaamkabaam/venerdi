@@ -163,8 +163,8 @@
       {
         "id": "wander",
         "title": "Wander somewhere?",
-        "hint": "Pick one.",
-        "multi": false,
+        "hint": "Pick as many as you like.",
+        "multi": true,
         "none": "Not really",
         "tiles": [
           {

@@ -726,7 +726,7 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s5) var(--s3);
 }
-.tiles--one { --ar: 1; }
+.tiles--place { --ar: 1; }  /* the areas and the wild cards: places (v9f F6: by what a tile is, not how many she picks) */
 .tile-cell { position: relative; display: grid; align-content: start; justify-items: start; min-width: 0; }
 .tile {
   display: grid;
@@ -1666,7 +1666,7 @@ dialog.peek .say-sound { white-space: normal; }
   .step-title { font-size: clamp(44px, 4.2vw, 60px); line-height: 1.04; }
   .step-hint { margin: var(--s3) 0 var(--s5); font-size: 1rem; }
   .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s5); }
-  .tiles--one { --ar: 4 / 3; }
+  .tiles--place { --ar: 4 / 3; }
   /* The none answer leaves the photo grid for the foot, beside Back (fold-in, design gate S2). */
   .tiles > .hapw--none { display: none; }
   .hapw--snone { display: inline-grid; }
@@ -1733,7 +1733,7 @@ dialog.peek .say-sound { white-space: normal; }
    short) and the question sits a little smaller, so every step still fits with its buttons. */
 @media (min-width: 1024px) and (max-height: 860px) {
   .step-title { font-size: 48px; }
-  .tiles--one { --ar: 16 / 9; }
+  .tiles--place { --ar: 16 / 9; }
 }
 
 /* From 1280 px the day is two columns: the map sticks on the left, unboxed, the plan runs on the right

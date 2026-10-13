@@ -416,6 +416,9 @@
   // The wild card stores its option id (compose() takes it as is); the other steps store the tile id.
   const tileValue = (s, t) => (s.id === 'wild' ? t.option : t.id);
   const tileOf = (s, v) => s.tiles.find((t) => tileValue(s, t) === v);
+  // v9f F6 (felix-11.md): steps 1 to 3 take any number of picks (`multi`). On steps 1 and 2 a tile is a sight or a food
+  // with things behind it (a list of them in its peek); on step 3, as on the wild card, a tile is one place.
+  const isVibe = (s) => s.multi && !s.tiles.some((t) => t.option);
   // `want`: the things she named in a peek (option ids, in the order she pressed them), and
   // `wantFrom`: the sight or food each was named under.
   const emptyAnswers = () => ({ ...Object.fromEntries(STEPS.map((s) => [s.id, s.multi ? [] : null])), want: [], wantFrom: {} });
@@ -423,8 +426,8 @@
   const chosen = (a, s) => { const v = a[s.id]; return Array.isArray(v) ? v : v ? [v] : []; };
   const counterText = (i) => fmt(ASK.counter, { n: i + 1, total: STEPS.length });
   const progressText = (i) => fmt(ASK.progress, { n: i + 1, total: STEPS.length });
-  // The sights and foods she answered (the pick-any steps), in tap order.
-  const vibesOf = (a) => STEPS.filter((s) => s.multi).flatMap((s) => a[s.id] || []);
+  // The sights and foods she answered (steps 1 and 2), in tap order.
+  const vibesOf = (a) => STEPS.filter(isVibe).flatMap((s) => a[s.id] || []);
   const serves = (o, reason) => !!(o && o.serves && reason in o.serves);
   // Every option behind a sight or a food, best first: what its peek lists.
   const servedBy = (reason) => C.options.filter((o) => serves(o, reason)).sort((a, b) => a.serves[reason] - b.serves[reason]);
@@ -439,21 +442,22 @@
     if (k === 'wild' || k.startsWith('wander:')) {
       const s = STEPS.find((x) => x.id === (k === 'wild' ? 'wild' : 'wander'));
       const t = s && s.tiles.find((x) => x.option === id);
-      if (t && !a[s.id]) a[s.id] = tileValue(s, t);
+      if (t && s.multi) { if (!a[s.id].length) a[s.id] = [tileValue(s, t)]; } else if (t && !a[s.id]) a[s.id] = tileValue(s, t);
       return false;
     }
-    const s = STEPS.find((x) => x.multi && tileOf(x, k));
+    const s = STEPS.find((x) => isVibe(x) && tileOf(x, k));
     if (!s) return false;
     if (!a[s.id].includes(k)) a[s.id].push(k);
     a.wantFrom[id] = k;
     return true;
   }
   // Answers from storage or an old link, cut to what this page has: tiles that still exist, named
-  // things that still exist and serve one of her answers (a v6 one whose home moved brings its home).
+  // things that still exist and serve one of her answers (a v6 one whose home moved brings its home). An area stored
+  // before v9f F6 (one string) is her one area now.
   const cleanAnswers = (a) => {
     const c = cloneAnswers(a);
     STEPS.forEach((s) => {
-      if (s.multi) c[s.id] = (Array.isArray(c[s.id]) ? c[s.id] : []).filter((v, i, arr) => tileOf(s, v) && arr.indexOf(v) === i);
+      if (s.multi) c[s.id] = [].concat(c[s.id] || []).filter((v, i, arr) => tileOf(s, v) && arr.indexOf(v) === i);
       else if (!tileOf(s, c[s.id])) c[s.id] = null;
     });
     c.wantFrom = c.wantFrom && typeof c.wantFrom === 'object' ? Object.fromEntries(Object.entries(c.wantFrom).map(([id, r]) => [aliasId(id), r])) : {};
@@ -474,7 +478,7 @@
       const state = s.multi ? 'aria-pressed="false"' : `role="radio" aria-checked="false" aria-posinset="${k + 1}" aria-setsize="${s.tiles.length}" tabindex="-1"`;
       const v = esc(tileValue(s, t));
       // "See all 8", "See both", or "Have a look" when one thing is behind it (v9, design-v9 2.4).
-      const n = s.multi ? servedBy(t.id).length : 1;
+      const n = isVibe(s) ? servedBy(t.id).length : 1;
       const more = n === 1 ? PK.openOne : n === 2 ? PK.openTwo : fmt(PK.open, { n });
       // The photo sits on its own layer over an ink mat: picked, it steps in 6 px (styles.css, b1.1).
       return `<div class="tile-cell">
@@ -493,7 +497,7 @@
     return `<fieldset class="step" data-step="${i}"${i ? ' hidden' : ''}>
         <legend class="step-title" id="${lid}" tabindex="-1"><span class="sr-only">${esc(progressText(i))}: </span>${esc(s.title)}</legend>
         <p class="step-hint">${esc(s.hint)}</p>
-        <div class="tiles ${s.multi ? 'tiles--any' : 'tiles--one'}${n > 4 ? ' tiles--many' : ''}"${s.multi ? ` role="group" aria-labelledby="${lid}"` : ''}>${tiles}${none}</div>
+        <div class="tiles ${s.multi ? 'tiles--any' : 'tiles--one'}${isVibe(s) ? '' : ' tiles--place'}${n > 4 ? ' tiles--many' : ''}"${s.multi ? ` role="group" aria-labelledby="${lid}"` : ''}>${tiles}${none}</div>
       </fieldset>`;
   }
   function renderStage() {
@@ -556,8 +560,8 @@
     STEPS.forEach((s) => chosen(a, s).forEach((v) => {
       const t = tileOf(s, v);
       if (!t) return;
-      const label = s.multi && WHY[v] ? WHY[v].label : tileLabel(t);
-      const named = s.multi ? wantsFor(a, v).map((id) => OPT[id].title) : [];
+      const label = isVibe(s) && WHY[v] ? WHY[v].label : tileLabel(t);
+      const named = isVibe(s) ? wantsFor(a, v).map((id) => OPT[id].title) : [];
       labels.push(named.length ? fmt(ASK.answerWants, { label, list: named.join(U.listJoin) }) : label);
     }));
     // Nothing answered (every step skipped): "No picks, so we just wing it :-)".
@@ -580,7 +584,7 @@
       const on = chosen(stage.draft, st).includes(b.dataset.value);
       b.setAttribute(st.multi ? 'aria-pressed' : 'aria-checked', String(on));
       // A sight or a food with things she named under it lists them in place of its sub.
-      if (!st.multi) return;
+      if (!isVibe(st)) return;
       const w = on ? wantsFor(stage.draft, b.dataset.value) : [];
       const sub = w.length ? fmt(PK.wanted, { list: w.map((id) => OPT[id].title).join(U.listJoin) }) : tileSub(tileOf(st, b.dataset.value));
       const el = $('.tile-sub', b);
@@ -721,7 +725,7 @@
     // v9d D5 (felix-6.md, "Ask right after the tap"): a tap that picks a sight or a food opens its list at once, asking
     // "Anything in particular?", so she sees there are things to choose under it; "Any is fine" (or any other close)
     // keeps the pick and the planner chooses, as before. An unpick opens nothing, nor does a food with one thing.
-    if (picked && servedBy(v).length > 1) openPeek(b, 'vibe', { step: +b.dataset.step, value: v, ask: true });
+    if (picked && isVibe(s) && servedBy(v).length > 1) openPeek(b, 'vibe', { step: +b.dataset.step, value: v, ask: true });
   }
   // Arrow keys move through the radios and select as they go.
   function onStageKey(e) {
@@ -741,7 +745,7 @@
     const more = e.target.closest('.tile-more');
     if (more) {
       const i = +more.dataset.step, s = STEPS[i], v = more.dataset.value;
-      if (s.multi) openPeek(more, 'vibe', { step: i, value: v });
+      if (isVibe(s)) openPeek(more, 'vibe', { step: i, value: v });
       else openPeek(more, 'pick', { step: i, value: v, id: tileOf(s, v).option });
       return;
     }
@@ -757,7 +761,7 @@
       // An answer, like a tile (Android; an iPhone's switch already ticked). On the last step Show me Friday's own
       // buzz is the one call (v9c P5: two calls in one tap, the second cutting the first short).
       if (!last) buzz('selection');
-      stage.draft[STEPS[stage.step].id] = null;
+      stage.draft[STEPS[stage.step].id] = STEPS[stage.step].multi ? [] : null;
       syncStage();
       if (last) planFriday(e.target.closest('button')); else goStep(stage.step + 1);
     } else if (a === 'change') openStage();
@@ -907,12 +911,13 @@
   // a list (v9d fold-in, gate-d1 N1).
   const listOf = (titles) => (titles.length < 2 ? titles.join('') : `${titles.slice(0, -1).join(U.listJoin)}${titles.some((t) => t.includes(U.listJoinLast)) ? U.listJoin.trimEnd() : ''}${U.listJoinLast}${titles[titles.length - 1]}`);
 
-  // Her answers in the link: one group per step, joined by "-": the pick-any steps as their
-  // answers' letters, the pick-one steps as the tile's position (base 36); empty when skipped. A
+  // Her answers in the link: one group per step, joined by "-": the sights and foods as their
+  // answers' letters, the areas and the wild card as each tile's position (base 36: v9f F6, one per area she picked,
+  // in her tap order; a link from before holds one); empty when skipped. A
   // fifth group, when she named things in a peek, holds their ids joined by "." in pressed order,
   // each after the letter of the sight or food she named it under: ar-pl-0-0-acolosseum.rpantheon
   // (an id with no letter, as in links from before, goes to the first answer it serves).
-  const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (s.multi ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-')
+  const encodeAnswers = (a) => STEPS.map((s) => chosen(a, s).map((v) => (isVibe(s) ? WHY[v]?.code || '' : s.tiles.findIndex((t) => tileValue(s, t) === v).toString(36))).join('')).join('-')
     + (a.want?.length ? `-${a.want.map((id) => (WHY[P.wantReason(OPT[id], a)]?.code || '') + id).join('.')}` : '');
   // A link without `v=7`, `v=8` or `v=9` is from v6: its pick-one steps hold positions in v6's tile lists, read
   // through these frozen tables (v7, v8 and v9 share their tile lists, so they decode the same way). A v6 tile that is gone (the Appian Way, the film fest, the Domus) reads as none.
@@ -926,7 +931,8 @@
     parts.slice(0, STEPS.length).forEach((part, i) => {
       const s = STEPS[i];
       if (!part) return;
-      if (s.multi) Array.from(part).forEach((c) => { const t = s.tiles.find((x) => WHY[x.id]?.code === c); if (t && !a[s.id].includes(t.id)) a[s.id].push(t.id); });
+      if (isVibe(s)) Array.from(part).forEach((c) => { const t = s.tiles.find((x) => WHY[x.id]?.code === c); if (t && !a[s.id].includes(t.id)) a[s.id].push(t.id); });
+      else if (s.multi) Array.from(part).forEach((c) => { const t = v6 && V6_TILES[s.id] ? tileOf(s, V6_TILES[s.id][parseInt(c, 36)]) : s.tiles[parseInt(c, 36)]; if (t && !a[s.id].includes(tileValue(s, t))) a[s.id].push(tileValue(s, t)); });
       else if (v6 && V6_TILES[s.id]) { const v = V6_TILES[s.id][parseInt(part, 36)]; if (tileOf(s, v)) a[s.id] = v; }
       else { const t = s.tiles[parseInt(part, 36)]; if (t) a[s.id] = tileValue(s, t); }
     });
@@ -951,8 +957,8 @@
     if (list.some((p) => p.reason === 'felix')) return a;
     for (const p of list) {
       for (const s of STEPS) {
-        if (s.multi && s.tiles.some((t) => t.id === p.reason) && !a[s.id].includes(p.reason)) a[s.id].push(p.reason);
-        if (!s.multi && s.id === p.reason) { const t = s.tiles.find((x) => x.option === p.id); if (t) a[s.id] = tileValue(s, t); }
+        if (isVibe(s) && s.tiles.some((t) => t.id === p.reason) && !a[s.id].includes(p.reason)) a[s.id].push(p.reason);
+        if (!isVibe(s) && s.id === p.reason) { const t = s.tiles.find((x) => x.option === p.id); if (t && s.multi) { if (!a[s.id].includes(tileValue(s, t))) a[s.id].push(tileValue(s, t)); } else if (t) a[s.id] = tileValue(s, t); }
       }
     }
     return a;
@@ -2291,7 +2297,7 @@
     const d = stage.draft;
     $$('.peek-toggle', dlg).forEach((b) => {
       // A thing named under another sight shows unpressed here (pressing it moves it over).
-      const on = b.dataset.action === 'want' ? wantedHere(b.dataset.id) : d[STEPS[peek.step].id] === peek.value;
+      const on = b.dataset.action === 'want' ? wantedHere(b.dataset.id) : chosen(d, STEPS[peek.step]).includes(peek.value);
       b.setAttribute('aria-pressed', String(on));
     });
     // v9d D5: "Any is fine" while nothing is named here, Done once something is.
@@ -2302,8 +2308,8 @@
   const wantedHere = (id) => stage.draft.want.includes(id) && P.wantReason(OPT[id], stage.draft) === peek.value;
   // "This one" in a sight or a food names the thing under it (and selects the answer if it was not
   // yet); pressed again it lets the thing go and leaves the answer selected. A thing already named
-  // under another sight moves over to this one. "This one" on an area or a wild card picks it
-  // (replacing the pick before), or clears it.
+  // under another sight moves over to this one. "This one" on an area adds it to her areas or takes it off (v9f F6);
+  // on a wild card it picks it (replacing the pick before), or clears it.
   function onPeekToggle(b) {
     buzz('selection');
     const d = stage.draft, s = STEPS[peek.step];
@@ -2315,7 +2321,8 @@
         d.wantFrom[id] = peek.value;
         if (!d[s.id].includes(peek.value)) d[s.id] = [...d[s.id], peek.value];
       }
-    } else d[s.id] = d[s.id] === peek.value ? null : peek.value;
+    } else if (s.multi) d[s.id] = d[s.id].includes(peek.value) ? d[s.id].filter((x) => x !== peek.value) : [...d[s.id], peek.value];
+    else d[s.id] = d[s.id] === peek.value ? null : peek.value;
     syncStage();
     syncPeek();
   }

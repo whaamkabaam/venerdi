@@ -570,15 +570,25 @@
   };
 
   /* Her priority list (spec 3.4, ruling S5): the things she named, in the order she pressed them; then the class, her
-     area, her wild card (one tap chose one thing); then the category picks: the pastry stop, the lunch place, the
+     areas in her tap order (v9f F6), her wild card (one tap chose one thing); then the category picks: the pastry stop, the lunch place, the
      sights in her tap order, the street food. Anything else (a hand Add) keeps its place after them. Stable, so a
      list already in this order stays as it is. */
   const TIER = { class: 1, wander: 2, wild: 3, pastry: 4, lunch: 5, street: 7 };
+  // v9f F6 (felix-11.md): she can tap more than one area; her areas are the tile ids in her tap order. An answer stored
+  // before v9f holds one area as a string (or null).
+  const areasOf = (answers) => [].concat(answers.wander || []).filter(Boolean);
+  const areaOptions = (C, answers) => {
+    const step = C.ask.steps.find((s) => s.id === 'wander');
+    return areasOf(answers).map((v) => step && step.tiles.find((t) => t.id === v)).filter(Boolean).map((t) => t.option);
+  };
   function priorityOrder(C, picks, answers = {}) {
     const want = answers.want || [], see = answers.see || [];
+    const areas = areaOptions(C, answers);
     const key = (p, i) => {
       const w = want.indexOf(p.id);
       if (w >= 0) return [0, w, i];
+      // Her areas in her tap order (an area she did not tap, from Use this, after them).
+      if (p.reason === 'wander') { const a = areas.indexOf(p.id); return [TIER.wander, a >= 0 ? a : areas.length, i]; }
       if (p.reason in TIER) return [TIER[p.reason], 0, i];
       const s = see.indexOf(p.reason);
       if (s >= 0) return [6, s, i];
@@ -597,9 +607,9 @@
     const O = optionsById(C);
     const can = (o) => !!o && !o.fridayNo;
     const see = answers.see || [], eat = answers.eat || [];
-    const wander = answers.wander || null, wild = answers.wild || null;
+    const areas = areaOptions(C, answers), wild = answers.wild || null;
     // v9c C1d (felix-2.md 6): nothing answered gives a light day, her picks only (none); no default fill.
-    if (!see.length && !eat.length && !wander && !wild) return { picks: [], extras: [] };
+    if (!see.length && !eat.length && !areasOf(answers).length && !wild) return { picks: [], extras: [] };
     const picks = [];
     const ids = () => picks.map((p) => p.id);
     const on = (id) => picks.some((p) => p.id === id);
@@ -611,10 +621,8 @@
       const reason = wantReason(o, answers);
       if (reason) add(id, reason, true);
     }
-    // 2. Her area and her wild card.
-    const wanderStep = C.ask.steps.find((s) => s.id === 'wander');
-    const tile = wander && wanderStep && wanderStep.tiles.find((t) => t.id === wander);
-    if (tile && can(O[tile.option]) && !on(tile.option)) add(tile.option, 'wander');
+    // 2. Her areas (v9f F6: each one she tapped, in her tap order) and her wild card.
+    for (const id of areas) if (can(O[id]) && !on(id)) add(id, 'wander');
     if (wild && can(O[wild]) && !on(wild)) add(wild, 'wild');
     const namedUnder = (reason) => picks.some((p) => p.want && p.reason === reason);
     const best = (reason, keepIf = () => true) => ranked(C, reason, ids(), ids(), (o) => can(o) && keepIf(o))[0] || null;
@@ -677,7 +685,7 @@
       if (ok === null) ok = build(C, [...picks, { id, reason }], opts).options.some((x) => x.id === id);
       if (ok) out.push({ id, reason });
     };
-    const answered = [...(answers.see || []), ...(answers.eat || []), ...(answers.wander ? ['wander'] : []), ...(answers.wild ? ['wild'] : [])];
+    const answered = [...(answers.see || []), ...(answers.eat || []), ...(areasOf(answers).length ? ['wander'] : []), ...(answers.wild ? ['wild'] : [])];
     const serving = answered.flatMap((reason) => ranked(C, reason, ids, ids, (o) => !o.fridayNo)
       .map((o) => ({ id: o.id, reason, s: scoreOf(C, o, reason, ids), order: o.order }))).sort((a, b) => a.s - b.s || a.order - b.order);
     const homes = new Set();
