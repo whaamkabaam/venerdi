@@ -355,6 +355,7 @@
       "m": "{m} min",
       "price": "€{n} each",
       "priceSplit": "€{you} for you, €{me} for me",
+      "priceBoth": "€{n} for both of us",
       "free": "Free",
       "needsBooking": "Needs booking",
       "join": " · "

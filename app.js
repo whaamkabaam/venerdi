@@ -1550,7 +1550,10 @@
     // "€18 for you, €2 for me". A whole number prints bare, anything else with two decimals (6.50).
     const money = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
     const split = typeof o.priceMe === 'number' && o.priceMe !== o.price;
-    const price = typeof o.price === 'number' ? (o.price ? (split ? fmt(F.priceSplit, { you: money(o.price), me: money(o.priceMe) }) : fmt(F.price, { n: money(o.price) })) : F.free) : o.price || '';
+    // v9f F1 (felix-11.md): where the two differ a lot (Felix pays half of hers or less), one total instead: "€20 for
+    // both of us". Close prices (the Haring show, €17 and €15) stay a pair.
+    const both = split && o.priceMe * 2 <= o.price;
+    const price = typeof o.price === 'number' ? (o.price ? (both ? fmt(F.priceBoth, { n: money(o.price + o.priceMe) }) : split ? fmt(F.priceSplit, { you: money(o.price), me: money(o.priceMe) }) : fmt(F.price, { n: money(o.price) })) : F.free) : o.price || '';
     // v9f F3 (felix-11.md): a food stop (a pastry, street food, gelato) says no "About 15 min"; visits and lunches do.
     const snack = !!o.serves && ('pastry' in o.serves || 'street' in o.serves);
     return [snack ? '' : fmt(F.about, { d }), price, o.booking === 'required' ? F.needsBooking : '', o.tag || ''].filter(Boolean);
