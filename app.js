@@ -3230,6 +3230,7 @@
     if (skyFrozen) return;
     clearTimeout(varTimer);
     varTimer = 0;
+    paintRoot();
     if (skyHex === varHex) return;
     varHex = skyHex;
     root.style.setProperty('--sky', skyHex);
@@ -3401,7 +3402,24 @@
     // The board's first row under the bar: the handover point (b3.2).
     const row0 = dayShown && DEP.board && DEP.board.rows[0];
     dockY = row0 ? top(row0.el) - hudH() : Infinity;
+    atEdge = edgeAt(scrollY);
   }
+
+  // v9f: past either end of the page (the rubber band), and at the end under Safari's bar, what shows is the root
+  // background, not the sky layer. While her scroll is at an end (her real scroll, read where the scroll event already
+  // reads it, not the smoothed one the sky follows), the root background takes each new sky colour as the sky layer
+  // does; elsewhere it follows once the sky has been still for 200 ms (syncSkyVar). Only html's own background is
+  // written, so nothing else restyles. 100 px: Safari's bar can grow or shrink without a re-measure (ScrollTrigger
+  // ignores those resizes on a phone), which moves the true end by up to its height.
+  let atEdge = false;
+  let rootHex = '';
+  function edgeAt(y) { return y <= 2 || y >= maxY - 100; }
+  function paintRoot() {
+    if (rootHex === skyHex) return;
+    rootHex = skyHex;
+    root.style.backgroundColor = skyHex;
+  }
+  addEventListener('scroll', () => { atEdge = edgeAt(scrollY); }, { passive: true });
 
   function timeAt(y) {
     if (y <= anchors[0].y) return anchors[0].t;
@@ -3430,9 +3448,7 @@
     const end = !!el && el === itemEls[itemEls.length - 1] && y >= maxY - 2;
     // At the page end it is night (v9c C1a); the clock still reads the entry (dinner's time).
     applySky(end ? SKY_NIGHT : reduced ? (el ? +el.dataset.min : START_MIN) : timeAt(y));
-    // At the page end the sky is still (night), so the root background (what the rubber band past the end shows)
-    // follows at once instead of 200 ms later. One restyle per arrival, not one per frame.
-    if (end) syncSkyVar();
+    if (atEdge) paintRoot();
 
     let sec = null;
     for (const s of sectionMarks) if (y >= s.y) sec = s;
