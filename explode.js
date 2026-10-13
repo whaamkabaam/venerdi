@@ -633,14 +633,17 @@
         }
       } });
     }
-    // From above, by group, nearest first; each group comes in as it was laid out, then breaks apart on landing.
+    // From above, by group; each group comes in as it was laid out, then breaks apart on landing. Her day's own things
+    // (a stop with its photo and title, "Your Friday", the note's "Hey Sasha," and "Felix") come last, just before the
+    // ARRIVALS board, so they end up on top of the heap where she can see them; the rest first. Nearest first in each.
     const groups = new Map();
     let hero = null;
     for (const p of far) {
       if (p.kind === 'hero') { hero = p; continue; }
       const g = groups.get(p.group) || []; g.push(p); groups.set(p.group, g);
     }
-    const list = [...groups.values()].map((ps) => ({ ps, y: Math.max(...ps.map((p) => p.cy)) })).sort((a, b) => b.y - a.y);
+    const list = [...groups.values()].map((ps) => ({ ps, y: Math.max(...ps.map((p) => p.cy)), top: ps.some((p) => p.rank <= 4 || p.rank === 7) }))
+      .sort((a, b) => a.top - b.top || b.y - a.y);
     const t0 = INHALE + 0.24, t1 = INHALE + (hero ? 1.6 : 1.9);
     const bins = new Float64Array(12);
     // Where each group comes down: evenly spread across the box, but drawn in toward the middle so the heap is a mound
