@@ -900,8 +900,6 @@
     return composedMemo.res;
   };
   const composedIds = () => composed().picks.map((p) => p.id);
-  // "More ideas" as it stands (worked out once per update).
-  let roomNow = [];
   // v9d D1: each "If there's time" row, worked out once per update: { id, ok } where ok says Swap in puts it on her
   // day, and `needs`, the earliest of her dinner times at which it would fit (only when it cannot go on now).
   let laterNow = [];
@@ -1531,7 +1529,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Your Friday: story cards, Swap, Remove, More ideas, dinner ideas    */
+  /* Your Friday: story cards, Swap, Remove, dinner ideas               */
   /* ------------------------------------------------------------------ */
 
   // Only the cards of her day have a place on the map (the bags and the arrival never do); dinner's dot
@@ -1601,7 +1599,7 @@
       : '';
     return `<div class="stop-photos"><div class="strip-frame"><div class="stop-strip">${strip}</div>${pill}</div>${dots}</div>`;
   }
-  // A photo that opens one thing's sheet (More ideas, See everything): the photo is the button.
+  // A photo that opens one thing's sheet (See everything): the photo is the button.
   const photoButtonHTML = (o, cls, sizes) => {
     const im = IMG[o.photos?.[0]];
     return `<button type="button" class="${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog" aria-label="${esc(PK.openPhotos)}: ${esc(o.title)}" style="--ph:${esc(im?.color || '')}">${im ? `<img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${sizes}" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">` : ''}</button>`;
@@ -1697,27 +1695,10 @@
     if (back) rows.splice(Math.min(undo.at, rows.length), 0, back);
     return `<li class="plan-group plan-group--later"><h3 class="label" id="later-h">${esc(D.title)}</h3></li><li class="plan-later"><ul class="later-list" aria-labelledby="later-h">${rows.join('')}</ul></li>`;
   }
-  // "More ideas" after the day (design-v9 4.5.7): a group label (only when there is something to offer),
-  // then the ideas and "See everything". An idea is its photo (a button that opens it), the answer it
-  // serves, the title and Add: no time, no price (AM12). Adding always works.
-  function roomHTML() {
-    const D = C.day;
-    const sugg = roomNow;
-    const tiles = sugg.map((x) => {
-      const o = OPT[x.id];
-      const label = x.reason === 'added' ? groupLabel(o) : reasonLabel(x.reason);
-      return `<li class="room-tile">
-          ${hap(photoButtonHTML(o, 'room-photo', '(min-width: 640px) 240px, 96px'), 'rphoto')}
-          <span class="room-why label">${esc(label)}</span>
-          <span class="room-name">${esc(o.title)}</span>
-          ${hap(`<button type="button" class="btn btn--quiet room-add" data-action="add" data-id="${esc(x.id)}" data-reason="${esc(x.reason)}">${esc(D.add)}<span class="sr-only">: ${esc(o.title)}</span></button>`, 'add')}
-        </li>`;
-    }).join('');
-    return `${sugg.length ? `<li class="plan-group plan-group--more"><h3 class="label">${esc(D.roomTitle)}</h3></li>` : ''}<li class="plan-room${sugg.length ? '' : ' is-bare'}">
-        ${sugg.length ? `<ul class="room-list">${tiles}</ul>` : ''}
-        ${hap(`<button type="button" class="btn room-all" data-action="catalogue" aria-haspopup="dialog">${esc(D.seeEverything)}</button>`, 'all')}
-      </li>`;
-  }
+  // v9f F9 (felix-11.md: "id remove the 'more ideas' tab"): no More ideas after the day. See everything stays, as one
+  // quiet text link where the section stood (after If there's time), because it is the only way to put on her day a
+  // place her answers did not bring.
+  const allHTML = () => `<li class="plan-all">${hap(`<button type="button" class="tbtn plan-all-btn" data-action="catalogue" aria-haspopup="dialog">${esc(C.day.seeEverything)}${ICON.more}</button>`, 'all')}</li>`;
   const undoHTML = () => `<li class="plan-undo">${hap(`<button type="button" class="undo-btn" data-action="undo">${esc(C.day.undo)}<span class="sr-only">: ${esc(undo.title)}</span></button>`)}</li>`;
 
   // The dinner card (spec 4.2, AM2): "around 19:00", "Dinner", one line, then the three ideas. Each idea:
@@ -1818,10 +1799,9 @@
       if (undo && !undo.list && !undoShown && key === undo.after) { html += undoHTML(); undoShown = true; }
     });
     if (undo && !undo.list && !undoShown) html = undoHTML() + html;
-    // If there's time, then More ideas and See everything come after the day, so it reads morning to night
-    // without a detour.
+    // If there's time, then See everything come after the day, so it reads morning to night without a detour.
     html += laterHTML();
-    html += roomHTML();
+    html += allHTML();
     body.innerHTML = `<ol class="plan">${html}</ol>`;
     watchKeyhole();
   }
@@ -2009,7 +1989,7 @@
     announce([lead, moved.length ? fmt(C.day.live.moved, { list: listOf(moved) }) : ''].filter(Boolean).join(' '));
   }
   function announce(text) { const el = document.getElementById('day-live'); if (el) el.textContent = text; }
-  // Add (More ideas, the catalogue): the new card lights up briefly where it lands (v9d D1: on her day, or under
+  // Add (the catalogue): the new card lights up briefly where it lands (v9d D1: on her day, or under
   // "If there's time" when it does not fit), and the live region says which.
   function addPick(id, reason, byKey = false) {
     if (!OPT[id] || picks.some((p) => p.id === id)) return;
@@ -2017,8 +1997,8 @@
     const on = plan.options.some((o) => o.id === id);
     announce(fmt(on ? C.day.live.onDay : C.day.live.inLater, { title: OPT[id].title }));
     flash(on ? stopEl(id) : $(`.later-row[data-key="${CSS.escape(id)}"]`, slot('day-body')));
-    // Keyboard: the button she pressed is gone with the re-render; carry on from the room.
-    if (!slot('catalogue').open) ($('.room-add', slot('day-body')) || $('[data-action="catalogue"]', slot('day-body')))?.focus({ preventScroll: true, focusVisible: byKey });
+    // Keyboard: the button she pressed is gone with the re-render; carry on from See everything.
+    if (!slot('catalogue').open) $('[data-action="catalogue"]', slot('day-body'))?.focus({ preventScroll: true, focusVisible: byKey });
   }
   function flash(el, ms = 1200) {
     if (!el) return;
@@ -2069,7 +2049,6 @@
     else if (a === 'remove') removeStop(b, e);
     else if (a === 'undo') undoRemove(e.detail === 0, e);
     else if (a === 'swapin') swapIn(b, e);
-    else if (a === 'add') addPick(b.dataset.id, b.dataset.reason, e.detail === 0);
     else if (a === 'dinner') setDinner(b.dataset.id, e.detail === 0);
     else if (a === 'dinner-time') toggleDinnerTime(b);
     else if (a === 'dinner-at') setDinnerAt(b.dataset.at, e.detail === 0);
@@ -3648,10 +3627,9 @@
 
   function update() {
     plan = P.build(C, pickIds(), planOpts());
-    // v9d D1: More ideas offers only what would go on her day as it is, and each "If there's time" row knows whether
-    // Swap in can put it on (else the dinner time it needs). All of it in the tap (at most a few ms on her longest
-    // day, gate-d1-spec browser-timing.txt), so the day and its buttons render once.
-    roomNow = picks.length || answers ? P.suggestionsFit(C, picks, answers || {}, planOpts(), plan).ideas : [];
+    // v9d D1: each "If there's time" row knows whether Swap in can put it on (else the dinner time it needs). All of it
+    // in the tap (at most a few ms on her longest day, gate-d1-spec browser-timing.txt), so the day and its buttons
+    // render once.
     laterNow = plan.later.map((l) => (P.canSwapIn(C, l.id, planOpts()) ? { id: l.id, ok: true }
       : { id: l.id, ok: false, needs: C.anchors.dinner.times.find((t) => P.canSwapIn(C, l.id, planOpts({ dinnerAt: t }))) || null }));
     syncSend();

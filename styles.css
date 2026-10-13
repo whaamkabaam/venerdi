@@ -256,15 +256,12 @@ svg { display: block; }
 .hapw--done { margin-left: auto; }
 .hapw--x { flex: none; margin-right: -6px; }
 .swap-alt > .hapw { grid-area: use; }
-.room-tile > .hapw--add { grid-area: add; }
-.hapw--all { margin-top: var(--s4); }
 .hapw--send { justify-self: start; margin-top: var(--s1); }
 .hapw--clock { flex: none; margin: 0 -6px; }
 .hapw--pocket { flex: none; }
 .hapw--clock > .hud-clock { display: flex; }
 /* v9c C3b: Change answers, the bar's Now, the More ideas and See everything photos, the peek's thumbnails. */
 .hapw--change, .hapw--now { flex: none; }
-.room-tile > .hapw--rphoto { grid-area: photo; display: grid; }
 .hapw--cphoto { display: grid; }
 .peek-row > .hapw--thumb { grid-area: thumb; align-self: start; display: grid; }
 
@@ -1206,7 +1203,7 @@ dialog.peek .say-sound { white-space: normal; }
   align-items: center;
 }
 .swap-photo { grid-area: photo; display: block; aspect-ratio: 1; border-radius: var(--r-thumb); overflow: hidden; background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent)); }
-.swap-photo img, .room-photo img, .cat-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
+.swap-photo img, .cat-photo img { width: 100%; height: 100%; object-fit: cover; outline: 1px solid var(--img-outline); outline-offset: -1px; }
 .swap-text { grid-area: text; display: grid; gap: 2px; min-width: 0; }
 .swap-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.25; text-wrap: balance; }
 .swap-line { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
@@ -1271,45 +1268,13 @@ dialog.peek .say-sound { white-space: normal; }
   .dinner-idea .stop-photos { grid-area: auto; align-self: start; } /* not the entry's "photos" area (laptop) */
 }
 
-/* More ideas, after the day: the group label, then the ideas (rows on a phone, three tiles from 640 px),
-   then See everything. The photo is a button that opens the idea. */
-.plan-room { padding: var(--s3) 0 var(--s2); }
-.plan-room.is-bare { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--hairline); }
-.room-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
-.room-tile {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  grid-template-areas: "photo why add" "photo name add";
-  column-gap: var(--s3);
-  align-items: center;
-}
-.room-photo {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-photo);
-  overflow: hidden;
-  background-color: var(--ph, color-mix(in oklch, var(--ink) 9%, transparent));
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: scale 150ms ease-out;
-}
-.room-photo:active, .cat-photo:active { scale: 0.96; }
-.room-photo img, .cat-photo img { transition: scale 300ms var(--ease-out); }
-@media (hover: hover) and (pointer: fine) { .room-photo:hover img, .cat-photo:hover img { scale: 1.03; } }
-.room-why { grid-area: why; align-self: end; font-size: 0.75rem; color: var(--ink-muted); }
-.room-name { grid-area: name; align-self: start; font-size: 0.9375rem; line-height: 1.25; font-weight: 600; text-wrap: balance; }
-.room-add { grid-area: add; }
-.room-all { margin-top: var(--s4); }
-@media (min-width: 640px) {
-  .room-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
-  .room-tile { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; grid-template-areas: "photo" "why" "name" "add"; align-items: start; row-gap: 2px; }
-  .room-why { margin-top: var(--s2); }
-  .room-tile > .hapw--add { justify-self: start; margin-top: var(--s2); }
-}
+/* v9f F9: See everything after the day, one quiet text link (More ideas is gone). Its words line up with the column's
+   edge; the 44 px hit area reaches left into the margin. */
+.plan-all { padding: var(--s4) 0 var(--s2); }
+.plan-all > .hapw { margin-left: calc(-1 * var(--s3)); }
+.cat-photo:active { scale: 0.96; }
+.cat-photo img { transition: scale 300ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .cat-photo:hover img { scale: 1.03; } }
 
 /* v9d D1 (design-d1.md 5): the trip into an entry, one quiet grey line at its top ("35 min, Bus 40", "25 min walk")
    after a short dotted mark, the path going on. Nothing on it moves. */
@@ -1716,7 +1681,7 @@ dialog.peek .say-sound { white-space: normal; }
   .stop-text { grid-area: text; }
   .plan-text > :not(.plan-time) { grid-column: 2; }
   .plan-item--text > .plan-text { column-gap: 0; row-gap: var(--s2); }
-  .plan-dinner > .dinner-ideas, .swap, .plan-room { margin-left: 104px; max-width: 640px; }
+  .plan-dinner > .dinner-ideas, .swap, .plan-all { margin-left: 104px; max-width: 640px; }
   .stop-photo { aspect-ratio: 3 / 2; }
   .stop-title { font-size: 2.125rem; }
   .plan-item { padding-bottom: var(--s8); }
@@ -1775,7 +1740,7 @@ dialog.peek .say-sound { white-space: normal; }
 
 @media (prefers-reduced-motion: reduce) {
   .mk, .mk-dot, .mk-label, .hud-map, .plan-item, .stop-card, .tile, .tile-img, .tile-img img, .tile-check, .step-none, .cat-add, .cat-add > *, .stop-dot, .stop-dot::before, .day-change { transition: none; }
-  .tile-more, .tile-more .i, .tbtn, .room-photo, .room-photo img, .cat-photo, .cat-photo img, .stop-title, .plan-title, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
+  .tile-more, .tile-more .i, .tbtn, .cat-photo, .cat-photo img, .stop-title, .plan-title, .peek-x, .peek-thumb, .peek-toggle, .peek-toggle-in, .peek-toggle .tick-i { transition: none; }
   .picked-ph, .sheet::backdrop { animation: none; }
   .note-en.is-on { animation: none; }
   .hud, .hud[data-on] { transition: none; }
