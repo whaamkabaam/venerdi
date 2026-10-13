@@ -1622,8 +1622,9 @@
   // The tip line: the friend from Rome's (`friendTip`), or v9f fold-in (felix-12.md) someone else's (`tipBy`, "Suggested by
   // Maya's mom" on Fortunata), in the same style.
   const tipHTML = (o, cls) => (o.tipBy || o.friendTip ? `<p class="${cls}">${esc(o.tipBy || PK.tip)}</p>` : '');
-  // A place line has no full stop, so a second sentence sits on a line of its own (v9f F2; the fold-in: Fortunata's tips).
-  const brHTML = (h) => h.replace(/\n/g, '<br>');
+  // A place line has no full stop, so a second sentence sits on a line of its own (v9f F2; the fold-in: Fortunata's tips),
+  // with a little space above it, so it never reads as the first one running on.
+  const brHTML = (h) => { const [first, ...rest] = h.split('\n'); return first + rest.map((x) => `<span class="line-next">${x}</span>`).join(''); };
   // How to say it (b3.5): in Barnum's line, "almond croissant" is a button that opens one caption under the line
   // with the Italian and a respelling. One phrase, no phrasebook: on her entry (`cid` say-barnum) and on its row
   // in the pastry sheet (say-barnum-pk); everywhere else the plain line. The caption is the paragraph's last,
@@ -1747,7 +1748,7 @@
           ${d.photos?.length ? stripHTML(d, '(min-width: 640px) 200px, 96px') : ''}
           <div class="dinner-text">
             <p class="dinner-name">${esc(d.title)}</p>
-            <p class="dinner-line">${esc(d.line).replace(/\n/g, '<br>')}</p>
+            <p class="dinner-line">${brHTML(esc(d.line))}</p>
             <p class="dinner-facts">${factsHTML([d.area, d.booking, d.price].filter(Boolean))}</p>
             ${tipHTML(d, 'stop-tip')}
           </div>

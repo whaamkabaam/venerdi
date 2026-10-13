@@ -1142,6 +1142,8 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 .stop-photos:has(.stop-dots) + .stop-text { padding-top: var(--s1); }
 .stop-title { font-family: var(--font-display); font-size: 1.875rem; line-height: 1.04; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; }
 .stop-line { max-width: 34em; text-wrap: pretty; }
+/* v9f fold-in: a place line's second sentence (the Ghetto's 1943 line, Fortunata's tips, Da Ivo's pasta) on its own line. */
+.line-next { display: block; margin-top: 0.35em; }
 .fact { white-space: nowrap; }
 .stop-facts { font-size: 0.875rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .stop-tip, .peek-tip { font-size: 0.8125rem; line-height: 1.35; font-weight: 600; color: var(--accent); }
