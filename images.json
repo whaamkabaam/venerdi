@@ -2094,6 +2094,38 @@
    "sourceUrl": "https://www.flickr.com/photos/pamontgo/45820803475"
   }
  },
+ "lirioni-1": {
+  "src800": "img/lirioni-1-800.webp",
+  "src1600": "img/lirioni-1-1600.webp",
+  "w": 1600,
+  "h": 1066,
+  "alt": "Pizzas baking on the floor of Li Rioni's wood oven, the fire burning at the back",
+  "focal": "45% 60%",
+  "color": "#582f16",
+  "credit": {
+   "title": "Il forno a legna",
+   "author": "Li Rioni a Santiquattro",
+   "license": "Used with credit, from the pizzeria's own site",
+   "licenseUrl": "https://lirioni.it/",
+   "sourceUrl": "https://lirioni.it/"
+  }
+ },
+ "lirioni-2": {
+  "src800": "img/lirioni-2-800.webp",
+  "src1600": "img/lirioni-2-1600.webp",
+  "w": 1600,
+  "h": 1062,
+  "alt": "Li Rioni's door under its name and a red awning, tables set on the pavement beside a wall of jasmine",
+  "focal": "55% 55%",
+  "color": "#69605b",
+  "credit": {
+   "title": "Il locale",
+   "author": "Li Rioni a Santiquattro",
+   "license": "Used with credit, from the pizzeria's own site",
+   "licenseUrl": "https://lirioni.it/",
+   "sourceUrl": "https://lirioni.it/"
+  }
+ },
  "corsi-1": {
   "src800": "img/corsi-1-800.webp",
   "src1600": "img/corsi-1-1600.webp",

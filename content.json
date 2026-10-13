@@ -455,6 +455,10 @@
         "title": "Li Rioni",
         "board": "LI RIONI",
         "line": "Thin, crispy Roman pizza from a wood oven, in a loud room done up like a street",
+        "photos": [
+          "lirioni-1",
+          "lirioni-2"
+        ],
         "area": "Behind the Colosseum",
         "booking": "We can book",
         "friendTip": false,
