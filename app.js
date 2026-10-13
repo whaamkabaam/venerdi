@@ -3867,6 +3867,10 @@
       xb.dataset.gone = '1';
       // From the tap on, the sky stays as it is: a late --sky write on the root would restyle every element mid-blast.
       // The reduced version keeps the page, and her scroll keeps the sky.
+      // v9f merge: the root background takes that sky first, the colour at the bottom of the explosion's sky, so wherever
+      // the root shows it matches (under Safari's bar the page's own sky layer shows, frozen with it); its 200 ms follow
+      // (syncSkyVar) would stop at the freeze and could leave it a step behind.
+      paintRoot();
       skyFrozen = !reduceMotion();
       // The sky above the heap: the page's blue hour at the top, down to the night she is in (explode.js).
       const sky = [rgbHex(oklchToRgb(skyAt(toMin(C.meta.civilDusk)))), skyHex];
