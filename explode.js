@@ -16,7 +16,7 @@
   // World units are CSS px at the page's own size; the camera scales them onto the screen.
   const W = {
     bodies: [], arbiters: new Map(), joints: [], stamp: 0,
-    gravity: 5200, iterations: 8, slop: 1, baum: 0.2, maxBias: 320, restitution: 0.18, restThreshold: 260,
+    gravity: 5200, gx: 0, gy: 5200, iterations: 8, slop: 1, baum: 0.2, maxBias: 320, restitution: 0.18, restThreshold: 260,
   };
   let nextId = 1;
   function makeBody(w, h, mass) {
@@ -282,7 +282,7 @@
     for (let i = 0; i < bs.length; i++) {
       const b = bs[i];
       if (b.im === 0) continue;
-      b.vy += W.gravity * dt;
+      b.vx += W.gx * dt; b.vy += W.gy * dt;
       b.vx *= 1 / (1 + dt * ld); b.vy *= 1 / (1 + dt * ld); b.w *= 1 / (1 + dt * ad);
     }
     for (const arb of W.arbiters.values()) preStep(arb, inv);
@@ -822,7 +822,8 @@
 
     // Asleep when nothing has moved for a while and nothing is still to come; then the loop stops.
     W.settle = !S.drag && S.t > (S.endAt || 1e9) && S.t - S.idleSince > 1.6;
-    if (!S.events.length && !S.ghosts.length && !S.drag && Z === ZF) {
+    if (T.on) tiltStep(dt);
+    if (!S.events.length && !S.ghosts.length && !S.drag && Z === ZF && !tilting()) {
       if (moving === 0) S.quiet += dt; else S.quiet = 0;
       if (S.quiet > 0.5 || S.rested || S.t - S.idleSince > 8) sleep();
     }
@@ -833,7 +834,7 @@
   function impacts() {
     for (const b of W.live) {
       if (b.im === 0 || b.pvx === undefined) continue;
-      const dv = Math.hypot(b.vx - b.pvx, b.vy - b.pvy - W.gravity * H_STEP);
+      const dv = Math.hypot(b.vx - b.pvx - W.gx * H_STEP, b.vy - b.pvy - W.gy * H_STEP);
       if (dv < 500) continue;
       const area = 4 * b.hw * b.hh;
       const big = b.piece && b.piece.kind === 'hero';
@@ -842,6 +843,7 @@
     }
   }
   function topple() {
+    if (T.on) return; // down is wherever the phone leans now
     for (const b of W.live) {
       if (b.im === 0 || !b.piece) continue;
       const long = Math.max(b.hw, b.hh), short = Math.min(b.hw, b.hh);
@@ -885,6 +887,7 @@
 
   function finish() {
     S.done = true;
+    tiltStart(false);
     said.textContent = opts.line;
     if (ui) {
       ui.top.hidden = false;
@@ -892,6 +895,57 @@
       // Focus goes to the line, which says how to get the page back (the status line above says what happened).
       try { ui.line.focus({ preventScroll: true, focusVisible: false }); } catch { /* old focus options */ }
     }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Tilt: the heap is trapped in the phone                              */
+  /* ------------------------------------------------------------------ */
+
+  // On a phone, once the heap has settled, its gravity follows the way the phone leans: the pieces slide and fall
+  // toward the low side, and a ceiling closes the box at the top of the screen. From deviceorientation's beta (front to
+  // back) and gamma (left to right), gravity in the plane of the screen is (sin gamma cos beta, sin beta), turned by the
+  // screen's own rotation; its length is how much of gravity lies in the screen (none with the phone flat on a table).
+  // The reading is smoothed (a 120 ms lag) and a change under 2 degrees does not wake a sleeping heap, so it does not
+  // jitter. Nothing on a laptop (no coarse pointer), and none in the reduced-motion version.
+  const T = { on: false, asked: false, listening: false, tx: 0, ty: 1, gx: 0, gy: 1 };
+  const tilting = () => T.on && Math.abs(T.tx - T.gx) + Math.abs(T.ty - T.gy) > 0.01;
+  function tiltStart(tap) {
+    if (T.listening || !S.done || opts.reduced || !matchMedia('(pointer: coarse)').matches) return;
+    const ask = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+    if (!ask) { T.listening = true; addEventListener('deviceorientation', onTilt); return; }
+    if (!tap || T.asked) return;
+    T.asked = true;
+    DeviceOrientationEvent.requestPermission().then((r) => { if (r === 'granted' && !T.listening) { T.listening = true; addEventListener('deviceorientation', onTilt); } }, () => {});
+  }
+  function onTilt(e) {
+    if (e.beta == null || e.gamma == null) return;
+    const b = e.beta * Math.PI / 180, g = e.gamma * Math.PI / 180;
+    const x = Math.sin(g) * Math.cos(b), y = Math.sin(b);
+    const turn = ((screen.orientation && screen.orientation.angle) ?? window.orientation ?? 0) * Math.PI / 180, c = Math.cos(turn), sn = Math.sin(turn);
+    const sx = c * x + sn * y, sy = -sn * x + c * y;
+    // Held within 5 degrees of upright counts as upright, so a phone held a little crooked does not keep the heap drifting.
+    const len = Math.hypot(sx, sy), ang = Math.atan2(sx, sy), dead = 5 * Math.PI / 180;
+    const a2 = Math.sign(ang) * Math.max(0, Math.abs(ang) - dead) * Math.PI / (Math.PI - dead);
+    T.tx = len * Math.sin(a2); T.ty = len * Math.cos(a2);
+    if (!T.on) {
+      T.on = true;
+      // The lid: the top of the box the camera ended on (above any piece still poking out).
+      let top = viewTop;
+      for (const o of W.live) if (o.piece) top = Math.min(top, o.minY);
+      const lid = makeBody((wallR - wallL) * 3, 2000, 0); lid.x = AX; lid.y = top - 2 - 1000; lid.fr = 0.7; addLive(lid);
+      // Slippery, like things loose behind glass: the sides of the box (walls, floor, lid) have no grip, so the heap
+      // cannot wedge itself between them and hang there, and the pieces slide on each other more easily.
+      for (const o of W.live) o.fr = o.piece ? o.fr * 0.6 : 0.02;
+      W.arbiters.clear();
+    }
+    if (Math.hypot(T.tx - T.gx, T.ty - T.gy) > 0.035) { if (S.asleep) thaw(); wake(); }
+  }
+  function tiltStep(dt) {
+    const k = 1 - Math.exp(-dt / 0.12);
+    T.gx += (T.tx - T.gx) * k; T.gy += (T.ty - T.gy) * k;
+    W.gx = W.gravity * T.gx; W.gy = W.gravity * T.gy;
+    // While it turns, the heap stays awake and lively (not the settling damping).
+    if (tilting()) S.idleSince = S.t;
   }
 
   /* ------------------------------------------------------------------ */
@@ -911,6 +965,9 @@
   }
   function bindTouch(layer) {
     let down = null;
+    // On an iPhone the tilt needs her permission, asked from a tap: her first tap on the heap once it has settled
+    // (asked at the tap on the button, Safari's prompt would cover the drum roll and the blast).
+    layer.addEventListener('click', () => tiltStart(true));
     layer.addEventListener('pointerdown', (e) => {
       // No text selection from a drag across the heap (the click that ticks the iPhone's switch still comes).
       if (e.pointerType === 'mouse') e.preventDefault();
