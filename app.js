@@ -1618,13 +1618,17 @@
     const im = IMG[o.photos?.[0]];
     return `<button type="button" class="${cls}" data-action="photos" data-id="${esc(o.id)}" aria-haspopup="dialog" aria-label="${esc(PK.openPhotos)}: ${esc(o.title)}" style="--ph:${esc(im?.color || '')}">${im ? `<img src="${esc(im.src800)}" srcset="${esc(im.src800)} 800w, ${esc(im.src1600)} 1600w" sizes="${sizes}" width="${+im.w}" height="${+im.h}" alt="" loading="lazy" decoding="async" style="object-position:${esc(im.focal || '50% 50%')}">` : ''}</button>`;
   };
-  const tipHTML = (o, cls) => (o.friendTip ? `<p class="${cls}">${esc(PK.tip)}</p>` : '');
+  // The tip line: the friend from Rome's (`friendTip`), or v9f fold-in (felix-12.md) someone else's (`tipBy`, "Suggested by
+  // Maya's mom" on Fortunata), in the same style.
+  const tipHTML = (o, cls) => (o.tipBy || o.friendTip ? `<p class="${cls}">${esc(o.tipBy || PK.tip)}</p>` : '');
+  // A place line has no full stop, so a second sentence sits on a line of its own (v9f F2; the fold-in: Fortunata's tips).
+  const brHTML = (h) => h.replace(/\n/g, '<br>');
   // How to say it (b3.5): in Barnum's line, "almond croissant" is a button that opens one caption under the line
   // with the Italian and a respelling. One phrase, no phrasebook: on her entry (`cid` say-barnum) and on its row
   // in the pastry sheet (say-barnum-pk); everywhere else the plain line. The caption is the paragraph's last,
   // block-level span, so a closed caption adds no space.
   function lineHTML(o, cid) {
-    const line = esc(o.line), S = o.say;
+    const line = brHTML(esc(o.line)), S = o.say;
     const at = S && cid ? line.indexOf(esc(S.words)) : -1;
     if (at < 0) return line;
     const w = esc(S.words);
@@ -2088,7 +2092,7 @@
         // A tile per option, as on the questions: the photo (it opens the thing), the text under it, then Add.
         return `<section class="cat-group" aria-labelledby="cg-${esc(g.id)}"><h3 class="label" id="cg-${esc(g.id)}">${esc(g.label)}</h3><ul class="cat-list">${opts.map((o) => `<li class="cat-row">
             ${hap(photoButtonHTML(o, 'cat-photo', '(min-width: 1024px) 240px, (min-width: 640px) 30vw, 44vw'), 'cphoto')}
-            <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${esc(o.line)}</span></span>
+            <span class="cat-text"><span class="cat-name">${esc(o.title)}</span><span class="cat-line">${brHTML(esc(o.line))}</span></span>
             <span class="cat-acts">
             ${hap(`<button type="button" class="cat-add" aria-pressed="false" data-id="${esc(o.id)}"><span class="cat-add-label">${esc(D.add)}</span>${ICON.check}<span class="sr-only">: ${esc(o.title)}</span></button>`)}<span class="cat-no" id="cw-${esc(o.id)}" hidden></span></span>
           </li>`).join('')}</ul></section>`;
@@ -2245,7 +2249,7 @@
         ${stripHTML(o, '(min-width: 1024px) 400px, 92vw', '', 'eager')}
         <div class="peek-text">
           <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
-          <p class="peek-line">${esc(o.line)}</p>
+          <p class="peek-line">${brHTML(esc(o.line))}</p>
           ${factsRow('peek-facts', o)}
           ${detailsHTML(o)}
           ${tipHTML(o, 'peek-tip')}

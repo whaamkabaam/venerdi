@@ -1989,7 +1989,8 @@
       "id": "fortunata",
       "group": "food",
       "title": "Lunch at Fortunata",
-      "line": "Fresh pasta rolled and cut by hand in the front window, just off Campo de' Fiori",
+      "line": "Fresh pasta rolled and cut by hand in the front window, just off Campo de' Fiori\nThe pasta comes very al dente unless you ask for it softer, and the tiramisu is good too",
+    "tipBy": "Suggested by Maya's mom",
       "board": {
         "to": "DA FORTUNATA"
       },
