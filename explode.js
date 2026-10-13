@@ -593,27 +593,65 @@
     return b;
   }
 
-  const INHALE = 0.11;
+  // Before the blast, a drum roll: hits that come faster and harder (BEATS, seconds from the tap), then a held roll to
+  // DRUM; then the inhale (everything leans toward the button, a beat of silence) and the blast at BLAST. What she sees
+  // and what an Android phone buzzes come from this one list.
+  const BEATS = [0, 0.15, 0.276, 0.382, 0.471, 0.546, 0.609, 0.662, 0.706, 0.746];
+  const ROLL = 0.79, DRUM = 1.15, INHALE = 0.11, BLAST = DRUM + INHALE;
+  // Android: each hit 20 to 32 ms (shorter ones many motors do not feel), the gap to the next, then the roll held.
+  function drumPattern() {
+    const out = [];
+    BEATS.forEach((t, i) => { const on = Math.round(20 + 12 * i / (BEATS.length - 1)); out.push(on, Math.round(((BEATS[i + 1] ?? ROLL) - t) * 1000) - on); });
+    out.push(Math.round((DRUM - ROLL) * 1000));
+    return out;
+  }
+  // A hit of the drum: the camera thumps in and jolts, and everything she sees jumps a little, harder each time; the
+  // button most.
+  function hit(k) {
+    const a = 0.25 + 0.75 * k / (BEATS.length - 1);
+    S.shake = Math.max(S.shake, 1.5 + 3 * a);
+    S.thump = 0.004 + 0.01 * a;
+    for (const p of S.pieces) if (p.state === 'pinned') kick(p, a);
+  }
+  function kick(p, a) {
+    const big = Math.max(p.sw, p.sh) > 240 ? 0.4 : 1, bomb = p.kind === 'bomb';
+    const r = (bomb ? 4 : 1.6) * a * big;
+    p.jx = (Math.random() - 0.5) * 2 * r; p.jy = -Math.random() * r * (bomb ? 1.4 : 1);
+    p.ja = (Math.random() - 0.5) * (bomb ? 0.36 : 0.016) * a * big;
+  }
+  // Between hits the jumps settle back; in the held roll everything shakes all the time.
+  function rattle(dt) {
+    const roll = S.t >= ROLL, k = Math.exp(-dt / 0.045);
+    if (roll) S.shake = Math.max(S.shake, 4.5);
+    S.thump = (S.thump || 0) * Math.exp(-dt / 0.06);
+    for (const p of S.pieces) {
+      if (p.state !== 'pinned' || p.x0 === undefined) continue;
+      if (roll) kick(p, 1); else if (p.jx !== undefined) { p.jx *= k; p.jy *= k; p.ja *= k; }
+      const b = p.body;
+      b.x = p.x0 + (p.jx || 0); b.y = p.y0 + (p.jy || 0); b.a = p.ja || 0;
+    }
+  }
   function schedule(near, far) {
     const ev = [];
     const bx = opts.from.x, by = opts.from.y;
     const shock = 5200;
+    BEATS.forEach((t, k) => ev.push({ t, fn: () => hit(k) }));
     // The blast itself: the jolt, the buzz on Android, and the evening coming in above as the camera steps back.
-    ev.push({ t: INHALE, fn: () => { S.shake = 10; vibrate([50, 40, 30]); if (S.sky) S.sky.classList.add('is-in'); } });
+    ev.push({ t: BLAST, fn: () => { S.shake = 10; vibrate([50, 40, 30]); if (S.sky) S.sky.classList.add('is-in'); } });
     for (const p of near) {
       const b = bodyFor(p);
       const dx = p.cx - bx, dy = p.cy - by, d = Math.hypot(dx, dy);
       if (p.kind === 'bomb') {
         b.ghost = true; setMass(b, b.m);
-        p.state = 'pinned';
-        ev.push({ t: INHALE, fn: () => { p.state = 'live'; addLiveGhost(b); b.vx = rr(-120, 120); b.vy = -4200; b.w = rr(-9, 9); } });
+        p.state = 'pinned'; p.x0 = b.x; p.y0 = b.y;
+        ev.push({ t: BLAST, fn: () => { p.state = 'live'; b.x = p.x0; b.y = p.y0; b.a = 0; addLiveGhost(b); b.vx = rr(-120, 120); b.vy = -4200; b.w = rr(-9, 9); } });
         continue;
       }
       const m = b.m; setMass(b, 0); p.state = 'pinned'; addLive(b);
       p.x0 = b.x; p.y0 = b.y; p.pull = Math.min(9, d * 0.03) / (d || 1);
-      const tRel = INHALE + (p.kind === 'hud' ? 0.02 : Math.min(0.55, d / shock) + rr(0, 0.03));
+      const tRel = BLAST + (p.kind === 'hud' ? 0.02 : Math.min(0.55, d / shock) + rr(0, 0.03));
       ev.push({ t: tRel, fn: () => {
-        setMass(b, m); p.state = 'live';
+        setMass(b, m); p.state = 'live'; b.a = 0;
         let ux = dx / (d || 1), uy = dy / (d || 1) - 0.75;
         const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
         const v = 3700 / (1 + d / 260) * rr(0.8, 1.15);
@@ -643,7 +681,7 @@
     }
     const list = [...groups.values()].map((ps) => ({ ps, y: Math.max(...ps.map((p) => p.cy)), top: ps.some((p) => p.rank <= 4 || p.rank === 7) }))
       .sort((a, b) => a.top - b.top || b.y - a.y);
-    const t0 = INHALE + 0.24, t1 = INHALE + (hero ? 1.6 : 1.9);
+    const t0 = BLAST + 0.24, t1 = BLAST + (hero ? 1.6 : 1.9);
     const bins = new Float64Array(12);
     // Where each group comes down: evenly spread across the box, but drawn in toward the middle so the heap is a mound
     // under the board and not a flat layer (a triangle's quantiles mixed in: mostly on a laptop, a little on a phone).
@@ -738,11 +776,11 @@
       acc -= H_STEP; n++;
       S.t += H_STEP;
       while (S.events.length && S.events[0].t <= S.t) S.events.shift().fn();
-      Z = S.t < INHALE ? 1 + 0.02 * (S.t / INHALE) : S.t < 1.3 + INHALE ? camZ(S.t - INHALE) : ZF;
-      if (S.t < INHALE) {
-        // The inhale: everything she sees leans a few px toward the button.
-        const e = Math.pow(S.t / INHALE, 2);
-        for (const p of S.pieces) if (p.state === 'pinned' && p.pull !== undefined) { p.body.x = p.x0 + (opts.from.x - p.x0) * p.pull * e; p.body.y = p.y0 + (opts.from.y - p.y0) * p.pull * e; }
+      Z = S.t < DRUM ? 1 + (S.thump || 0) : S.t < BLAST ? 1 + 0.02 * ((S.t - DRUM) / INHALE) : S.t < 1.3 + BLAST ? camZ(S.t - BLAST) : ZF;
+      if (S.t >= DRUM && S.t < BLAST) {
+        // The inhale: the drum stops and everything she sees leans a few px toward the button.
+        const e = Math.pow((S.t - DRUM) / INHALE, 2);
+        for (const p of S.pieces) if (p.state === 'pinned' && p.pull !== undefined) { p.body.x = p.x0 + (opts.from.x - p.x0) * p.pull * e; p.body.y = p.y0 + (opts.from.y - p.y0) * p.pull * e; p.body.a = 0; }
       }
       if (S.hudAnchor) {
         // The hinge keeps to the top right corner of her screen while the camera pulls back.
@@ -756,6 +794,7 @@
       if (W.settle) rest(H_STEP);
     }
     if (n === 9) acc = 0;
+    if (S.t < DRUM) rattle(dt);
     // The camera's jolt, decaying. Its own dice (not the show's), so the heap does not depend on the frame rate.
     S.shake *= Math.pow(0.0009, dt);
     if (S.shake < 0.15) S.shake = 0;
@@ -998,13 +1037,14 @@
     const wl = makeBody(2000, 40000, 0); wl.x = AX - worldW / 2 - 1000; wl.y = VH - 20000; addLive(wl);
     const wr = makeBody(2000, 40000, 0); wr.x = AX + worldW / 2 + 1000; wr.y = VH - 20000; addLive(wr);
     S.events = schedule(near, far);
-    S.endAt = 4.6 + INHALE;
+    S.endAt = 4.6 + BLAST;
     // Read after the changes on purpose: the forced layout lands in this task and the paint in the next frame's, two
     // tasks of about 70 ms with the CPU slowed 4x instead of one of 160 ms.
     S.on = true; S.t = 0; S.last = 0; S.asleep = false; S.idleSince = 0; S.scrollY = scrollY; S.dy = 0;
     S.shake = 0;
     // The pieces that start in view are written once now, so the first frame already has them as bodies.
     for (const p of near) if (p.body) write(p);
+    vibrate(drumPattern());
     S.raf = requestAnimationFrame(frame);
   }
   function ownPaint(el) {
