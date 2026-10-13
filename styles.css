@@ -946,7 +946,9 @@ main:has(#dep[hidden]) + .footer > * { max-width: var(--wide); }
 /* Send sits inside #day (it closes the day's column); the day section already carries the side padding. */
 .section--day > .section--send { padding-left: 0; padding-right: 0; }
 .send { display: grid; gap: var(--s3); margin-top: var(--s5); }
-.send-label { font-weight: 600; }
+/* v9f look round: the note's question in the page's serif, sized like the day's text entries ("You land", "Dinner"),
+   so Send reads as the day's last part, the glass pill under its heading as in the questions. */
+.send-label { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.08; font-weight: 700; font-synthesis: none; letter-spacing: -0.01em; text-wrap: balance; }
 .send-text {
   width: 100%;
   min-height: 88px;
