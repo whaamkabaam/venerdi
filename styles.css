@@ -97,10 +97,13 @@ html {
   text-size-adjust: 100%;
   background-color: var(--sky);
   color: var(--ink);
+  /* The sky layer's containing block, so it spans the page. Not body: a positioned body over the composited sky
+     layer would itself be composited, the whole page as one more layer (a slower first frame, v9f sky.md). */
+  position: relative;
 }
 /* The sky behind the page, its own composited layer: app.js recolours it every frame while scrolling,
    which is a solid-colour layer update instead of a repaint of everything in view.
-   v9f (Felix's F13): it is part of the page, from its top to its end (body is its containing block), not fixed to the
+   v9f (Felix's F13): it is part of the page, from its top to its end (html is its containing block), not fixed to the
    window. iOS Safari draws no fixed box under and around its floating bar, so a fixed sky left that strip to the root
    background, which follows the sky only once it has been still for 200 ms: a lavender strip under an orange page. */
 .sky-bg {
@@ -112,7 +115,6 @@ html {
   will-change: transform;
 }
 body {
-  position: relative; /* the sky layer's containing block: it spans the page */
   margin: 0;
   font-family: var(--font-body);
   font-size: 1.0625rem;
