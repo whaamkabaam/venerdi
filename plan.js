@@ -38,8 +38,11 @@
     LUNCH_MINUTES: 45,              // "Lunch wherever we are."
     SNACK_GAP: 120,                 // a snack that is not lunch: 2 h after lunch ends, 2 h before her dinner (S3)
     FIXED_EARLY: 10,                // default minutes early for a fixed-time thing
-    BAGS_FROM: toMin('14:30'),      // the luggage: at the hostel no earlier than this...
-    BAGS_TO: toMin('16:00'),        // ...and no later (so the 13:00 class, which ends 16:00, never fits: O7)
+    // Felix 13 Oct about 22:35: "luggage should fit where it makes sense, after 3pm". The search places it anywhere
+    // in this window, wherever the day works best (it was 14:30 to 16:00, which cut the afternoon in two).
+    BAGS_FROM: toMin('15:00'),      // the luggage: at the hostel no earlier than this...
+    BAGS_TO: toMin('17:30'),        // ...and no later (the hour at the flat and the trip to dinner still fit),
+    BAGS_BEFORE_DINNER: 120,        // or, with a later dinner, up to 2 h before it (like the evening end, S2)
     BAGS_GRAB: 10,                  // minutes at the hostel to get the bags
     CHECKIN: toMin('15:00'),        // at the flat no earlier than this
     AT_FLAT: 60,                    // settling in and a break before we head out again
@@ -66,6 +69,7 @@
   });
   const FRAME_EARLY = Object.freeze({ ...FRAME, NOON: FRAME.NOON_EARLY, LUNCH_FROM: FRAME.LUNCH_FROM_EARLY });
   const eveningEnd = (dinnerAt) => Math.max(FRAME.EVENING_END, dinnerAt - 30);
+  const bagsTo = (dinnerAt) => Math.max(FRAME.BAGS_TO, dinnerAt - FRAME.BAGS_BEFORE_DINNER);
 
   /* ---------------- travel ---------------- */
   // data.js's `transit` (tooling/transit.json, the hourly form of qa/v9d/transit/: { v: 1, hours, nodes, labels,
@@ -412,10 +416,11 @@
       toDinner: (loc, t) => { let m = Infinity; for (const d of ideaNodes) m = Math.min(m, T.plan(loc, d, t)); return m; },
       exhaustive: !!exhaustive, budget: FRAME.NODE_BUDGET, cut: 0, hits: 0,
     };
-    // This build's two frames: the evening end follows her dinner (S2).
-    const ee = eveningEnd(ctx.dinnerAt);
-    const FN = ee === FRAME.EVENING_END ? FRAME : Object.freeze({ ...FRAME, EVENING_END: ee });
-    const FE = ee === FRAME.EVENING_END ? FRAME_EARLY : Object.freeze({ ...FRAME_EARLY, EVENING_END: ee });
+    // This build's two frames: the evening end and the luggage's latest start follow her dinner (S2).
+    const ee = eveningEnd(ctx.dinnerAt), bt = bagsTo(ctx.dinnerAt);
+    const base = ee === FRAME.EVENING_END && bt === FRAME.BAGS_TO;
+    const FN = base ? FRAME : Object.freeze({ ...FRAME, EVENING_END: ee, BAGS_TO: bt });
+    const FE = base ? FRAME_EARLY : Object.freeze({ ...FRAME_EARLY, EVENING_END: ee, BAGS_TO: bt });
     const anyLunch = P.some((o) => o.lunch);
     const kept = [];       // jobs, in priority order
     let lunch = null;      // the lunch job (an option) or null for the plain line
