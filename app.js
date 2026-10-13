@@ -3189,11 +3189,11 @@
   // Sky over Rome (time -> colour). Sunset and civil dusk come from content.meta.
   // v9f (Felix's F13, qa/v9f/sky.md): blue morning and midday, a lavender haze, a blush, then one warm run (cream, honey,
   // apricot, a dusty rose at sunset) instead of a saturated gold and a red-coral, so no stretch is loud (chroma at most
-  // 0.105, was 0.146). The colour moves in OKLab on a monotone cubic through the stops: no kink at a stop, no overshoot,
+  // 0.095, was 0.146). The colour moves in OKLab on a monotone cubic through the stops: no kink at a stop, no overshoot,
   // and the drop to dusk passes a muted mauve instead of a magenta flash. A direct blue -> gold blend crosses green.
   const SKY = [
     ['09:30', '#CFE4F1'], ['13:00', '#B5D7EE'], ['14:50', '#D8DBF0'], ['15:40', '#F1DADB'], ['16:20', '#F5DFC8'],
-    ['17:05', '#F3CC98'], ['17:50', '#EEAF88'], [C.meta.sunset, '#E2917A'], [C.meta.civilDusk, '#3A4A8E'], ['21:00', '#121833'],
+    ['17:05', '#F3CC98'], ['17:50', '#EEAF88'], [C.meta.sunset, '#E49A84'], [C.meta.civilDusk, '#3A4A8E'], ['21:00', '#121833'],
   ].map(([t, hex]) => { const [L, Ch, H] = rgbToOklch(hexRgb(hex)); const h = (H * Math.PI) / 180; return { t: toMin(t), lab: [L, Ch * Math.cos(h), Ch * Math.sin(h)] }; });
   const DUSK = SKY.findIndex((s) => s.t === toMin(C.meta.sunset)); // tramonto -> ora blu
   const SKY_NIGHT = SKY[SKY.length - 1].t; // 21:00, night: where the page's end scrolls to (v9c C1a)
