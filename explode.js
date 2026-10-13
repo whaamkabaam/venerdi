@@ -501,11 +501,20 @@
   }
 
   function vibrate(ms) { if (opts.vibrate && navigator.vibrate) { try { navigator.vibrate(ms); } catch { /* not here */ } } }
-  let lastBuzz = 0;
+  // The blast on an Android phone: one big hit, then aftershocks that fade (0.49 s; nothing else buzzes over it).
+  const BOOM = [130, 30, 80, 40, 50, 50, 30, 60, 20];
+  let lastBuzz = -1, lastLen = 0;
   function thud(power, big) {
-    // Weight you can feel: the camera jolts on a heavy landing, and an Android phone buzzes with it.
+    // Weight you can feel: the camera jolts on a heavy landing, and an Android phone buzzes with it, harder and longer
+    // for a heavier hit. One knock at a time, each its own beat (each call ends the last), so a heap coming down is a
+    // rhythm and not one long buzz; the ARRIVALS board landing always gets through.
     S.shake = Math.max(S.shake, Math.min(big ? 11 : 6, power));
-    if (S.t - lastBuzz > 0.07 && power > 2.2) { lastBuzz = S.t; vibrate(Math.round(Math.min(40, 8 + power * 3))); }
+    if (power < 1.5 || S.t < (S.hush || 0)) return;
+    const gap = S.t - lastBuzz;
+    if (gap < Math.max(0.075, lastLen + 0.035) && !(big && gap > 0.04)) return;
+    lastLen = Math.min(big ? 0.07 : 0.042, 0.018 + power * 0.004);
+    lastBuzz = S.t;
+    vibrate(Math.round(lastLen * 1000));
   }
 
   function plan(pieces) {
@@ -637,7 +646,7 @@
     const shock = 5200;
     BEATS.forEach((t, k) => ev.push({ t, fn: () => hit(k) }));
     // The blast itself: the jolt, the buzz on Android, and the evening coming in above as the camera steps back.
-    ev.push({ t: BLAST, fn: () => { S.shake = 10; vibrate([50, 40, 30]); if (S.sky) S.sky.classList.add('is-in'); } });
+    ev.push({ t: BLAST, fn: () => { S.shake = 10; vibrate(BOOM); S.hush = S.t + BOOM.reduce((x, y) => x + y) / 1000; if (S.sky) S.sky.classList.add('is-in'); } });
     for (const p of near) {
       const b = bodyFor(p);
       const dx = p.cx - bx, dy = p.cy - by, d = Math.hypot(dx, dy);
@@ -911,7 +920,7 @@
       try { layer.setPointerCapture(e.pointerId); } catch { /* fine */ }
       thaw();
       wake();
-      if (b) { S.drag = finger(b, wx, wy); layer.classList.add('is-grab'); }
+      if (b) { S.drag = finger(b, wx, wy); layer.classList.add('is-grab'); vibrate(20); }
     });
     layer.addEventListener('pointermove', (e) => {
       if (!down || e.pointerId !== down.id) return;
@@ -933,7 +942,7 @@
   // A tap: the piece under her finger hops; a tap on the sky sets off a little blast there.
   function poke(b, sx, sy) {
     const wx = toWorldX(sx), wy = toWorldY(sy);
-    if (b) { b.vy -= rr(1100, 1500); b.vx += (wx - b.x) * -2 + rr(-200, 200); b.w += rr(-9, 9); vibrate(14); return; }
+    if (b) { b.vy -= rr(1100, 1500); b.vx += (wx - b.x) * -2 + rr(-200, 200); b.w += rr(-9, 9); vibrate(26); return; }
     let hit = 0;
     for (const o of W.live) {
       if (!o.piece || o.im === 0) continue;
@@ -942,7 +951,7 @@
       const v = 1500 / (1 + d / 110);
       o.vx += (dx / (d || 1)) * v; o.vy += (dy / (d || 1)) * v - 300; o.w += rr(-6, 6); hit++;
     }
-    if (hit) { S.shake = Math.max(S.shake, 3); vibrate(20); }
+    if (hit) { S.shake = Math.max(S.shake, 3); vibrate([40, 30, 24]); }
   }
 
   /* ------------------------------------------------------------------ */
@@ -1140,7 +1149,7 @@
     ui = buildUI();
     ui.layer.remove();
     root.classList.add('xp-rm');
-    vibrate([30, 40, 20, 40, 20]);
+    vibrate(BOOM);
     S.on = false; S.done = true;
     finish();
   }
