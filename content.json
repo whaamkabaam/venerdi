@@ -76,7 +76,6 @@
     ],
     "title": "Friday",
     "dateLine": "16 October · Rome",
-    "lead": "You land at 08:10. The rest is up to you :)",
     "countdownStatus": {
       "days": "IN {n} DAYS",
       "tomorrow": "TOMORROW"
@@ -2848,7 +2847,7 @@
   },
   "ui": {
     "pageTitle": "Sasha's Friday in Rome",
-    "ogTitle": "A few ideas for Friday in Rome",
+    "ogTitle": "Here are some ideas for what we can do on Friday :))",
     "ogImageAlt": "An arrivals board saying FRI 16 and SASHA in yellow split-flap letters, over the domes and rooftops of Rome",
     "ogSiteName": "Venerdì",
     "noscript": "This page needs JavaScript.",
