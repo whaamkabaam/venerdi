@@ -658,7 +658,10 @@
     });
     if (hero) ev.push({ t: t1 + 0.34, fn: () => drop([hero], bins, { hero: true }) });
     const bomb = near.find((p) => p.kind === 'bomb');
-    if (bomb) ev.push({ t: (hero ? t1 + 0.34 : t1) + 0.6, fn: () => returnBomb(bomb) });
+    const back = (hero ? t1 + 0.34 : t1) + 0.6;
+    if (bomb) ev.push({ t: back, fn: () => returnBomb(bomb) });
+    // The line comes a beat after the button has landed back on the board (it falls for about 0.3 s).
+    S.sayAt = back + 1;
     ev.sort((a, b) => a.t - b.t);
     return ev;
   }
@@ -776,7 +779,7 @@
       if (moving === 0) S.quiet += dt; else S.quiet = 0;
       if (S.quiet > 0.5 || S.rested || S.t - S.idleSince > 8) sleep();
     }
-    if (!S.done && S.t > (S.endAt || 1e9)) finish();
+    if (!S.done && S.t > (S.sayAt || 1e9)) finish();
   }
   // Velocity before each step, to feel the landings.
   function track() { for (const b of W.live) { b.pvx = b.vx; b.pvy = b.vy; } }
