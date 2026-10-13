@@ -558,7 +558,7 @@
       "id": "forum",
       "group": "ancient",
       "title": "Roman Forum and Palatine",
-      "line": "The Roman Forum's ruins, then up the Palatine where the emperors lived, with the Circus Maximus below",
+      "line": "The Roman Forum's ruins lead up the Palatine, where the emperors lived, and the Circus Maximus lies below",
       "board": {
         "to": "FORUM AND PALATINE"
       },
@@ -810,7 +810,7 @@
       "id": "largo",
       "group": "ancient",
       "title": "Caesar's cats",
-      "line": "The ruins where Caesar was stabbed, now with a cat shelter in one corner and cats asleep on the old stones",
+      "line": "Caesar was stabbed in these ruins, and now a cat shelter in one corner looks after the cats asleep on the old stones",
       "board": {
         "to": "CAESAR'S CATS"
       },
@@ -896,7 +896,7 @@
       "id": "castel",
       "group": "view",
       "title": "Castel Sant'Angelo",
-      "line": "An emperor's tomb turned fortress, a long ramp and some stairs up to a terrace facing St Peter's",
+      "line": "An emperor's tomb that became a fortress, with a long ramp and some stairs up to a terrace facing St Peter's",
       "board": {
         "to": "CASTEL SANT'ANGELO"
       },
@@ -1015,7 +1015,7 @@
       "id": "capuchin",
       "group": "odd",
       "title": "Bone crypt",
-      "line": "Six small rooms decorated with the bones of about 3,700 people, most of them friars",
+      "line": "Six small rooms decorated with the bones of about 3,700 people, and most of them were friars",
       "board": {
         "to": "BONE CRYPT"
       },
@@ -1281,7 +1281,7 @@
       "id": "borghese",
       "group": "art",
       "title": "Bernini at the Borghese",
-      "line": "Bernini's marble statues: Daphne's fingers turning into leaves, David biting his lip mid-throw",
+      "line": "Bernini's marble statues, where Daphne's fingers are turning into leaves and David bites his lip mid-throw",
       "board": {
         "to": "BORGHESE"
       },
@@ -1337,7 +1337,7 @@
       "id": "stpeters",
       "group": "art",
       "title": "St Peter's",
-      "line": "Enormous, with Michelangelo's Pietà just inside the door and Bernini's bronze canopy under the dome",
+      "line": "It's enormous, with Michelangelo's Pietà just inside the door and Bernini's bronze canopy under the dome",
       "board": {
         "to": "ST PETER'S"
       },
@@ -1380,7 +1380,7 @@
       "id": "caravaggio",
       "group": "art",
       "title": "Three Caravaggios",
-      "line": "San Luigi dei Francesi, a church near the Pantheon with three Caravaggios in one side chapel",
+      "line": "San Luigi dei Francesi, a church near the Pantheon where three Caravaggios hang in one side chapel",
       "board": {
         "to": "SAN LUIGI"
       },
@@ -1772,7 +1772,7 @@
       "id": "innocenti",
       "group": "food",
       "title": "Biscuit bakery",
-      "line": "An old biscuit bakery in Trastevere with a 16-metre oven",
+      "line": "An old biscuit bakery in Trastevere that still bakes in its 16-metre oven",
       "board": {
         "to": "INNOCENTI"
       },
@@ -1947,7 +1947,7 @@
       "id": "gelato",
       "group": "food",
       "title": "Gelateria del Teatro",
-      "line": "Gelato on Via dei Coronari in flavours like sage and raspberry or Amalfi lemon, and whipped cream made without sugar",
+      "line": "Gelato on Via dei Coronari in flavours like sage and raspberry or Amalfi lemon, and the whipped cream has no sugar in it",
       "board": {
         "to": "GELATO"
       },
@@ -2336,7 +2336,7 @@
       "id": "keyhole",
       "group": "wander",
       "title": "Mouth of Truth and the keyhole",
-      "line": "The Mouth of Truth, said to bite liars' hands, then up the hill to the keyhole with St Peter's dome framed in it and the orange garden next door",
+      "line": "The Mouth of Truth is said to bite liars' hands, and up the hill a keyhole frames St Peter's dome, next to the orange garden",
       "board": {
         "to": "MOUTH OF TRUTH"
       },
@@ -2384,7 +2384,7 @@
       "id": "acquedotti",
       "group": "wander",
       "title": "Aqueduct park",
-      "line": "Roman aqueduct arches nearly 28 metres tall in an open park on the south-east edge of Rome",
+      "line": "Roman aqueduct arches nearly 28 metres tall stand in an open park on the south-east edge of Rome",
       "board": {
         "to": "AQUEDUCTS"
       },
@@ -2426,7 +2426,7 @@
       "id": "coppede",
       "group": "wander",
       "title": "Coppedè",
-      "line": "About forty fairytale buildings around Piazza Mincio, with an iron chandelier hanging in a stone arch and a fountain with twelve frogs",
+      "line": "About forty fairytale buildings around Piazza Mincio, where an iron chandelier hangs in a stone arch and a fountain has twelve frogs",
       "board": {
         "to": "COPPEDE"
       },
@@ -2622,7 +2622,7 @@
       "id": "cannon",
       "group": "wild",
       "title": "Noon cannon",
-      "line": "A loud cannon shot below the Gianicolo terrace every day at noon, and a free view over Rome at any hour",
+      "line": "A cannon fires below the Gianicolo terrace every day at noon, loud enough to make you jump, and the view over Rome is free at any hour",
       "board": {
         "to": "NOON CANNON"
       },
