@@ -1797,7 +1797,7 @@
       "id": "market",
       "group": "food",
       "title": "Testaccio market",
-      "line": "A neighbourhood market with about 100 stalls, one of them selling a dripping beef sandwich that most people eat standing up",
+      "line": "A neighbourhood market with about 100 stalls, one selling a dripping beef sandwich most people eat standing up",
       "board": {
         "to": "TESTACCIO MARKET"
       },
