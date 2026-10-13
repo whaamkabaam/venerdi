@@ -155,7 +155,7 @@
           {
             "id": "class",
             "label": "Make pasta",
-            "sub": "Fettuccine and a tiramisu with a chef, then we eat it all. In English.",
+            "sub": "Fettuccine and a tiramisu with a chef, then a sit-down meal, in English",
             "photoOf": "pasta"
           }
         ]
@@ -194,7 +194,7 @@
           {
             "id": "coppede",
             "label": "Coppedè",
-            "sub": "A few fairytale streets, almost nobody there",
+            "sub": "A few fairytale streets around one small square",
             "option": "coppede"
           },
           {
@@ -445,7 +445,7 @@
         "id": "lirioni",
         "title": "Li Rioni",
         "board": "LI RIONI",
-        "line": "Thin, crispy Roman pizza from a wood oven, in a loud room done up like a street.",
+        "line": "Thin, crispy Roman pizza from a wood oven, in a loud room done up like a street",
         "area": "Behind the Colosseum",
         "booking": "We can book",
         "price": "around €15 each",
@@ -463,7 +463,7 @@
         "id": "remo",
         "title": "Da Remo",
         "board": "DA REMO",
-        "line": "Testaccio's loud, cheap pizza place. The pizzas come fast and there's usually a queue.",
+        "line": "Loud, cheap Testaccio pizza place where the pizzas come fast and there's usually a queue",
         "area": "Testaccio",
         "booking": "Walk in, cash only",
         "price": "around €15 each",
@@ -481,7 +481,7 @@
         "id": "ivo",
         "title": "Da Ivo",
         "board": "DA IVO",
-        "line": "An old Trastevere pizzeria, open since 1962. They say a table always turns up. They have pasta too, in case it's a pasta day for you :D",
+        "line": "An old Trastevere pizzeria open since 1962, no booking for two, and their site says a table always turns up\nThey have pasta too, in case it's a pasta day for you :D",
         "area": "Trastevere",
         "booking": "Walk in",
         "price": "around €15 each",
@@ -502,7 +502,7 @@
       "id": "colosseum",
       "group": "ancient",
       "title": "Colosseum, from outside",
-      "line": "The inside is sold out online for Friday, so we walk round it and look down over the Forum from the Capitol.",
+      "line": "Sold out inside for Friday, so a walk round the outside and then the free view over the Forum from the Capitol",
       "board": {
         "to": "COLOSSEUM"
       },
@@ -544,7 +544,7 @@
       "id": "forum",
       "group": "ancient",
       "title": "Roman Forum and Palatine",
-      "line": "We walk through the Roman Forum and up the Palatine, where the emperors lived, and look down on the Circus Maximus.",
+      "line": "The Roman Forum's ruins, then up the Palatine where the emperors lived, with the Circus Maximus below",
       "board": {
         "to": "FORUM AND PALATINE"
       },
@@ -587,7 +587,7 @@
       "id": "pantheon",
       "group": "ancient",
       "title": "Pantheon",
-      "line": "A 1,900-year-old dome with an open hole at the top. Stand in the middle and look up.",
+      "line": "A 1,900-year-old dome with an open hole at the top",
       "board": {
         "to": "PANTHEON"
       },
@@ -631,7 +631,7 @@
       "id": "clemente",
       "group": "ancient",
       "title": "San Clemente",
-      "line": "Two staircases down under a church: a Roman house, a temple of a secret cult, and water running somewhere below.",
+      "line": "Two levels under the church: a Roman house, a temple of Mithras and an underground stream",
       "board": {
         "to": "SAN CLEMENTE"
       },
@@ -697,7 +697,7 @@
       "id": "trevi",
       "group": "ancient",
       "title": "Trevi Fountain",
-      "line": "Before 11:30 we see it from the street. After that, the steps down to the basin need a ticket, €2 each.",
+      "line": "Always free from the street, and the steps down to the basin are free before 11:30 and €2 each after",
       "board": {
         "to": "TREVI FOUNTAIN"
       },
@@ -739,7 +739,7 @@
       "id": "vicus",
       "group": "ancient",
       "title": "Under Trevi's streets",
-      "line": "Stairs down from an old cinema to a Roman house, where the water that feeds the Trevi still runs past.",
+      "line": "Ruins of a Roman house under an old cinema near the Trevi, with the water that feeds the fountain still running past",
       "board": {
         "to": "VICUS CAPRARIUS"
       },
@@ -796,7 +796,7 @@
       "id": "largo",
       "group": "ancient",
       "title": "Caesar's cats",
-      "line": "The ruins where Caesar was stabbed are home to a cat sanctuary now. They sleep on the old stones.",
+      "line": "The ruins where Caesar was stabbed, now with a cat shelter in one corner and cats asleep on the old stones",
       "board": {
         "to": "CAESAR'S CATS"
       },
@@ -838,7 +838,7 @@
       "id": "vittoriano",
       "group": "view",
       "title": "Vittoriano roof",
-      "line": "A lift up to the roof of the big white monument at sunset. All of Rome around you, the old Forums right below.",
+      "line": "A lift up to the roof of the big white monument, all of Rome around and the old Forums right below, open until after sunset",
       "board": {
         "to": "VITTORIANO ROOF"
       },
@@ -882,7 +882,7 @@
       "id": "castel",
       "group": "view",
       "title": "Castel Sant'Angelo",
-      "line": "An emperor's tomb turned fortress. A long ramp and some stairs take you up to the terrace, St Peter's dead ahead.",
+      "line": "An emperor's tomb turned fortress, a long ramp and some stairs up to a terrace facing St Peter's",
       "board": {
         "to": "CASTEL SANT'ANGELO"
       },
@@ -958,7 +958,7 @@
       "id": "pincio",
       "group": "view",
       "title": "Pincio and the Spanish Steps",
-      "line": "We cut through Villa Borghese to a free terrace over Piazza del Popolo, then walk along to the top of the Spanish Steps and down into Piazza di Spagna.",
+      "line": "Through Villa Borghese to a free terrace over Piazza del Popolo, then along to the top of the Spanish Steps and down into Piazza di Spagna",
       "board": {
         "to": "SPANISH STEPS"
       },
@@ -1001,7 +1001,7 @@
       "id": "capuchin",
       "group": "odd",
       "title": "Bone crypt",
-      "line": "Six small rooms decorated with the bones of about 3,700 people, most of them friars.",
+      "line": "Six small rooms decorated with the bones of about 3,700 people, most of them friars",
       "board": {
         "to": "BONE CRYPT"
       },
@@ -1048,7 +1048,7 @@
       "id": "ignazio",
       "group": "odd",
       "title": "The fake dome",
-      "line": "The church never got its dome, so a painter faked one on the flat ceiling. From the right spot on the floor it looks real.",
+      "line": "The church never got its dome, so a painter faked one on the flat ceiling, and from the right spot on the floor it looks real",
       "board": {
         "to": "SANT'IGNAZIO"
       },
@@ -1090,7 +1090,7 @@
       "id": "spada",
       "group": "odd",
       "title": "The trick corridor",
-      "line": "A colonnade that looks 35 metres deep is under nine. The warrior at the end is about knee high.",
+      "line": "A colonnade that looks 35 metres deep but is under 9, with a warrior statue at the end that's only about knee high",
       "board": {
         "to": "GALLERIA SPADA"
       },
@@ -1133,7 +1133,7 @@
       "id": "gesu",
       "group": "odd",
       "title": "The 17:30 machine",
-      "line": "At 17:30 a 17th-century machine slides a huge painting down like a curtain, with music, and a silver statue appears behind it.",
+      "line": "At 17:30 a 17th-century machine lowers the huge altar painting, with music, and a silver statue appears behind it",
       "board": {
         "to": "GESU"
       },
@@ -1183,7 +1183,7 @@
       "id": "montemartini",
       "group": "odd",
       "title": "Statues in a power plant",
-      "line": "Roman marble gods stand between giant black engines in an old power station.",
+      "line": "Roman marble statues between the giant black engines of an old power station",
       "board": {
         "to": "MONTEMARTINI"
       },
@@ -1225,7 +1225,7 @@
       "id": "cemetery",
       "group": "odd",
       "title": "Pyramid and Keats",
-      "line": "A quiet garden cemetery behind a real Roman pyramid. Keats is buried here.",
+      "line": "A quiet garden cemetery behind a Roman pyramid, where Keats is buried",
       "board": {
         "to": "PYRAMID"
       },
@@ -1267,7 +1267,7 @@
       "id": "borghese",
       "group": "art",
       "title": "Bernini at the Borghese",
-      "line": "Marble that looks soft: Daphne's fingers turning into leaves, David biting his lip mid-throw.",
+      "line": "Bernini's marble statues: Daphne's fingers turning into leaves, David biting his lip mid-throw",
       "board": {
         "to": "BORGHESE"
       },
@@ -1323,7 +1323,7 @@
       "id": "stpeters",
       "group": "art",
       "title": "St Peter's",
-      "line": "It's enormous, and it's free. Michelangelo's Pietà is just inside the door, and the light comes down from the dome.",
+      "line": "Enormous, with Michelangelo's Pietà just inside the door and Bernini's bronze canopy under the dome",
       "board": {
         "to": "ST PETER'S"
       },
@@ -1366,7 +1366,7 @@
       "id": "caravaggio",
       "group": "art",
       "title": "Three Caravaggios",
-      "line": "Walk in off a street near the Pantheon and three Caravaggios hang in a side chapel.",
+      "line": "San Luigi dei Francesi, a church near the Pantheon with three Caravaggios in one side chapel",
       "board": {
         "to": "SAN LUIGI"
       },
@@ -1413,7 +1413,7 @@
       "id": "doria",
       "group": "art",
       "title": "The Doria Pamphilj palace",
-      "line": "A family still lives upstairs, and you walk through their gilded Hall of Mirrors to Velázquez's red-faced pope, with Bernini's bust of the same man beside it.",
+      "line": "A palace the family still lives in: a gilded Hall of Mirrors, then Velázquez's red-faced pope next to Bernini's bust of the same man",
       "board": {
         "to": "DORIA PAMPHILJ"
       },
@@ -1474,7 +1474,7 @@
       "id": "haring",
       "group": "art",
       "title": "Keith Haring",
-      "line": "A new show of his in a palace off Piazza Navona: the chalk subway drawings, a motorbike he painted in Rome, and paintings under blacklight.",
+      "line": "A new show in a palace off Piazza Navona: his chalk subway drawings, a motorbike he painted in Rome in 1984 and some works under blacklight",
       "board": {
         "to": "KEITH HARING"
       },
@@ -1545,7 +1545,7 @@
       "id": "kandinsky",
       "group": "art",
       "title": "Kandinsky",
-      "line": "About seventy of his paintings, most on loan from the Pompidou in Paris, in a palace on Piazza Venezia.",
+      "line": "About seventy of his paintings, most on loan from the Pompidou in Paris, in a palace on Piazza Venezia",
       "board": {
         "to": "KANDINSKY"
       },
@@ -1588,7 +1588,7 @@
       "id": "sistine",
       "group": "art",
       "title": "Sistine Chapel",
-      "line": "Michelangelo's ceiling is at the end of the Vatican Museums.",
+      "line": "Michelangelo's ceiling, at the end of the Vatican Museums",
       "fridayNo": "Sold out for Friday",
       "board": {
         "to": "SISTINE CHAPEL"
@@ -1630,7 +1630,7 @@
       "id": "maritozzo",
       "group": "food",
       "title": "Maritozzo",
-      "line": "A soft bun split open and packed with cream, at Regoli near Termini, a pastry shop going since 1916.",
+      "line": "A soft bun split open and filled with whipped cream, at Regoli near Termini, a pastry shop open since 1916",
       "board": {
         "to": "MARITOZZO"
       },
@@ -1672,7 +1672,7 @@
       "id": "barnum",
       "group": "food",
       "title": "Croissants at Barnum",
-      "line": "A bakery just off Campo de' Fiori that makes its own croissants. We get the pain au chocolat, and the almond croissant if they have it that day.",
+      "line": "A bakery just off Campo de' Fiori that bakes its own pain au chocolat, plus an almond croissant on some days",
       "board": {
         "to": "BARNUM"
       },
@@ -1710,14 +1710,14 @@
       },
       "say": {
         "words": "almond croissant",
-        "how": "In Italian it's un cornetto alle mandorle (oon cor-NET-toh AHL-leh MAHN-dor-leh)."
+        "how": "In Italian it's un cornetto alle mandorle (oon cor-NET-toh AHL-leh MAHN-dor-leh)"
       }
     },
     {
       "id": "boccione",
       "group": "food",
       "title": "Boccione",
-      "line": "A tiny bakery in the Ghetto with no sign. Get the burnt-top fruit cake and the sour cherry tart.",
+      "line": "A tiny bakery in the Ghetto with no sign, known for its burnt-top fruit cake and sour cherry and ricotta tart",
       "board": {
         "to": "BOCCIONE"
       },
@@ -1758,7 +1758,7 @@
       "id": "innocenti",
       "group": "food",
       "title": "Biscuit bakery",
-      "line": "An old Trastevere bakery with a 16-metre oven. The trays come straight out to the counter.",
+      "line": "An old biscuit bakery in Trastevere with a 16-metre oven",
       "board": {
         "to": "INNOCENTI"
       },
@@ -1799,7 +1799,7 @@
       "id": "market",
       "group": "food",
       "title": "Testaccio market",
-      "line": "A neighbourhood market full of food stalls. The beef sandwich drips, so most people eat it standing up.",
+      "line": "A neighbourhood market with about 100 stalls, one of them selling a dripping beef sandwich that most people eat standing up",
       "board": {
         "to": "TESTACCIO MARKET"
       },
@@ -1846,7 +1846,7 @@
       "id": "suppli",
       "group": "food",
       "title": "Supplì",
-      "line": "Fried rice balls with mozzarella inside. Break one open and the cheese stretches like a phone cord.",
+      "line": "Fried rice balls from Supplizio, filled with meat, tomato and mozzarella",
       "board": {
         "to": "SUPPLI"
       },
@@ -1893,7 +1893,7 @@
       "id": "trapizzino",
       "group": "food",
       "title": "Trapizzino",
-      "line": "A triangle of crusty pizza bread stuffed with a Roman stew, like chicken cacciatora or meatballs in tomato sauce.",
+      "line": "A triangle of crusty pizza bread filled with a Roman stew, like chicken cacciatora or meatballs in tomato sauce, on Piazza Trilussa",
       "board": {
         "to": "TRAPIZZINO"
       },
@@ -1936,7 +1936,7 @@
       "id": "gelato",
       "group": "food",
       "title": "Gelateria del Teatro",
-      "line": "They do flavours like sage and raspberry or Amalfi lemon, and the cream on top has no sugar in it.",
+      "line": "Gelato on Via dei Coronari in flavours like sage and raspberry or Amalfi lemon, and whipped cream made without sugar",
       "board": {
         "to": "GELATO"
       },
@@ -1977,7 +1977,7 @@
       "id": "fortunata",
       "group": "food",
       "title": "Lunch at Fortunata",
-      "line": "The pasta gets rolled and cut by hand in the front window, and that's what you eat.",
+      "line": "Fresh pasta rolled and cut by hand in the front window, just off Campo de' Fiori",
       "board": {
         "to": "DA FORTUNATA"
       },
@@ -2025,7 +2025,7 @@
       "id": "flavio",
       "group": "food",
       "title": "Lunch in a hill of pots",
-      "line": "A trattoria dug into a hill made of broken Roman jars. Some walls show the old jars behind glass.",
+      "line": "A Testaccio trattoria built into a hill of broken Roman jars, some of them showing behind glass in the walls",
       "board": {
         "to": "FLAVIO"
       },
@@ -2081,7 +2081,7 @@
       "id": "pasta",
       "group": "food",
       "title": "Pasta class",
-      "line": "Roll and cut fettuccine by hand with a chef, make a tiramisu, then sit down and eat what you made. In English.",
+      "line": "A class in English with a chef: hand-rolled fettuccine and a tiramisu, then a sit-down meal of what you made",
       "board": {
         "to": "PASTA CLASS"
       },
@@ -2125,11 +2125,11 @@
       "details": [
         {
           "label": "When",
-          "text": "11:00 or 13:00. 1h 30 making, 1h 30 eating."
+          "text": "11:00 or 13:00, 1h 30 making and 1h 30 eating"
         },
         {
           "label": "Sauce",
-          "text": "We pick tomato and basil, amatriciana or cacio e pepe, and the kitchen makes it."
+          "text": "Tomato and basil, amatriciana or cacio e pepe, made by the kitchen"
         },
         {
           "label": "Where",
@@ -2151,7 +2151,7 @@
       "id": "trastevere",
       "group": "wander",
       "title": "Trastevere",
-      "line": "Small ivy-covered streets across the river, two vintage shops on Via di San Francesco a Ripa, and no plan: we turn wherever looks better.",
+      "line": "Small ivy-covered streets across the river for wandering, and two vintage shops on Via di San Francesco a Ripa",
       "board": {
         "to": "TRASTEVERE"
       },
@@ -2198,7 +2198,7 @@
       "id": "centre",
       "group": "wander",
       "title": "Piazza Navona and around",
-      "line": "We start at Bernini's fountain in Piazza Navona and wander the small streets to Campo de' Fiori, past the Pantheon.",
+      "line": "From Bernini's fountain in Piazza Navona through the small streets to Campo de' Fiori, past the Pantheon",
       "board": {
         "to": "PIAZZA NAVONA"
       },
@@ -2240,7 +2240,7 @@
       "id": "keyhole",
       "group": "wander",
       "title": "Mouth of Truth and the keyhole",
-      "line": "First the Mouth of Truth: you put your hand in and see if it bites. Then up the hill to the keyhole with St Peter's dome framed in it, and the orange trees next door.",
+      "line": "The Mouth of Truth, said to bite liars' hands, then up the hill to the keyhole with St Peter's dome framed in it and the orange garden next door",
       "board": {
         "to": "MOUTH OF TRUTH"
       },
@@ -2288,7 +2288,7 @@
       "id": "acquedotti",
       "group": "wander",
       "title": "Aqueduct park",
-      "line": "Roman aqueduct arches nearly 28 metres tall, standing in a field where locals run and walk their dogs.",
+      "line": "Roman aqueduct arches nearly 28 metres tall, standing in an open park on the south-east edge of Rome",
       "board": {
         "to": "AQUEDUCTS"
       },
@@ -2330,7 +2330,7 @@
       "id": "coppede",
       "group": "wander",
       "title": "Coppedè",
-      "line": "A few streets most people never see. An iron chandelier hangs in a stone arch, and the fountain is all frogs.",
+      "line": "About forty fairytale buildings around Piazza Mincio, with an iron chandelier hanging in a stone arch and a fountain with twelve frogs",
       "board": {
         "to": "COPPEDE"
       },
@@ -2373,7 +2373,7 @@
       "id": "monti",
       "group": "wander",
       "title": "Monti",
-      "line": "The neighbourhood between my hostel and the Colosseum: vintage shops like Pifebo and Humana, a fountain square, and a tiny mosaic chapel if we catch it open.",
+      "line": "The neighbourhood between my hostel and the Colosseum, with vintage shops like Pifebo and Humana, a fountain square and a tiny mosaic chapel that isn't always open",
       "board": {
         "to": "MONTI"
       },
@@ -2416,7 +2416,7 @@
       "id": "ghetto",
       "group": "wander",
       "title": "The Jewish Ghetto",
-      "line": "A flat loop past a Roman colonnade with a church built into it, a palace sitting on a Roman theatre, and four bronze boys pushing turtles into a fountain. Friday is also 16 October, the day in 1943 the Nazis rounded up over a thousand of Rome's Jews, starting right here, so there may be a commemoration.",
+      "line": "A flat loop past a Roman colonnade with a church built into it, a palace on a Roman theatre and four bronze boys pushing turtles into a fountain, and Friday is 16 October, the day in 1943 the Nazis rounded up over a thousand of Rome's Jews starting here, so there may be a commemoration",
       "board": {
         "to": "GHETTO"
       },
@@ -2459,7 +2459,7 @@
       "id": "circovr",
       "group": "wild",
       "title": "Chariot race in VR",
-      "line": "On the real Circus Maximus track, a headset rebuilds the stands and a chariot race goes past you.",
+      "line": "A VR headset on the real Circus Maximus track rebuilds the stands, and a chariot race goes past",
       "board": {
         "to": "CIRCO MAXIMO VR"
       },
@@ -2526,7 +2526,7 @@
       "id": "cannon",
       "group": "wild",
       "title": "Noon cannon",
-      "line": "A cannon fires below the Gianicolo terrace at noon. Loud, and the view of Rome is free at any hour.",
+      "line": "A loud cannon shot below the Gianicolo terrace every day at noon, and a free view over Rome at any hour",
       "board": {
         "to": "NOON CANNON"
       },
@@ -2571,7 +2571,7 @@
       "id": "coronati",
       "group": "wild",
       "title": "The nuns' bell",
-      "line": "We ring the convent bell, and if the nuns are around they let us into a chapel painted in the 1240s like a comic strip.",
+      "line": "A convent chapel painted in the 1240s like a comic strip, open if the nuns answer the bell",
       "board": {
         "to": "SANTI QUATTRO"
       },
@@ -2613,7 +2613,7 @@
       "id": "circusjog",
       "group": "wild",
       "title": "A lap of the Circus Maximus",
-      "line": "One easy lap of the old chariot track, about 1.5 km, with the Palatine ruins above you.",
+      "line": "One easy lap of the old chariot track, about 1.5 km, with the Palatine ruins above",
       "board": {
         "to": "CIRCUS MAXIMUS"
       },
@@ -2655,7 +2655,7 @@
       "id": "sidecar",
       "group": "also",
       "title": "Vespa sidecar",
-      "line": "A driver takes us through the old streets in a vintage Vespa sidecar. One of us rides in the sidecar, one behind the driver, and we swap at the stops.",
+      "line": "A driver on a vintage Vespa with a sidecar through the old streets, one of us in the sidecar and one behind the driver, swapping at the stops",
       "board": {
         "to": "SIDECAR"
       },
