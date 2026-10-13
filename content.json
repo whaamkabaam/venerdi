@@ -357,10 +357,6 @@
     "seeEverything": "See everything",
     "close": "Close",
     "facts": {
-      "about": "About {d}",
-      "hm": "{h}h {m}",
-      "h": "{h}h",
-      "m": "{m} min",
       "price": "€{n} each",
       "priceSplit": "€{you} for you, €{me} for me",
       "priceBoth": "€{n} for both of us",

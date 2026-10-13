@@ -1559,12 +1559,11 @@
     slot('dep-note').innerHTML = fromLink ? `<p class="day-note">${esc(D.fromLink)}${back}</p>` : '';
   }
 
-  // "About 1h 30 · €18 each · Needs booking · Shoulders and knees covered": duration, the price each
-  // (or Free), "Needs booking" where it has to be booked, and an instruction tag.
+  // "€18 each · Needs booking · Shoulders and knees covered": the price each (or Free), "Needs booking" where it has
+  // to be booked, and an instruction tag. v9f F15a (felix-15.md: "remove the time things for the activities"): no
+  // duration on any entry or sheet; the planner still plans with the minutes.
   function factList(o) {
     const F = C.day.facts;
-    const h = Math.floor(o.minutes / 60), m = o.minutes % 60;
-    const d = h ? (m ? fmt(F.hm, { h, m: String(m).padStart(2, '0') }) : fmt(F.h, { h })) : fmt(F.m, { m });
     // v9: where Felix pays less than Sasha (`priceMe`, the EU under-26 tickets), the price says both:
     // "€18 for you, €2 for me". A whole number prints bare, anything else with two decimals (6.50).
     const money = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
@@ -1573,14 +1572,13 @@
     // both of us". Close prices (the Haring show, €17 and €15) stay a pair.
     const both = split && o.priceMe * 2 <= o.price;
     const price = typeof o.price === 'number' ? (o.price ? (both ? fmt(F.priceBoth, { n: money(o.price + o.priceMe) }) : split ? fmt(F.priceSplit, { you: money(o.price), me: money(o.priceMe) }) : fmt(F.price, { n: money(o.price) })) : F.free) : o.price || '';
-    // v9f F3 (felix-11.md): a food stop (a pastry, street food, gelato) says no "About 15 min"; visits and lunches do.
-    const snack = !!o.serves && ('pastry' in o.serves || 'street' in o.serves);
-    return [snack ? '' : fmt(F.about, { d }), price, o.booking === 'required' ? F.needsBooking : '', o.tag || ''].filter(Boolean);
+    return [price, o.booking === 'required' ? F.needsBooking : '', o.tag || ''].filter(Boolean);
   }
   // As HTML: each fact (with the dot after it) never breaks inside, so a line can't end on "around" and
   // start the next on "€15 each", or start on a dot. The text reads the same as the facts joined.
   const factsHTML = (list) => { const J = C.day.facts.join, dot = J.trimEnd(); return list.map((f, i) => `<span class="fact">${esc(f)}${i < list.length - 1 ? esc(dot) : ''}</span>`).join(esc(J.slice(dot.length))); };
-  // An option's facts row; one with nothing in it (a pastry stop, v9f F3) is hidden, so its grid leaves no gap for it.
+  // An option's facts row; one with nothing in it (a pastry stop, v9f F3; a free visit, F15a) is hidden, so its grid
+  // leaves no gap for it.
   const factsRow = (cls, o, tag = 'p') => { const list = factList(o); return `<${tag} class="${cls}"${list.length ? '' : ' hidden'}>${factsHTML(list)}</${tag}>`; };
   const groupLabel = (o) => (C.catalogue.groups.find((g) => g.id === o.group) || {}).label || '';
   const nowTag = `<span class="tag tag--now">${esc(U.nowTag)}</span>`;
