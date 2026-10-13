@@ -1744,7 +1744,7 @@
     // v9f F2: a place line has no full stop, so a second sentence (Felix's own, on Da Ivo) sits on a line of its own.
     // v9f places (felix-11.md F8): an idea with photos shows them as an entry does (the strip, a bar per photo).
     const ideas = IDEAS.map((d) => `<li class="dinner-idea${d.photos?.length ? ' has-photos' : ''}">
-          ${d.photos?.length ? stripHTML(d, '(min-width: 640px) 200px, 92vw') : ''}
+          ${d.photos?.length ? stripHTML(d, '(min-width: 640px) 200px, 96px') : ''}
           <div class="dinner-text">
             <p class="dinner-name">${esc(d.title)}</p>
             <p class="dinner-line">${esc(d.line).replace(/\n/g, '<br>')}</p>

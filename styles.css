@@ -1290,6 +1290,18 @@ dialog.peek .say-sound { white-space: normal; }
    pages it): above its name on a phone, in a 200 px column left of its name from 640 px, where an idea without
    photos lets its text take that column too (no empty slot). */
 .dinner-idea .stop-strip:has(> :nth-child(2)) .stop-photo { cursor: pointer; }
+/* v9f fold-in (gate-design): on a phone the photos sit in a 96 px column beside the name, as the lunch list and If there's
+   time show theirs, so the three ideas read as three rows of one shape and the old photos are not blown up to the full
+   width; an idea without photos lets its text take that column too. */
+@media (max-width: 639.98px) {
+  .dinner-idea.has-photos { grid-template-columns: 96px minmax(0, 1fr); column-gap: var(--s3); align-items: start; }
+  .dinner-idea.has-photos > .stop-photos { grid-column: 1; grid-row: 1; }
+  .dinner-idea.has-photos > .dinner-text { grid-column: 2; grid-row: 1; }
+  .dinner-idea.has-photos > .dinner-acts { grid-column: 1 / -1; }
+  .dinner-idea .stop-photo { border-radius: var(--r-thumb); overflow: hidden; }
+  .dinner-idea .stop-dots { margin-left: -10px; }
+  .dinner-idea .stop-dot { width: 36px; }
+}
 @media (min-width: 640px) {
   .dinner-ideas:has(.has-photos) .dinner-idea { grid-template-columns: 200px minmax(0, 1fr) auto; }
   .dinner-ideas:has(.has-photos) .dinner-idea:not(.has-photos) .dinner-text { grid-column: 1 / 3; }
