@@ -3473,6 +3473,36 @@
     const sum = [0];
     for (let i = -k; i < n + k; i++) sum.push(sum[sum.length - 1] + rawTimeAt(Math.min(maxY, Math.max(0, i * step))));
     skyTimes = { step, t: Array.from({ length: n }, (_, i) => (sum[i + 2 * k + 1] - sum[i]) / (2 * k + 1)) };
+    widenDrop(skyTimes.t, step);
+  }
+  // v9f fold-in (gate-mech S1): the drop from sunset to blue hour went by in about 45 px of scroll on a phone, a cut from
+  // sunset to night in one flick. It is now paced by its colour, not its minutes: over DROP_PX of her scroll, centred where
+  // it was, the turn from warm to cool (27 % to 50 % of the way, measured in OKLab) takes about three fifths, and the
+  // stretch where text is under 4.5:1 on the sky (44 % to 70 %) stays short. The minutes on either side (the warm run from
+  // 17:50, blue hour to 19:05; further out when a full day leaves too little room) give way.
+  const DROP_PX = 280;
+  const DROP_U = [0, 0.1, 0.68, 0.84, 1], DROP_Q = [0, 0.27, 0.44, 0.7, 1];
+  const steepInv = (q) => { const f = (x) => 1 / (1 + Math.exp(-30 * (x - 0.5))), F = f(0) + q * (f(1) - f(0)); return 0.5 + Math.log(F / (1 - F)) / 30; };
+  function widenDrop(t, step) {
+    const s0 = toMin(C.meta.sunset), s1 = toMin(C.meta.civilDusk);
+    const at = (v) => t.findIndex((x) => x >= v);
+    const i0 = at(s0), i1 = at(s1), need = Math.ceil(DROP_PX / step);
+    if (i0 < 1 || i1 < 0) return;
+    let lo = at(s0 - 38), hi = at(s1 + 9);
+    if (hi < 0) hi = t.length - 1;
+    if (hi - lo < need + 8) { lo = Math.max(0, at(s0 - 83)); const h = at(s1 + 34); hi = h < 0 ? t.length - 1 : h; }
+    const len = Math.max(i1 - i0, Math.min(need, hi - lo - 8));
+    if (lo < 0 || hi - lo - 8 < len || t[lo] > s0 || t[hi] < s1) return;
+    const ja = Math.max(lo + 4, Math.min(Math.round((i0 + i1 - len) / 2), hi - 4 - len)), jb = ja + len, tlo = t[lo], thi = t[hi];
+    for (let i = lo + 1; i < hi; i++) {
+      if (i <= ja) { t[i] = tlo + ((s0 - tlo) * (i - lo)) / (ja - lo); continue; }
+      if (i >= jb) { t[i] = s1 + ((thi - s1) * (i - jb)) / (hi - jb); continue; }
+      const u = (i - ja) / len;
+      let k = 0;
+      while (u > DROP_U[k + 1]) k++;
+      const q = DROP_Q[k] + ((DROP_Q[k + 1] - DROP_Q[k]) * (u - DROP_U[k])) / (DROP_U[k + 1] - DROP_U[k]);
+      t[i] = s0 + (s1 - s0) * steepInv(q);
+    }
   }
   function timeAt(y) {
     if (!skyTimes) return rawTimeAt(y);
