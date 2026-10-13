@@ -3415,6 +3415,7 @@
     const row0 = dayShown && DEP.board && DEP.board.rows[0];
     dockY = row0 ? top(row0.el) - hudH() : Infinity;
     atEdge = edgeAt(scrollY);
+    spreadTimes();
   }
 
   // v9f: past either end of the page (the rubber band), and at the end under Safari's bar, what shows is the root
@@ -3433,7 +3434,24 @@
   }
   addEventListener('scroll', () => { atEdge = edgeAt(scrollY); }, { passive: true });
 
+  // v9f: the sky's time at a scroll position is the mean of the entries' times over the middle 60 % of the window, so a
+  // long gap between two entries no longer sweeps the whole afternoon past in a few px (on a phone 15:00 to 17:45 came
+  // in 238 px; the biggest colour change over 100 px of scroll is now under half of what it was). Every 8 px, on each
+  // measure; only the sky reads it.
+  let skyTimes = null;
+  function spreadTimes() {
+    const step = 8, k = Math.round((innerHeight * 0.3) / step), n = Math.ceil(maxY / step) + 1;
+    const sum = [0];
+    for (let i = -k; i < n + k; i++) sum.push(sum[sum.length - 1] + rawTimeAt(Math.min(maxY, Math.max(0, i * step))));
+    skyTimes = { step, t: Array.from({ length: n }, (_, i) => (sum[i + 2 * k + 1] - sum[i]) / (2 * k + 1)) };
+  }
   function timeAt(y) {
+    if (!skyTimes) return rawTimeAt(y);
+    const { step, t } = skyTimes;
+    const f = Math.min(t.length - 1, Math.max(0, y / step)), i = Math.floor(f), j = Math.min(t.length - 1, i + 1);
+    return t[i] + (t[j] - t[i]) * (f - i);
+  }
+  function rawTimeAt(y) {
     if (y <= anchors[0].y) return anchors[0].t;
     for (let i = 0; i < anchors.length - 1; i++) {
       const a = anchors[i], b = anchors[i + 1];
