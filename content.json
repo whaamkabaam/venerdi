@@ -153,13 +153,13 @@
           {
             "id": "lunch",
             "label": "A proper lunch",
-            "sub": "Fresh pasta, a hill of Roman jars, an old wine shop, grilled scamorza",
+            "sub": "Fresh pasta, a trattoria inside a hill of Roman jars, an old wine shop, grilled scamorza",
             "photoOf": "fortunata"
           },
           {
             "id": "class",
             "label": "Make pasta",
-            "sub": "Fettuccine and a tiramisu with a chef, then a sit-down meal, in English",
+            "sub": "A class in English: fettuccine and a tiramisu with a chef, then you eat what you made",
             "photoOf": "pasta"
           }
         ]
@@ -492,7 +492,7 @@
         "id": "ivo",
         "title": "Da Ivo",
         "board": "DA IVO",
-        "line": "An old Trastevere pizzeria open since 1962, no booking for two, and their site says a table always turns up\nThey have pasta too, in case it's a pasta day for you :D",
+        "line": "An old Trastevere pizzeria open since 1962, no bookings for a table of two, and their site says a table always turns up\nThey have pasta too, in case it's a pasta day for you :D",
         "photos": [
           "ivo-1",
           "ivo-2"
@@ -2134,7 +2134,7 @@
       "id": "valentino",
       "group": "food",
       "title": "Lunch at Valentino",
-      "line": "A Monti trattoria behind the old painted sign of an ice depot and Birra Peroni, with grilled scamorza done several ways",
+      "line": "A Monti trattoria behind an old painted Birra Peroni sign, with grilled scamorza done several ways",
       "board": {
         "to": "VALENTINO"
       },
@@ -2247,7 +2247,7 @@
       "id": "trastevere",
       "group": "wander",
       "title": "Trastevere",
-      "line": "Small ivy-covered streets across the river for wandering, and two vintage shops on Via di San Francesco a Ripa",
+      "line": "Small ivy-covered streets across the river that work best with no plan, plus two vintage shops on Via di San Francesco a Ripa",
       "board": {
         "to": "TRASTEVERE"
       },
@@ -2469,7 +2469,7 @@
       "id": "monti",
       "group": "wander",
       "title": "Monti",
-      "line": "The neighbourhood between my hostel and the Colosseum, with vintage shops like Pifebo and Humana, a fountain square and a tiny mosaic chapel that isn't always open",
+      "line": "Between my hostel and the Colosseum: vintage shops like Pifebo and Humana, a fountain square and a tiny mosaic chapel that isn't always open",
       "board": {
         "to": "MONTI"
       },
@@ -2751,7 +2751,7 @@
       "id": "sidecar",
       "group": "also",
       "title": "Vespa sidecar",
-      "line": "A driver takes us round the old streets on a vintage Vespa with a sidecar, one of us in the sidecar and one on the back, swapping at the stops",
+      "line": "A driver takes us round old Rome on a vintage Vespa with a sidecar, one of us in the sidecar and one on the back, swapping at the stops",
       "board": {
         "to": "SIDECAR"
       },
