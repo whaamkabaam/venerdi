@@ -1778,18 +1778,19 @@ dialog.peek .say-sound { white-space: normal; }
   .when-btn, .when-btn .i, .dt-opt { transition: none; }
 }
 
-/* ---------- Explode everything (v9e, behind ?boom=1; app.js and explode.js) ---------- */
-/* Under the send box, in the night sky: a button hanging a little crooked, as if one screw were already loose. When
-   it comes into view it wobbles once on that screw. */
-.xp { display: grid; justify-items: start; gap: var(--s2); margin-top: var(--s8); }
-.xp-btn { gap: 8px; padding: 0 16px 0 13px; color: var(--accent); rotate: -2.5deg; transform-origin: 14% 40%; }
-.xp-i { width: 16px; height: 16px; }
-.xp-note { font-size: 0.8125rem; color: var(--ink-muted); }
-.xp.is-seen .xp-btn { animation: xp-loose 1.2s cubic-bezier(0.3, 0, 0.2, 1) 0.15s both; }
-@keyframes xp-loose {
-  0% { rotate: -2.5deg; } 16% { rotate: 5deg; } 36% { rotate: -6deg; } 56% { rotate: 2deg; } 76% { rotate: -4deg; } 100% { rotate: -2.5deg; }
+/* ---------- Don't press me (v9f; app.js and explode.js) ---------- */
+/* The last thing on the page, at its bottom right, in plain small words: no box, no icon, nothing crooked. The words
+   end on the column's right edge; the hit area (44 px tall) reaches past them into the margin. */
+.xp { display: grid; justify-items: end; margin-top: var(--s8); margin-right: calc(var(--s3) * -1); }
+.xp-btn {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s3); border: 0; border-radius: var(--r-btn);
+  background: transparent; color: var(--ink-muted); font: inherit; font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: scale 150ms var(--ease-out), background-color 150ms var(--ease-out), color 150ms var(--ease-out);
 }
-@media (prefers-reduced-motion: reduce) { .xp.is-seen .xp-btn { animation: none; } }
+.xp-btn:active { scale: 0.96; }
+.xp-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (hover: hover) { .xp-btn:hover { background-color: var(--fill-quiet); color: var(--ink); } }
 /* While it runs and after: only the pieces and the sky are drawn; the rest of the page is gone until a reload. */
 /* No scroll anchoring once it starts: a piece moved by a transform must not make the browser scroll the page. */
 :root.xp-on, :root.xp-on body { overflow-anchor: none; }

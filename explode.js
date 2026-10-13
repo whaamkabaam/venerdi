@@ -1,5 +1,5 @@
-/* Explode everything (v9e, "real physics"; behind ?boom=1 for now). app.js loads this file when the button at the
-   bottom comes near, or on its tap. Every component of the page becomes a solid box with weight: the real elements are moved with
+/* Explode everything (v9e, "real physics"; v9f: the button "Don't press me"). app.js loads this file when the button
+   at the bottom comes near, or on its tap. Every component of the page becomes a solid box with weight: the real elements are moved with
    transforms (nothing is cloned, captured or drawn again), so a photo stays a photo and a flap stays a flap. A small
    rigid-body solver after Erin Catto's Box2D-Lite (MIT; box against box, contacts with warm starting, a hinge and a
    finger joint) gives the weight and the collisions. The blast starts at the button; the camera pulls back so the
@@ -359,7 +359,6 @@
     ['.send-btn', { tier: 1 }],
     ['.map-note', { text: 1, tier: 3 }],
     ['.xp-btn', { kind: 'bomb', tier: 1 }],
-    ['.xp-note', { text: 1, tier: 1 }],
   ];
   const GROUP = '.hud, .hero .board, .stage, .section--dep, .hero-note, .day-head, .plan-item, .plan-group, .dinner-idea, .room-tile, .later-row, .send, .xp, .day-map';
 
@@ -1076,7 +1075,7 @@
   // the new state; she can still scroll the crooked page.
   const RM = ['.hud[data-on]', '.board', '.note-greeting', '.note > p', '.note-sign', '.stage-closed', '.dep-weather', '.day-head h2', '.day-change',
     '.plan-group .label', '.plan-trip > span:not(.sr-only)', '.plan-time', '.plan-title', 'h4.plan-line', 'p.plan-line', '.stop-top', '.strip-frame', '.stop-dots', '.stop-title', '.stop-line', '.stop-facts', '.stop-tip', '.stop-actions .hapw', '.stop-actions .tbtn',
-    '.dinner-name', '.dinner-line', '.dinner-facts', '.dinner-acts .hapw', '.dinner-acts .tbtn', '.room-tile > *', '.hapw--all', '.later-row > *', '.send-label', '.send-text', '.hapw--send', '.day-map', '.map-note', '.xp-btn', '.xp-note'];
+    '.dinner-name', '.dinner-line', '.dinner-facts', '.dinner-acts .hapw', '.dinner-acts .tbtn', '.room-tile > *', '.hapw--all', '.later-row > *', '.send-label', '.send-text', '.hapw--send', '.day-map', '.map-note', '.xp-btn'];
   function hang(o) {
     const els = [];
     for (const sel of RM) for (const el of document.querySelectorAll(sel)) {
