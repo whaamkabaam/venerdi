@@ -1718,10 +1718,11 @@
   }
   function dinnerHTML(it, time, attrs, timeRow) {
     const A = C.anchors.dinner;
+    // v9f F2: a place line has no full stop, so a second sentence (Felix's own, on Da Ivo) sits on a line of its own.
     const ideas = IDEAS.map((d) => `<li class="dinner-idea">
           <div class="dinner-text">
             <p class="dinner-name">${esc(d.title)}</p>
-            <p class="dinner-line">${esc(d.line)}</p>
+            <p class="dinner-line">${esc(d.line).replace(/\n/g, '<br>')}</p>
             <p class="dinner-facts">${factsHTML([d.area, d.booking, d.price].filter(Boolean))}</p>
             ${tipHTML(d, 'stop-tip')}
           </div>
