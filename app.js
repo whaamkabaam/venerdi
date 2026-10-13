@@ -1551,11 +1551,15 @@
     const money = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
     const split = typeof o.priceMe === 'number' && o.priceMe !== o.price;
     const price = typeof o.price === 'number' ? (o.price ? (split ? fmt(F.priceSplit, { you: money(o.price), me: money(o.priceMe) }) : fmt(F.price, { n: money(o.price) })) : F.free) : o.price || '';
-    return [fmt(F.about, { d }), price, o.booking === 'required' ? F.needsBooking : '', o.tag || ''].filter(Boolean);
+    // v9f F3 (felix-11.md): a food stop (a pastry, street food, gelato) says no "About 15 min"; visits and lunches do.
+    const snack = !!o.serves && ('pastry' in o.serves || 'street' in o.serves);
+    return [snack ? '' : fmt(F.about, { d }), price, o.booking === 'required' ? F.needsBooking : '', o.tag || ''].filter(Boolean);
   }
   // As HTML: each fact (with the dot after it) never breaks inside, so a line can't end on "around" and
   // start the next on "€15 each", or start on a dot. The text reads the same as the facts joined.
   const factsHTML = (list) => { const J = C.day.facts.join, dot = J.trimEnd(); return list.map((f, i) => `<span class="fact">${esc(f)}${i < list.length - 1 ? esc(dot) : ''}</span>`).join(esc(J.slice(dot.length))); };
+  // An option's facts row; one with nothing in it (a pastry stop, v9f F3) is hidden, so its grid leaves no gap for it.
+  const factsRow = (cls, o, tag = 'p') => { const list = factList(o); return `<${tag} class="${cls}"${list.length ? '' : ' hidden'}>${factsHTML(list)}</${tag}>`; };
   const groupLabel = (o) => (C.catalogue.groups.find((g) => g.id === o.group) || {}).label || '';
   const nowTag = `<span class="tag tag--now">${esc(U.nowTag)}</span>`;
   const mapLink = (o) => (o.links?.[0] ? `<a class="stop-map" href="${esc(o.links[0].url)}" target="_blank" rel="noopener">${esc(o.links[0].label)}<span class="sr-only">: ${esc(o.title)}</span>${newTab}${ICON.out}</a>` : '');
@@ -1573,7 +1577,7 @@
         <p class="swap-title label">${esc(D.instead)}</p>
         <ul class="swap-list">${alts.map((a) => { const o = OPT[a]; return `<li class="swap-alt">
           ${thumbHTML(o.photos?.[0], 'swap-photo', '112px')}
-          <span class="swap-text"><span class="swap-name">${esc(o.title)}</span><span class="swap-line">${factsHTML(factList(o))}</span></span>
+          <span class="swap-text"><span class="swap-name">${esc(o.title)}</span>${factsRow('swap-line', o, 'span')}</span>
           ${hap(`<button type="button" class="btn btn--quiet swap-use" data-action="use" data-id="${esc(a)}">${esc(D.useThis)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}
         </li>`; }).join('')}</ul>
       </div></div>`;
@@ -1646,7 +1650,7 @@
           <div class="stop-text">
             <h4 class="stop-title" id="st-${id}"><span class="sr-only">${esc(time)}, </span>${esc(o.title)}</h4>
             <p class="stop-line">${lineHTML(o, `say-${o.id}`)}</p>
-            <p class="stop-facts">${factsHTML(factList(o))}</p>
+            ${factsRow('stop-facts', o)}
             ${tipHTML(o, 'stop-tip')}
             <div class="stop-actions">${alts.length ? hap(`<button type="button" class="tbtn" data-action="swap" aria-expanded="false" aria-controls="sw-${id}">${esc(D.swap)}<span class="sr-only">: ${esc(o.title)}</span></button>`) : ''}${hap(`<button type="button" class="tbtn" data-action="remove">${esc(D.remove)}<span class="sr-only">: ${esc(o.title)}</span></button>`)}${linksHTML(o)}</div>
           </div>
@@ -2191,7 +2195,7 @@
   const peekTextHTML = (o) => `<div class="peek-text">
           <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
           <p class="peek-line">${lineHTML(o, `say-${o.id}-pk`)}</p>
-          <p class="peek-facts">${factsHTML(factList(o))}</p>
+          ${factsRow('peek-facts', o)}
           ${tipHTML(o, 'peek-tip')}
         </div>`;
   // A row: thumbnail, title, line, facts, the friend's line and "This one". The thumbnail opens the
@@ -2226,7 +2230,7 @@
         <div class="peek-text">
           <h3 class="peek-name" id="pk-${esc(o.id)}">${esc(o.title)}</h3>
           <p class="peek-line">${esc(o.line)}</p>
-          <p class="peek-facts">${factsHTML(factList(o))}</p>
+          ${factsRow('peek-facts', o)}
           ${detailsHTML(o)}
           ${tipHTML(o, 'peek-tip')}
         </div>
