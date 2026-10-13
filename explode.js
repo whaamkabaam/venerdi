@@ -936,7 +936,7 @@
     const top = document.createElement('div');
     top.className = 'xp-top xp-ui';
     top.hidden = true;
-    top.innerHTML = `<p class="xp-said" aria-hidden="true"></p><button class="btn btn--small xp-again" type="button"></button>`;
+    top.innerHTML = `<p class="xp-said" aria-hidden="true"></p><button class="btn xp-again" type="button"></button>`;
     top.querySelector('.xp-said').textContent = opts.said;
     const again = top.querySelector('.xp-again');
     again.textContent = opts.again;
