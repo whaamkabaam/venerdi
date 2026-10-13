@@ -711,7 +711,7 @@
       "id": "trevi",
       "group": "ancient",
       "title": "Trevi Fountain",
-      "line": "Free to see from the street at any time, the ticket from 11:30 is only for the steps down to the basin",
+      "line": "Free to see from the street at any time, and from 11:30 the steps down to the basin need a ticket",
       "board": {
         "to": "TREVI FOUNTAIN"
       },
@@ -852,7 +852,7 @@
       "id": "vittoriano",
       "group": "view",
       "title": "Vittoriano roof",
-      "line": "A lift up to the roof of the big white monument, all of Rome around and the old Forums right below, open until after sunset",
+      "line": "A lift up to the roof of the big white monument, with all of Rome around you and the old Forums right below, open until after sunset",
       "board": {
         "to": "VITTORIANO ROOF"
       },
@@ -1905,7 +1905,7 @@
       "id": "trapizzino",
       "group": "food",
       "title": "Trapizzino",
-      "line": "A triangle of crusty pizza bread filled with a Roman stew, like chicken cacciatora or meatballs in tomato sauce, on Piazza Trilussa",
+      "line": "On Piazza Trilussa, a triangle of crusty pizza bread filled with a Roman stew like chicken cacciatora or meatballs in tomato sauce",
       "board": {
         "to": "TRAPIZZINO"
       },
@@ -2512,7 +2512,7 @@
       "id": "ghetto",
       "group": "wander",
       "title": "The Jewish Ghetto",
-      "line": "A flat loop past a Roman colonnade with a church built into it, a palace on a Roman theatre and four bronze boys pushing turtles into a fountain, and Friday is 16 October, the day in 1943 the Nazis began rounding up over a thousand of Rome's Jews here, so there may be a commemoration",
+      "line": "A flat loop past a Roman colonnade with a church built into it, a palace on a Roman theatre and bronze boys pushing turtles into a fountain\nFriday is also 16 October, the day in 1943 the Nazis began rounding up over a thousand of Rome's Jews here, so there may be a commemoration",
       "board": {
         "to": "GHETTO"
       },
