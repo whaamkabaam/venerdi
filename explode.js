@@ -356,7 +356,9 @@
     ['.room-add, .room-all', { tier: 2 }],
     ['.send-label', { text: 1, tier: 1 }],
     ['.send-text', { tier: 1 }],
-    ['.send-btn', { tier: 1 }],
+    // v9f fold-in (felix-16.md): the whole Send pill is one piece, its glass, her photos and the button together, so no
+    // frosted glass is left behind over the heap (WebKit draws a backdrop filter even under visibility: hidden).
+    ['.send-bar', { tier: 1 }],
     ['.map-note', { text: 1, tier: 3 }],
     ['.xp-btn', { kind: 'bomb', tier: 1 }],
   ];
@@ -1219,7 +1221,7 @@
   // the new state; she can still scroll the crooked page.
   const RM = ['.hud[data-on]', '.board', '.note-greeting', '.note > p', '.note-sign', '.stage-closed', '.dep-weather', '.day-head h2', '.day-change',
     '.plan-group .label', '.plan-trip > span:not(.sr-only)', '.plan-time', '.plan-title', 'h4.plan-line', 'p.plan-line', '.stop-top', '.strip-frame', '.stop-dots', '.stop-title', '.stop-line', '.stop-facts', '.stop-tip', '.stop-actions .hapw', '.stop-actions .tbtn',
-    '.dinner-name', '.dinner-line', '.dinner-facts', '.dinner-acts .hapw', '.dinner-acts .tbtn', '.room-tile > *', '.hapw--all', '.later-row > *', '.send-label', '.send-text', '.hapw--send', '.day-map', '.map-note', '.xp-btn'];
+    '.dinner-name', '.dinner-line', '.dinner-facts', '.dinner-acts .hapw', '.dinner-acts .tbtn', '.room-tile > *', '.hapw--all', '.later-row > *', '.send-label', '.send-text', '.send-bar', '.day-map', '.map-note', '.xp-btn'];
   function hang(o) {
     const els = [];
     for (const sel of RM) for (const el of document.querySelectorAll(sel)) {
