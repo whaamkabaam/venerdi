@@ -3053,7 +3053,6 @@
     if (!dayShown) return;
     if (wideMQ.matches && !pageAtlas) {
       pageAtlas = new Atlas(slot('day-map'), 'page');
-      slot('day-map').insertAdjacentHTML('beforeend', `<p class="map-note">${esc(U.mapNote)}</p>`);
       bindPageMap();
       syncMap(pageAtlas);
     }
@@ -3115,7 +3114,7 @@
     if (!sheetAtlas) {
       dlg.innerHTML = `<div class="sheet-grab" aria-hidden="true"></div>
         <div class="sheet-head mapsheet-head">
-          <div class="mapsheet-titles"><h2 id="ms-h" tabindex="-1">${esc(U.mapTitle)}</h2><p class="mapsheet-note">${esc(U.mapNote)}</p></div>
+          <div class="mapsheet-titles"><h2 id="ms-h" class="sr-only" tabindex="-1">${esc(U.mapTitle)}</h2></div>
           ${hap(`<button type="button" class="peek-x" data-action="map-close" aria-label="${esc(PK.close)}">${ICON.close}</button>`, 'x')}
         </div>
         <div class="mapsheet-map"></div>`;
