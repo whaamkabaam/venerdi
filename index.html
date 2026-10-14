@@ -112,6 +112,20 @@
     cf.type = 'module'; cf.src = 'https://static.cloudflareinsights.com/beacon.min.js';
     cf.setAttribute('data-cf-beacon', '{"token": "5e68ce1bab7542d48d91859ebb74e345"}');
     document.body.appendChild(cf);
+    /* Felix 14 Oct: tell the phones apart. Each browser keeps a random code; a hidden frame opens seen.html with it,
+       which Cloudflare files under /venerdi/seen/<code>/, so this phone's visits have their own line. Nothing else is sent. */
+    var code = null;
+    try { code = localStorage.getItem('venerdi:v8:device'); } catch (e) { /* storage blocked: a one-off code below */ }
+    if (!/^[a-z0-9]{8}$/.test(code || '')) {
+      code = Array.from(crypto.getRandomValues(new Uint8Array(8)), function (b) { return (b % 36).toString(36); }).join('');
+      try { localStorage.setItem('venerdi:v8:device', code); } catch (e) { /* counted once, as a new phone */ }
+    }
+    addEventListener('load', function () {
+      var seen = document.createElement('iframe');
+      seen.src = '/venerdi/seen.html?d=' + code; seen.hidden = true; seen.tabIndex = -1; seen.title = '';
+      seen.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(seen);
+    });
   }
 </script>
 </body>

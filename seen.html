@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Venerdì</title>
+<meta name="robots" content="noindex">
+</head>
+<body>
+<script>
+  /* Felix 14 Oct: tell the phones apart. index.html opens this page in a hidden frame as seen.html?d=<code>, the code
+     its browser keeps. The frame's own address becomes /venerdi/seen/<code>/ before the beacon loads, so Cloudflare
+     Web Analytics files the visit under that code. Live site only, like the page's own beacon. */
+  var d = new URLSearchParams(location.search).get('d');
+  if (location.hostname === 'whaamkabaam.github.io' && /^[a-z0-9]{8}$/.test(d || '')) {
+    history.replaceState(null, '', '/venerdi/seen/' + d + '/');
+    var cf = document.createElement('script');
+    cf.type = 'module'; cf.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    cf.setAttribute('data-cf-beacon', '{"token": "5e68ce1bab7542d48d91859ebb74e345"}');
+    document.body.appendChild(cf);
+  }
+</script>
+</body>
+</html>
